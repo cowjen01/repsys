@@ -4,9 +4,10 @@
     "es2021": true
   },
   "extends": [
-    "plugin:react/recommended",
     "airbnb",
-    "prettier"
+    "prettier",
+    "plugin:react/recommended",
+    "plugin:react-redux/recommended"
   ],
   "parserOptions": {
     "ecmaFeatures": {
@@ -18,7 +19,8 @@
   "plugins": [
     "react",
     "prettier",
-    "react-hooks"
+    "react-hooks",
+    "react-redux"
   ],
   "rules": {
     "react/jsx-props-no-spreading": "off",
