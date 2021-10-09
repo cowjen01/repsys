@@ -1,12 +1,21 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import pt from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Pagination from '@mui/material/Pagination';
 
 import ItemView from './ItemView';
+import ItemSkeleton from './ItemSkeleton';
 
-function ItemBarPreview({ title, itemsPerPage, totalItems }) {
+function ItemBarView({ title, itemsPerPage, totalItems }) {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  }, []);
+
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
@@ -16,7 +25,7 @@ function ItemBarPreview({ title, itemsPerPage, totalItems }) {
         <Grid container spacing={2}>
           {[...Array(itemsPerPage).keys()].map((i) => (
             <Grid key={i} item md={12 / itemsPerPage}>
-              <ItemView />
+              {isLoading ? <ItemSkeleton /> : <ItemView />}
             </Grid>
           ))}
         </Grid>
@@ -28,14 +37,14 @@ function ItemBarPreview({ title, itemsPerPage, totalItems }) {
   );
 }
 
-ItemBarPreview.defaultProps = {
+ItemBarView.defaultProps = {
   itemsPerPage: 4,
 };
 
-ItemBarPreview.propTypes = {
+ItemBarView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number,
   totalItems: pt.number.isRequired,
 };
 
-export default ItemBarPreview;
+export default ItemBarView;

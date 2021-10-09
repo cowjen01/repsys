@@ -9,10 +9,11 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const DND_ITEM_TYPE = 'itemBar';
 
-function ItemBarPreview({ index, title, onMove, onDelete }) {
+function ItemBarPreview({ index, title, onMove, onDelete, onDuplicate }) {
   const dragRef = useRef(null);
   const previewRef = useRef(null);
 
@@ -103,6 +104,9 @@ function ItemBarPreview({ index, title, onMove, onDelete }) {
         <IconButton>
           <EditIcon />
         </IconButton>
+        <IconButton onClick={() => onDuplicate(index)}>
+          <ContentCopyIcon />
+        </IconButton>
         <IconButton onClick={() => onDelete(index)}>
           <DeleteIcon />
         </IconButton>
@@ -118,6 +122,7 @@ ItemBarPreview.propTypes = {
   onMove: pt.func.isRequired,
   onDelete: pt.func.isRequired,
   index: pt.number.isRequired,
+  onDuplicate: pt.func.isRequired,
 };
 
 export default ItemBarPreview;
