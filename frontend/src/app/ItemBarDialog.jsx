@@ -1,33 +1,98 @@
 import React from 'react';
+import pt from 'prop-types';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
+import { Formik, Field } from 'formik';
 
-function ItemBarDialog({ open, onClose }) {
+import TextField from './TextField';
+import SelectField from './SelectField';
+
+function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
   return (
-    <Dialog
-      open={open}
-      onClose={() => onClose(false)}
-      aria-labelledby="alert-dialog-title"
-      aria-describedby="alert-dialog-description"
-    >
-      <DialogTitle id="alert-dialog-title">Are you sure you want to delete this bar?</DialogTitle>
-      <DialogContent>
-        <DialogContentText id="alert-dialog-description">
-          Deleting this bar all settings will be lost.
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => onClose(false)}>Disagree</Button>
-        <Button onClick={() => onClose(true)} autoFocus>
-          Agree
-        </Button>
-      </DialogActions>
+    <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
+      <Formik
+        initialValues={initialValues}
+        validate={(values) => {
+          const errors = {};
+          const requiredMessage = 'This field is required';
+          if (!values.title) {
+            errors.title = requiredMessage;
+          } else if (!values.totalItems) {
+            errors.totalItems = requiredMessage;
+          }
+          return errors;
+        }}
+        onSubmit={(values, { setSubmitting }) => {
+          onSubmit(values);
+          setSubmitting(false);
+        }}
+      >
+        {({ submitForm, isSubmitting, values }) => (
+          <>
+            <DialogContent>
+              <Field name="title" label="Title" fullWidth component={TextField} />
+              <Field
+                name="model"
+                fullWidth
+                label="Recommendation model"
+                component={SelectField}
+                options={models.map((m) => ({ label: m.key, value: m.key }))}
+              />
+              {models
+                .find((m) => m.key === values.model)
+                .attributes.map((a) => (
+                  <Field
+                    key={a.key}
+                    name={`modelAttributes.${values.model}.${a.key}`}
+                    type={a.type || 'text'}
+                    fullWidth
+                    label={a.label}
+                    component={TextField}
+                  />
+                ))}
+              <Field
+                name="itemsPerPage"
+                fullWidth
+                label="Items per page"
+                component={SelectField}
+                options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
+              />
+              <Field
+                name="totalItems"
+                label="Total items"
+                type="number"
+                fullWidth
+                component={TextField}
+              />
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={onClose}>Close</Button>
+              <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
+                Submit
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Formik>
     </Dialog>
   );
 }
+
+ItemBarDialog.defaultProps = {
+  initialValues: {},
+  models: [],
+};
+
+ItemBarDialog.propTypes = {
+  open: pt.bool.isRequired,
+  onClose: pt.func.isRequired,
+  onSubmit: pt.func.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  initialValues: pt.any,
+  // eslint-disable-next-line react/forbid-prop-types
+  models: pt.any,
+};
 
 export default ItemBarDialog;

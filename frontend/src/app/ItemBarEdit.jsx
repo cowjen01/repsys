@@ -11,14 +11,14 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
-const DND_ITEM_TYPE = 'itemBar';
+const ITEM_TYPE = 'itemBar';
 
-function ItemBarPreview({ index, title, onMove, onDelete, onDuplicate }) {
+function ItemBarPreview({ index, title, onMove, onDelete, onEdit, onDuplicate }) {
   const dragRef = useRef(null);
   const previewRef = useRef(null);
 
   const [{ handlerId }, drop] = useDrop({
-    accept: DND_ITEM_TYPE,
+    accept: ITEM_TYPE,
     collect(monitor) {
       return {
         handlerId: monitor.getHandlerId(),
@@ -56,7 +56,7 @@ function ItemBarPreview({ index, title, onMove, onDelete, onDuplicate }) {
   });
 
   const [{ isDragging }, drag, preview] = useDrag({
-    type: DND_ITEM_TYPE,
+    type: ITEM_TYPE,
     item: () => ({ index }),
     collect: (monitor) => ({
       isDragging: monitor.isDragging(),
@@ -98,10 +98,12 @@ function ItemBarPreview({ index, title, onMove, onDelete, onDuplicate }) {
             }}
           />
         </Box>
-        <Typography variant="h6">{title}</Typography>
+        <Typography variant="h6" component="div">
+          {title}
+        </Typography>
       </Box>
       <Box>
-        <IconButton>
+        <IconButton onClick={() => onEdit(index)}>
           <EditIcon />
         </IconButton>
         <IconButton onClick={() => onDuplicate(index)}>
@@ -123,6 +125,7 @@ ItemBarPreview.propTypes = {
   onDelete: pt.func.isRequired,
   index: pt.number.isRequired,
   onDuplicate: pt.func.isRequired,
+  onEdit: pt.func.isRequired,
 };
 
 export default ItemBarPreview;

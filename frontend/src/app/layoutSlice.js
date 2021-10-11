@@ -6,34 +6,17 @@ const nanoid = customAlphabet('1234567890abcdef', 10);
 
 export const layoutSlice = createSlice({
   name: 'layout',
-  initialState: [
-    {
-      id: nanoid(),
-      title: 'Recommended for you',
-      model: 'knn-5',
-      itemsPerPage: 4,
-      totalItems: 20,
-    },
-    {
-      id: nanoid(),
-      title: 'Top 4 in Czech Republic',
-      model: 'knn-8',
-      itemsPerPage: 3,
-      totalItems: 20,
-    },
-  ],
+  initialState: [],
   reducers: {
     addBar: {
       reducer(state, action) {
         state.push(action.payload);
       },
-      prepare(title, itemsPerPage) {
+      prepare(values) {
         return {
           payload: {
             id: nanoid(),
-            title,
-            itemsPerPage,
-            totalItems: 20,
+            ...values,
           },
         };
       },
@@ -41,6 +24,12 @@ export const layoutSlice = createSlice({
     updateBarsOrder: (state, action) => {
       const { dragIndex, hoverIndex } = action.payload;
       [state[dragIndex], state[hoverIndex]] = [state[hoverIndex], state[dragIndex]];
+    },
+    updateBar: (state, action) => {
+      const bar = state.find(({ id }) => id === action.payload.id);
+      if (bar) {
+        Object.assign(bar, action.payload);
+      }
     },
     duplicateBar: {
       reducer(state, action) {
@@ -67,7 +56,7 @@ export const layoutSlice = createSlice({
   },
 });
 
-export const { addBar, removeBar, updateBarsOrder, duplicateBar } = layoutSlice.actions;
+export const { addBar, removeBar, updateBarsOrder, duplicateBar, updateBar } = layoutSlice.actions;
 
 export const layoutSelector = (state) => state.layout;
 

@@ -4,10 +4,8 @@ import Skeleton from '@mui/material/Skeleton';
 
 function ItemSkeleton() {
   return (
-    <Box sx={{ pt: 0.5 }}>
-      <Skeleton variant="rectangular" height={118} />
-      <Skeleton />
-      <Skeleton width="60%" />
+    <Box sx={{ pt: 0.5, width: '100%' }}>
+      <Skeleton variant="rectangular" height={155} />
     </Box>
   );
 }

@@ -1,4 +1,5 @@
 import React from 'react';
+import pt from 'prop-types';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -21,13 +22,18 @@ function ConfirmDialog({ open, onClose }) {
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose(false)}>Disagree</Button>
+        <Button onClick={() => onClose(false)}>Cancel</Button>
         <Button onClick={() => onClose(true)} autoFocus>
-          Agree
+          Delete
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
+
+ConfirmDialog.propTypes = {
+  open: pt.bool.isRequired,
+  onClose: pt.func.isRequired,
+};
 
 export default ConfirmDialog;
