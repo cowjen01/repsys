@@ -130,7 +130,7 @@ function Studio() {
                   totalItems={bar.totalItems}
                   title={bar.title}
                   model={bar.model}
-                  modelAttributes={bar.modelAttributes[bar.model]}
+                  modelAttributes={bar.modelAttributes}
                   itemsPerPage={bar.itemsPerPage}
                 />
               )}

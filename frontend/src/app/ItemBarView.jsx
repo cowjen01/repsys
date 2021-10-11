@@ -8,9 +8,13 @@ import ItemView from './ItemView';
 import { fetchItems } from './api';
 import ItemSkeleton from './ItemSkeleton';
 
-function ItemBarView({ title, model, itemsPerPage, totalItems }) {
+function ItemBarView({ title, model, itemsPerPage, totalItems, modelAttributes }) {
   const [page, setPage] = useState(0);
-  const { items, isLoading } = fetchItems(`/recommendations?model=${model}&total=${totalItems}`);
+  const { items, isLoading } = fetchItems(
+    `/recommendations?model=${model}&total=${totalItems}&attributes=${encodeURIComponent(JSON.stringify(
+      modelAttributes[model]
+    ))}`
+  );
 
   const handlePageChange = (e, newPage) => {
     setPage(newPage - 1);
@@ -55,11 +59,17 @@ function ItemBarView({ title, model, itemsPerPage, totalItems }) {
   );
 }
 
+ItemBarView.defaultProps = {
+  modelAttributes: {}
+}
+
 ItemBarView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number.isRequired,
   totalItems: pt.number.isRequired,
   model: pt.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  modelAttributes: pt.any
 };
 
 export default ItemBarView;
