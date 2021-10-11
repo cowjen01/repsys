@@ -19,8 +19,6 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
           const requiredMessage = 'This field is required';
           if (!values.title) {
             errors.title = requiredMessage;
-          } else if (!values.totalItems) {
-            errors.totalItems = requiredMessage;
           }
           return errors;
         }}
@@ -58,13 +56,6 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
                 label="Items per page"
                 component={SelectField}
                 options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
-              />
-              <Field
-                name="totalItems"
-                label="Total items"
-                type="number"
-                fullWidth
-                component={TextField}
               />
             </DialogContent>
             <DialogActions>

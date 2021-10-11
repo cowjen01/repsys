@@ -95,7 +95,6 @@ function Studio() {
       setBarData({
         title: 'New bar',
         itemsPerPage: 4,
-        totalItems: 20,
         model: modelsData[0].key,
         modelAttributes,
       });
@@ -127,7 +126,6 @@ function Studio() {
                 />
               ) : (
                 <ItemBarView
-                  totalItems={bar.totalItems}
                   title={bar.title}
                   model={bar.model}
                   modelAttributes={bar.modelAttributes}

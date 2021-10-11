@@ -10,8 +10,9 @@ function shuffle(array) {
 export const handlers = [
   rest.get('/api/models', (req, res, ctx) => res(ctx.status(200), ctx.json(models))),
   rest.get('/api/recommendations', (req, res, ctx) => {
-    const total = req.url.searchParams.get('total');
+    const model = req.url.searchParams.get('model');
+    const totalItems = model === 'vasp' ? 20 : 10;
     shuffle(movies);
-    return res(ctx.status(200), ctx.json(movies.slice(0, total)));
+    return res(ctx.status(200), ctx.json(movies.slice(0, totalItems)));
   }),
 ];
