@@ -10,7 +10,7 @@ import ItemSkeleton from './ItemSkeleton';
 
 function ItemBarView({ title, model, itemsPerPage, totalItems }) {
   const [page, setPage] = useState(0);
-  const { items, isLoading } = fetchItems(`/recommendations?model=${model}`);
+  const { items, isLoading } = fetchItems(`/recommendations?model=${model}&total=${totalItems}`);
 
   const handlePageChange = (e, newPage) => {
     setPage(newPage - 1);
