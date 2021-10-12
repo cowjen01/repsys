@@ -10,6 +10,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 
 import {
   toggleBuildMode,
@@ -48,8 +49,9 @@ function Layout({ children }) {
       <Box sx={{ display: 'flex' }}>
         <MuiAppBar position="fixed" elevation={2}>
           <Toolbar>
+            <BubbleChartIcon sx={{ marginRight: 1 }} />
             <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Repsys
+              REPSYS
             </Typography>
             <FormControlLabel
               control={
@@ -62,6 +64,9 @@ function Layout({ children }) {
               label="Build mode"
             />
             <FormControlLabel
+              sx={{
+                marginLeft: 1,
+              }}
               control={<Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />}
               label="Dark mode"
             />
