@@ -18,7 +18,7 @@ function SelectField({
       name={name}
       helperText={errors[name]}
       error={Boolean(errors[name])}
-      variant="filled"
+      variant="outlined"
       margin="normal"
       SelectProps={{
         native: true,

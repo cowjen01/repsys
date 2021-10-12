@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 export function fetchItems(path) {
   const [items, setItems] = useState([]);
+  const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -10,13 +11,16 @@ export function fetchItems(path) {
     fetch(`/api${path}`)
       .then((response) => response.json())
       .then((data) => {
-        if (isActive) {
-          setItems(data);
-        }
-        setIsLoading(false);
+        setTimeout(() => {
+          if (isActive) {
+            setItems(data);
+          }
+          setIsLoading(false);
+        }, 300);
       })
-      .catch((error) => {
+      .catch((err) => {
         setIsLoading(false);
+        setError(err);
       });
 
     return () => {
@@ -24,5 +28,5 @@ export function fetchItems(path) {
     };
   }, []);
 
-  return { items, isLoading };
+  return { items, isLoading, error };
 }

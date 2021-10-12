@@ -29,20 +29,26 @@ function ItemBarView({ title, model, itemsPerPage, modelAttributes }) {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={2} alignItems="stretch">
-          {items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
-            <Grid key={item.id} item display="flex" md={12 / itemsPerPage}>
-              <ItemView
-                title={item.title}
-                subtitle={item.subtitle.toString()}
-                header={item.header.toString()}
-                description={item.description}
-                image={item.image}
-              />
-            </Grid>
-          ))}
+          {!isLoading
+            ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
+                <Grid key={item.id} item display="flex" md={12 / itemsPerPage}>
+                  <ItemView
+                    title={item.title}
+                    subtitle={item.subtitle.toString()}
+                    header={item.header.toString()}
+                    description={item.description}
+                    image={item.image}
+                  />
+                </Grid>
+              ))
+            : [...Array(itemsPerPage).keys()].map((i) => (
+                <Grid key={i} item display="flex" md={12 / itemsPerPage}>
+                  <ItemSkeleton />
+                </Grid>
+              ))}
         </Grid>
       </Grid>
-      {items.length > itemsPerPage && (
+      {!isLoading && items.length > itemsPerPage && (
         <Grid item xs={12}>
           <Pagination
             page={page + 1}

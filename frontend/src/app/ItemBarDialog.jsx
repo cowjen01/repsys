@@ -61,7 +61,7 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
             <DialogActions>
               <Button onClick={onClose}>Close</Button>
               <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
-                Submit
+                Save
               </Button>
             </DialogActions>
           </>

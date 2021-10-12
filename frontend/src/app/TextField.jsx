@@ -6,7 +6,7 @@ function TextField({ field: { name, value, onChange, onBlur }, form: { errors },
   return (
     <MuiTextField
       name={name}
-      variant="filled"
+      variant="outlined"
       onChange={onChange}
       onBlur={onBlur}
       value={value}
