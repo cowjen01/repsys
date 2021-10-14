@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import pt from 'prop-types';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import { Formik, Field } from 'formik';
+import DialogTitle from '@mui/material/DialogTitle';
 
 import TextField from './TextField';
 import SelectField from './SelectField';
@@ -12,6 +13,7 @@ import SelectField from './SelectField';
 function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
+      <DialogTitle>Configuration form</DialogTitle>
       <Formik
         initialValues={initialValues}
         validate={(values) => {
@@ -19,6 +21,8 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
           const requiredMessage = 'This field is required';
           if (!values.title) {
             errors.title = requiredMessage;
+          } else if (!values.model || values.model === 'null') {
+            errors.model = requiredMessage;
           }
           return errors;
         }}
@@ -27,47 +31,62 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
           setSubmitting(false);
         }}
       >
-        {({ submitForm, isSubmitting, values }) => (
-          <>
-            <DialogContent>
-              <Field name="title" label="Title" fullWidth component={TextField} />
-              <Field
-                name="model"
-                fullWidth
-                label="Recommendation model"
-                component={SelectField}
-                options={models.map((m) => ({ label: m.key, value: m.key }))}
-              />
-              {models
-                .find((m) => m.key === values.model)
-                .attributes.map((a) => (
+        {({ submitForm, isSubmitting, values }) => {
+          const model = useMemo(() => models.find((m) => m.key === values.model), [values.model]);
+          return (
+            <>
+              <DialogContent>
+                <Field name="title" label="Title" fullWidth component={TextField} />
+                <Field
+                  name="itemsPerPage"
+                  fullWidth
+                  label="Items per page"
+                  component={SelectField}
+                  options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
+                />
+                <Field
+                  name="model"
+                  fullWidth
+                  label="Recommendation model"
+                  component={SelectField}
+                  options={[
+                    { label: 'Select model', value: 'null' },
+                    ...models.map((m) => ({ label: m.key, value: m.key })),
+                  ]}
+                />
+                {model &&
+                  model.attributes &&
+                  model.attributes.map((a) => (
+                    <Field
+                      key={a.key}
+                      name={`modelAttributes.${values.model}.${a.key}`}
+                      type={a.type || 'text'}
+                      fullWidth
+                      label={a.label}
+                      component={TextField}
+                    />
+                  ))}
+                {model && model.businessRules && model.businessRules.length && (
                   <Field
-                    key={a.key}
-                    name={`modelAttributes.${values.model}.${a.key}`}
-                    type={a.type || 'text'}
+                    name={`businessRule.${values.model}`}
                     fullWidth
-                    label={a.label}
-                    component={TextField}
+                    label="Business rule"
+                    component={SelectField}
+                    options={model.businessRules.map((b) => ({ label: b, value: b }))}
                   />
-                ))}
-              <Field
-                name="itemsPerPage"
-                fullWidth
-                label="Items per page"
-                component={SelectField}
-                options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
-              />
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose} color="secondary">
-                Close
-              </Button>
-              <Button onClick={submitForm} color="secondary" disabled={isSubmitting} autoFocus>
-                Save
-              </Button>
-            </DialogActions>
-          </>
-        )}
+                )}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={onClose} color="secondary">
+                  Close
+                </Button>
+                <Button onClick={submitForm} color="secondary" disabled={isSubmitting} autoFocus>
+                  Save
+                </Button>
+              </DialogActions>
+            </>
+          );
+        }}
       </Formik>
     </Dialog>
   );

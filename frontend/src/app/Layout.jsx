@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import pt from 'prop-types';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -11,15 +11,21 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
+import Button from '@mui/material/Button';
+import MenuItem from '@mui/material/MenuItem';
+import Menu from '@mui/material/Menu';
+import Grid from '@mui/material/Grid';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 
 import {
-  toggleBuildMode,
   buildModeSelector,
   darkModeSelector,
   toggleDarkMode,
+  toggleBuildMode,
 } from './studioSlice';
 
 function Layout({ children }) {
+  const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
   const darkMode = useSelector(darkModeSelector);
@@ -48,33 +54,81 @@ function Layout({ children }) {
     [darkMode]
   );
 
+  const handleSettingsOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleSettingsClose = () => {
+    setAnchorEl(null);
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
       <Box sx={{ display: 'flex' }}>
         <MuiAppBar position="fixed" elevation={2}>
           <Toolbar>
-            <BubbleChartIcon sx={{ marginRight: 1 }} />
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              REPSYS
-            </Typography>
-            <FormControlLabel
-              control={
-                <Switch
-                  color="secondary"
-                  checked={buildMode}
-                  onChange={() => dispatch(toggleBuildMode())}
+            <Grid justifyContent="space-between" alignItems="center" container>
+              <Grid item>
+                <Button
+                  startIcon={<DashboardIcon />}
+                  aria-controls="menu-appbar"
+                  aria-haspopup="true"
+                  color="inherit"
+                  onClick={handleSettingsOpen}
+                  variant="text"
+                >
+                  Menu
+                </Button>
+                <Menu
+                  id="menu-appbar"
+                  anchorEl={anchorEl}
+                  anchorOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  keepMounted
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'right',
+                  }}
+                  open={Boolean(anchorEl)}
+                  onClose={handleSettingsClose}
+                >
+                  <MenuItem onClick={handleSettingsClose}>Profile</MenuItem>
+                  <MenuItem onClick={handleSettingsClose}>My account</MenuItem>
+                </Menu>
+              </Grid>
+              <Grid item>
+                <Grid container direction="row" alignItems="center">
+                  <BubbleChartIcon sx={{ marginRight: 1 }} />
+                  <Typography variant="h6" component="div">
+                    REPSYS
+                  </Typography>
+                </Grid>
+              </Grid>
+              <Grid item>
+                {/* <FormControlLabel
+                  sx={{
+                    marginLeft: 1,
+                  }}
+                  control={
+                    <Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />
+                  }
+                  label="Dark"
+                /> */}
+                <FormControlLabel
+                  control={
+                    <Switch
+                      color="secondary"
+                      checked={buildMode}
+                      onChange={() => dispatch(toggleBuildMode())}
+                    />
+                  }
+                  label="Build mode"
                 />
-              }
-              label="Build mode"
-            />
-            <FormControlLabel
-              sx={{
-                marginLeft: 1,
-              }}
-              control={<Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />}
-              label="Dark mode"
-            />
+              </Grid>
+            </Grid>
           </Toolbar>
         </MuiAppBar>
         <Box

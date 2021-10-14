@@ -31,17 +31,18 @@ function Studio() {
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
 
-  const { items: modelsData, isLoading } = fetchItems('/models');
+  const { items: modelData, isLoading: isModelLoading } = fetchItems('/models');
+  const { items: userData, isLoading: isUserLoading } = fetchItems('/users');
 
   const modelAttributes = useMemo(
     () =>
       Object.fromEntries(
-        modelsData.map((m) => [
+        modelData.map((m) => [
           m.key,
           Object.fromEntries(m.attributes.map((a) => [a.key, a.defaultValue || ''])),
         ])
       ),
-    [modelsData]
+    [modelData]
   );
 
   const handleBarMove = (dragIndex, hoverIndex) => {
@@ -85,17 +86,17 @@ function Studio() {
   };
 
   const handleBarEdit = (index) => {
-    if (!isLoading) {
+    if (!isModelLoading) {
       setBarData(layout[index]);
     }
   };
 
   const handleBarAdd = () => {
-    if (!isLoading) {
+    if (!isModelLoading) {
       setBarData({
         title: 'New bar',
         itemsPerPage: 4,
-        model: modelsData[0].key,
+        // model: modelsData[0].key,
         modelAttributes,
       });
     }
@@ -107,12 +108,15 @@ function Studio() {
       <ItemBarDialog
         open={barData !== undefined}
         initialValues={barData}
-        models={modelsData}
+        models={modelData}
         onClose={handleBarDialogClose}
         onSubmit={handleBarSubmit}
       />
       <Container maxWidth="lg">
         <Grid container spacing={3}>
+          {/* <Grid item xs={12}>
+
+          </Grid> */}
           {layout.map((bar, index) => (
             <Grid item xs={12} key={bar.id}>
               {buildMode ? (

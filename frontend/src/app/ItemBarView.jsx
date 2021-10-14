@@ -9,10 +9,10 @@ import Box from '@mui/material/Box';
 import ItemView from './ItemView';
 import { fetchItems } from './api';
 
-function ItemBarView({ title, model, itemsPerPage, modelAttributes }) {
+function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes }) {
   const [page, setPage] = useState(0);
   const { items, isLoading } = fetchItems(
-    `/recommendations?model=${model}&attributes=${encodeURIComponent(
+    `/recommendations?model=${model}&userId=${userId}&attributes=${encodeURIComponent(
       JSON.stringify(modelAttributes[model])
     )}`
   );
@@ -69,6 +69,7 @@ ItemBarView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number.isRequired,
   model: pt.string.isRequired,
+  userId: pt.string.isRequired,
   // eslint-disable-next-line react/forbid-prop-types
   modelAttributes: pt.any,
 };

@@ -22,8 +22,8 @@ function ConfirmDialog({ open, onClose }) {
         </DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button onClick={() => onClose(false)}>Cancel</Button>
-        <Button onClick={() => onClose(true)} autoFocus>
+        <Button color="secondary" onClick={() => onClose(false)}>Cancel</Button>
+        <Button color="secondary" onClick={() => onClose(true)} autoFocus>
           Delete
         </Button>
       </DialogActions>
