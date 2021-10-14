@@ -3,10 +3,11 @@ import pt from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Pagination from '@mui/material/Pagination';
+import Skeleton from '@mui/material/Skeleton';
+import Box from '@mui/material/Box';
 
 import ItemView from './ItemView';
 import { fetchItems } from './api';
-import ItemSkeleton from './ItemSkeleton';
 
 function ItemBarView({ title, model, itemsPerPage, modelAttributes }) {
   const [page, setPage] = useState(0);
@@ -23,11 +24,9 @@ function ItemBarView({ title, model, itemsPerPage, modelAttributes }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Typography variant="h6" component="div">
+        <Typography variant="h6" component="div" gutterBottom>
           {title}
         </Typography>
-      </Grid>
-      <Grid item xs={12}>
         <Grid container spacing={2} alignItems="stretch">
           {!isLoading
             ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
@@ -43,20 +42,21 @@ function ItemBarView({ title, model, itemsPerPage, modelAttributes }) {
               ))
             : [...Array(itemsPerPage).keys()].map((i) => (
                 <Grid key={i} item display="flex" md={12 / itemsPerPage}>
-                  <ItemSkeleton />
+                  <Skeleton variant="rectangular" height={155} width="100%" />
                 </Grid>
               ))}
         </Grid>
       </Grid>
-      {!isLoading && items.length > itemsPerPage && (
-        <Grid item xs={12}>
+      <Grid item xs={12}>
+        {isLoading && <Box sx={{ height: 32 }} />}
+        {!isLoading && items.length > itemsPerPage && (
           <Pagination
             page={page + 1}
             onChange={handlePageChange}
             count={Math.ceil(items.length / itemsPerPage)}
           />
-        </Grid>
-      )}
+        )}
+      </Grid>
     </Grid>
   );
 }

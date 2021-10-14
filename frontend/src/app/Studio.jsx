@@ -112,7 +112,7 @@ function Studio() {
         onSubmit={handleBarSubmit}
       />
       <Container maxWidth="lg">
-        <Grid container spacing={4}>
+        <Grid container spacing={3}>
           {layout.map((bar, index) => (
             <Grid item xs={12} key={bar.id}>
               {buildMode ? (
@@ -152,7 +152,7 @@ function Studio() {
             right: 32,
           }}
           onClick={handleBarAdd}
-          color="primary"
+          color="secondary"
           aria-label="add"
         >
           <AddIcon />

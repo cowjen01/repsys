@@ -30,9 +30,14 @@ function Layout({ children }) {
         palette: {
           ...(!darkMode
             ? {
-                primary: colors.amber,
-                secondary: {
-                  main: colors.grey[700],
+                primary: {
+                  main: '#212121',
+                  light: '#484848',
+                  dark: '#000000',
+                },
+                secondary: colors.deepOrange,
+                background: {
+                  default: '#fafafa',
                 },
               }
             : {
