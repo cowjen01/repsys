@@ -75,7 +75,7 @@ function Layout({ children }) {
                   aria-controls="menu-appbar"
                   aria-haspopup="true"
                   color="inherit"
-                  onClick={handleSettingsOpen}
+                  // onClick={handleSettingsOpen}
                   variant="text"
                 >
                   Menu
@@ -95,8 +95,8 @@ function Layout({ children }) {
                   open={Boolean(anchorEl)}
                   onClose={handleSettingsClose}
                 >
-                  <MenuItem onClick={handleSettingsClose}>Profile</MenuItem>
-                  <MenuItem onClick={handleSettingsClose}>My account</MenuItem>
+                  <MenuItem onClick={handleSettingsClose}>Dataset</MenuItem>
+                  <MenuItem onClick={handleSettingsClose}>Settings</MenuItem>
                 </Menu>
               </Grid>
               <Grid item>

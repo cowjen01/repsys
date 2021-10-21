@@ -5,7 +5,7 @@ import TextField from '@mui/material/TextField';
 
 function SelectField({
   field: { name, value, onChange, onBlur },
-  form: { errors },
+  form: { errors, touched },
   options,
   ...props
 }) {
@@ -16,8 +16,8 @@ function SelectField({
       onChange={onChange}
       onBlur={onBlur}
       name={name}
-      helperText={errors[name]}
-      error={Boolean(errors[name])}
+      helperText={touched[name] && errors[name]}
+      error={touched[name] && Boolean(errors[name])}
       variant="outlined"
       margin="normal"
       SelectProps={{

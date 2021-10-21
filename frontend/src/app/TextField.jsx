@@ -2,7 +2,7 @@
 import React from 'react';
 import MuiTextField from '@mui/material/TextField';
 
-function TextField({ field: { name, value, onChange, onBlur }, form: { errors }, ...props }) {
+function TextField({ field: { name, value, onChange, onBlur }, form: { errors, touched }, ...props }) {
   return (
     <MuiTextField
       name={name}
@@ -11,8 +11,8 @@ function TextField({ field: { name, value, onChange, onBlur }, form: { errors },
       onBlur={onBlur}
       value={value}
       margin="normal"
-      helperText={errors[name]}
-      error={Boolean(errors[name])}
+      helperText={touched[name] && errors[name]}
+      error={Boolean(touched[name] && errors[name])}
       {...props}
     />
   );
