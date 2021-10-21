@@ -5,6 +5,7 @@ import Grid from '@mui/material/Grid';
 import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
 import { Typography } from '@mui/material';
+import Drawer from '@mui/material/Drawer';
 
 import {
   addBar,
@@ -14,18 +15,20 @@ import {
   duplicateBar,
   updateBar,
 } from './layoutSlice';
-import { buildModeSelector, openSnackbar } from './studioSlice';
+import { buildModeSelector, openSnackbar, openModelMetrics, closeModelMetrics, modelMetricsSelector } from './studioSlice';
 import ItemBarView from './ItemBarView';
 import ItemBarEdit from './ItemBarEdit';
 import ConfirmDialog from './ConfirmDialog';
 import ItemBarDialog from './ItemBarDialog';
 import Layout from './Layout';
 import Snackbar from './Snackbar';
+import ModelMetrics from './ModelMetrics';
 import { fetchItems } from './api';
 
 function Studio() {
   const layout = useSelector(layoutSelector);
   const buildMode = useSelector(buildModeSelector);
+  const metricsOpen = useSelector(modelMetricsSelector);
   const dispatch = useDispatch();
 
   const [deleteIndex, setDeleteIndex] = useState();
@@ -81,7 +84,7 @@ function Studio() {
     } else {
       dispatch(updateBar(data));
     }
-    dispatch(openSnackbar('All updates done!'));
+    dispatch(openSnackbar('All settings applied!'));
     handleBarDialogClose();
   };
 
@@ -114,9 +117,6 @@ function Studio() {
       />
       <Container maxWidth="lg">
         <Grid container spacing={3}>
-          {/* <Grid item xs={12}>
-
-          </Grid> */}
           {layout.map((bar, index) => (
             <Grid item xs={12} key={bar.id}>
               {buildMode ? (
@@ -132,6 +132,7 @@ function Studio() {
                 <ItemBarView
                   title={bar.title}
                   model={bar.model}
+                  onMetricsClick={() => dispatch(openModelMetrics())}
                   modelAttributes={bar.modelAttributes}
                   itemsPerPage={bar.itemsPerPage}
                 />
@@ -147,6 +148,9 @@ function Studio() {
           )}
         </Grid>
       </Container>
+      <Drawer anchor="bottom" open={metricsOpen} onClose={() => dispatch(closeModelMetrics())}>
+        <ModelMetrics />
+      </Drawer>
       <Snackbar />
       {buildMode && (
         <Fab

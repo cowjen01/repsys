@@ -16,6 +16,7 @@ import MenuItem from '@mui/material/MenuItem';
 import Menu from '@mui/material/Menu';
 import Grid from '@mui/material/Grid';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import { useHotkeys } from 'react-hotkeys-hook';
 
 import {
   buildModeSelector,
@@ -29,6 +30,10 @@ function Layout({ children }) {
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
   const darkMode = useSelector(darkModeSelector);
+
+  useHotkeys('cmd+b', () => {
+    dispatch(toggleBuildMode());
+  });
 
   const theme = useMemo(
     () =>
@@ -49,6 +54,15 @@ function Layout({ children }) {
             : {
                 mode: 'dark',
               }),
+        },
+        components: {
+          MuiSwitch: {
+            styleOverrides: {
+              track: {
+                backgroundColor: '#fff',
+              },
+            },
+          },
         },
       }),
     [darkMode]
@@ -80,7 +94,7 @@ function Layout({ children }) {
                 >
                   Menu
                 </Button>
-                <Menu
+                {/* <Menu
                   id="menu-appbar"
                   anchorEl={anchorEl}
                   anchorOrigin={{
@@ -97,7 +111,7 @@ function Layout({ children }) {
                 >
                   <MenuItem onClick={handleSettingsClose}>Dataset</MenuItem>
                   <MenuItem onClick={handleSettingsClose}>Settings</MenuItem>
-                </Menu>
+                </Menu> */}
               </Grid>
               <Grid item>
                 <Grid container direction="row" alignItems="center">
@@ -108,15 +122,6 @@ function Layout({ children }) {
                 </Grid>
               </Grid>
               <Grid item>
-                {/* <FormControlLabel
-                  sx={{
-                    marginLeft: 1,
-                  }}
-                  control={
-                    <Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />
-                  }
-                  label="Dark"
-                /> */}
                 <FormControlLabel
                   control={
                     <Switch
@@ -127,6 +132,15 @@ function Layout({ children }) {
                   }
                   label="Build mode"
                 />
+                {/* <FormControlLabel
+                  sx={{
+                    marginLeft: 1,
+                  }}
+                  control={
+                    <Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />
+                  }
+                  label="Dark mode"
+                /> */}
               </Grid>
             </Grid>
           </Toolbar>

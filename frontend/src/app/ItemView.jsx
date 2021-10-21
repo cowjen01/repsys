@@ -8,7 +8,7 @@ import CardMedia from '@mui/material/CardMedia';
 function ItemView({ header, title, description, subtitle, image }) {
   return (
     <Card sx={{ width: '100%', minHeight: 155 }}>
-      {image && <CardMedia component="img" height="140" image={image} alt="green iguana" />}
+      {image && <CardMedia component="img" height="140" image={image} alt="item media" />}
       <CardContent>
         {header && (
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>

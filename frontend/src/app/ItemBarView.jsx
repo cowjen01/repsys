@@ -4,12 +4,13 @@ import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
 import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
-import Box from '@mui/material/Box';
+import BarChartIcon from '@mui/icons-material/BarChart';
+import Chip from '@mui/material/Chip';
 
 import ItemView from './ItemView';
 import { fetchItems } from './api';
 
-function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes }) {
+function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes, onMetricsClick }) {
   const [page, setPage] = useState(0);
   const { items, isLoading } = fetchItems(
     `/recommendations?model=${model}&userId=${userId}&attributes=${encodeURIComponent(
@@ -22,11 +23,20 @@ function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes }) {
   };
 
   return (
-    <Grid container spacing={2}>
+    <Grid container spacing={1}>
       <Grid item xs={12}>
-        <Typography variant="h6" component="div" gutterBottom>
-          {title}
-        </Typography>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item>
+            <Typography variant="h6" component="div">
+              {title}
+            </Typography>
+          </Grid>
+          <Grid item>
+            <Chip color="secondary" onClick={onMetricsClick} size="small" clickable icon={<BarChartIcon />} label="Metrics" />
+          </Grid>
+        </Grid>
+      </Grid>
+      <Grid item xs={12}>
         <Grid container spacing={2} alignItems="stretch">
           {!isLoading
             ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
@@ -47,8 +57,14 @@ function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes }) {
               ))}
         </Grid>
       </Grid>
-      <Grid item xs={12}>
-        {isLoading && <Box sx={{ height: 32 }} />}
+      <Grid
+        item
+        xs={12}
+        sx={{
+          marginTop: 1,
+        }}
+      >
+        {isLoading && <Skeleton variant="rectangular" height={32} width="30%" />}
         {!isLoading && items.length > itemsPerPage && (
           <Pagination
             page={page + 1}
@@ -69,7 +85,7 @@ ItemBarView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number.isRequired,
   model: pt.string.isRequired,
-  userId: pt.string.isRequired,
+  // userId: pt.string.isRequired,
   // eslint-disable-next-line react/forbid-prop-types
   modelAttributes: pt.any,
 };
