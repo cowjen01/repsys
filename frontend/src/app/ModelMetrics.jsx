@@ -1,9 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 // import pt from 'prop-types';
 import Box from '@mui/material/Box';
-import { XAxis, YAxis, CartesianGrid, Tooltip, Legend, Bar, BarChart } from 'recharts';
-import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
+import Chart from 'react-google-charts';
 
 const data = [
   {
@@ -42,6 +41,9 @@ const data2 = [
 ];
 
 function ModelMetrics() {
+  const benchmarkData = useMemo(() => data.map((x) => [x.name, x.uv, x.pv]), [data]);
+  const popularityData = useMemo(() => data2.map((x) => [x.uv]), [data2]);
+
   return (
     <Box
       sx={{
@@ -50,30 +52,35 @@ function ModelMetrics() {
     >
       <Grid container spacing={2} justifyContent="center" flexDirection="row">
         <Grid item>
-          <Typography variant="subtitle1" textAlign="center" gutterBottom>
-            Model Benchmarks
-          </Typography>
-          <BarChart width={400} height={250} data={data}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="name" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            <Bar dataKey="uv" name="Baseline" fill="#212121" radius={[5, 5, 0, 0]} />
-            <Bar dataKey="pv" name="VASP" fill="#ff3d00" radius={[5, 5, 0, 0]} />
-          </BarChart>
+          <Chart
+            width={500}
+            height={300}
+            chartType="Bar"
+            loader={<div>Loading Chart</div>}
+            data={[['Method', 'Baseline', 'KNN'], ...benchmarkData]}
+            options={{
+              chart: {
+                title: 'Model Benchmarks',
+                subtitle: 'Comparation of the current model against baseline',
+              },
+            }}
+          />
         </Grid>
         <Grid item>
-          <Typography variant="subtitle1" textAlign="center" gutterBottom>
-            Popularity Bias
-          </Typography>
-          <BarChart width={400} height={250} data={data2}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis />
-            <YAxis />
-            <Tooltip />
-            <Bar dataKey="uv" fill="#212121" radius={[5, 5, 0, 0]} />
-          </BarChart>
+          <Chart
+            width={500}
+            height={300}
+            chartType="Histogram"
+            loader={<div>Loading Chart</div>}
+            data={[['foo'],...popularityData]}
+            options={{
+              chart: {
+                title: 'Popularity Bias',
+                subtitle: 'Comparation of the current model against baseline',
+              },
+              legend: { position: 'none' },
+            }}
+          />
         </Grid>
       </Grid>
     </Box>

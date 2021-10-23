@@ -170,7 +170,7 @@ function Studio() {
                       </Typography>
                       <Alert severity="warning" sx={{ marginTop: 0 }}>
                         <AlertTitle>Empty User</AlertTitle>
-                        Select user from the right panel to see some recommendations.
+                        Select a user from the right panel to see some recommendations.
                       </Alert>
                     </>
                   )}
@@ -213,7 +213,10 @@ function Studio() {
         <ModelMetrics />
       </Drawer>
       <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
-        <UserSearch onUserSelect={(user) => dispatch(setSelectedUser(user))} />
+        <UserSearch onUserSelect={(user) => {
+          dispatch(setSelectedUser(user))
+          setUserSearchOpen(false);
+        }} />
       </Drawer>
       <Snackbar />
       {buildMode && (

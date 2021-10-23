@@ -273,3 +273,26 @@ export const users = [
     id: '20',
   },
 ];
+
+export const userSpace = [
+  { id: '1', x: 0.77, y: 4.33, cluster: 3 },
+  { id: '2', x: 4.49, y: 4.59, cluster: 2 },
+  { id: '3', x: 2.62, y: 4.55, cluster: 4 },
+  { id: '4', x: 4.3, y: 0.95, cluster: 2 },
+  { id: '5', x: 4.97, y: 1.71, cluster: 2 },
+  { id: '6', x: 0.01, y: 3.15, cluster: 2 },
+  { id: '7', x: 1.95, y: 3.28, cluster: 1 },
+  { id: '8', x: 1.98, y: 1.95, cluster: 1 },
+  { id: '9', x: 2.57, y: 2.51, cluster: 4 },
+  { id: '10', x: 0.42, y: 3.04, cluster: 3 },
+  { id: '11', x: 0.09, y: 3.8, cluster: 4 },
+  { id: '12', x: 0.51, y: 0.68, cluster: 1 },
+  { id: '13', x: 4.59, y: 1.93, cluster: 1 },
+  { id: '14', x: 2.28, y: 4.9, cluster: 3 },
+  { id: '15', x: 0.23, y: 1.84, cluster: 1 },
+  { id: '16', x: 2.58, y: 1.4, cluster: 3 },
+  { id: '17', x: 3.95, y: 0.16, cluster: 3 },
+  { id: '18', x: 2.64, y: 3.3, cluster: 2 },
+  { id: '19', x: 1.98, y: 1.12, cluster: 3 },
+  { id: '20', x: 1.83, y: 1.03, cluster: 3 },
+];
