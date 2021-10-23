@@ -5,10 +5,17 @@ import Card from '@mui/material/Card';
 import CardContent from '@mui/material/CardContent';
 import CardMedia from '@mui/material/CardMedia';
 
-function ItemView({ header, title, description, subtitle, image }) {
+function ItemView({ id, header, title, description, subtitle, image, imageWidth, imageHeight }) {
   return (
     <Card sx={{ width: '100%', minHeight: 155 }}>
-      {image && <CardMedia component="img" height="140" image={image} alt="item media" />}
+      {image && (
+        <CardMedia
+          sx={{ minHeight: imageHeight }}
+          component="img"
+          image={`https://picsum.photos/seed/${id}/${imageWidth}/${imageHeight}`}
+          alt="item media"
+        />
+      )}
       <CardContent>
         {header && (
           <Typography sx={{ fontSize: 14 }} color="text.secondary" gutterBottom>

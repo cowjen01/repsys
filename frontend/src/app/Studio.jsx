@@ -6,6 +6,8 @@ import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
 import { Typography } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
+import Alert from '@mui/material/Alert';
+import AlertTitle from '@mui/material/AlertTitle';
 
 import {
   addBar,
@@ -15,7 +17,13 @@ import {
   duplicateBar,
   updateBar,
 } from './layoutSlice';
-import { buildModeSelector, openSnackbar, openModelMetrics, closeModelMetrics, modelMetricsSelector } from './studioSlice';
+import {
+  buildModeSelector,
+  openSnackbar,
+  openModelMetrics,
+  closeModelMetrics,
+  modelMetricsSelector,
+} from './studioSlice';
 import ItemBarView from './ItemBarView';
 import ItemBarEdit from './ItemBarEdit';
 import ConfirmDialog from './ConfirmDialog';
@@ -23,6 +31,7 @@ import ItemBarDialog from './ItemBarDialog';
 import Layout from './Layout';
 import Snackbar from './Snackbar';
 import ModelMetrics from './ModelMetrics';
+import UserSelectPanel from './UserSelectPanel';
 import { fetchItems } from './api';
 
 function Studio() {
@@ -33,9 +42,9 @@ function Studio() {
 
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
+  const [selectedUser, setSelectedUser] = useState(null);
 
   const { items: modelData, isLoading: isModelLoading } = fetchItems('/models');
-  const { items: userData, isLoading: isUserLoading } = fetchItems('/users');
 
   const modelAttributes = useMemo(
     () =>
@@ -99,7 +108,7 @@ function Studio() {
       setBarData({
         title: 'New bar',
         itemsPerPage: 4,
-        // model: modelsData[0].key,
+        model: modelData[0].key,
         modelAttributes,
       });
     }
@@ -115,11 +124,76 @@ function Studio() {
         onClose={handleBarDialogClose}
         onSubmit={handleBarSubmit}
       />
-      <Container maxWidth="lg">
-        <Grid container spacing={3}>
-          {layout.map((bar, index) => (
-            <Grid item xs={12} key={bar.id}>
-              {buildMode ? (
+      <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
+        {!buildMode ? (
+          <Grid container spacing={4}>
+            {layout.length === 0 ? (
+              <Grid item xs={12}>
+                <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
+                  There are no recommenders, switch to the Build Mode to create one.
+                </Typography>
+              </Grid>
+            ) : (
+              <>
+                <Grid item xs={12} lg={9}>
+                  {selectedUser ? (
+                    <Grid container spacing={3}>
+                      {layout.map((bar, index) => (
+                        <Grid item xs={12} key={bar.id}>
+                          {buildMode ? (
+                            <ItemBarEdit
+                              onDuplicate={handleBarDuplicate}
+                              onDelete={handleBarDelete}
+                              onEdit={handleBarEdit}
+                              title={bar.title}
+                              index={index}
+                              onMove={handleBarMove}
+                            />
+                          ) : (
+                            <ItemBarView
+                              title={bar.title}
+                              model={bar.model}
+                              user={selectedUser}
+                              onMetricsClick={() => dispatch(openModelMetrics())}
+                              modelAttributes={bar.modelAttributes}
+                              itemsPerPage={bar.itemsPerPage}
+                            />
+                          )}
+                        </Grid>
+                      ))}
+                    </Grid>
+                  ) : (
+                    <>
+                      <Typography variant="h6" component="div" gutterBottom>
+                        User Recommendations
+                      </Typography>
+                      <Alert severity="warning" sx={{ marginTop: 0 }}>
+                        <AlertTitle>Empty User</AlertTitle>
+                        Select user from the right panel to see some recommendations.
+                      </Alert>
+                    </>
+                  )}
+                </Grid>
+                <Grid item xs={12} lg={3}>
+                  <UserSelectPanel
+                    selectedUser={selectedUser}
+                    onUserSelect={(user) => setSelectedUser(user)}
+                  />
+                </Grid>
+              </>
+            )}
+          </Grid>
+        ) : (
+          <Grid container spacing={3}>
+            {layout.length === 0 && (
+              <Grid item xs={12}>
+                <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
+                  There are no recommenders, press the Add button to create one.
+                </Typography>
+              </Grid>
+            )}
+            {layout.map((bar, index) => (
+              <Grid item xs={12} key={bar.id}>
                 <ItemBarEdit
                   onDuplicate={handleBarDuplicate}
                   onDelete={handleBarDelete}
@@ -128,25 +202,10 @@ function Studio() {
                   index={index}
                   onMove={handleBarMove}
                 />
-              ) : (
-                <ItemBarView
-                  title={bar.title}
-                  model={bar.model}
-                  onMetricsClick={() => dispatch(openModelMetrics())}
-                  modelAttributes={bar.modelAttributes}
-                  itemsPerPage={bar.itemsPerPage}
-                />
-              )}
-            </Grid>
-          ))}
-          {layout.length === 0 && (
-            <Grid item xs={12}>
-              <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
-                There are currently no bars, press the add button to create one.
-              </Typography>
-            </Grid>
-          )}
-        </Grid>
+              </Grid>
+            ))}
+          </Grid>
+        )}
       </Container>
       <Drawer anchor="bottom" open={metricsOpen} onClose={() => dispatch(closeModelMetrics())}>
         <ModelMetrics />

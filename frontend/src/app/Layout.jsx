@@ -79,22 +79,21 @@ function Layout({ children }) {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Box sx={{ display: 'flex' }}>
-        <MuiAppBar position="fixed" elevation={2}>
-          <Toolbar>
-            <Grid justifyContent="space-between" alignItems="center" container>
-              <Grid item>
-                <Button
-                  startIcon={<DashboardIcon />}
-                  aria-controls="menu-appbar"
-                  aria-haspopup="true"
-                  color="inherit"
-                  // onClick={handleSettingsOpen}
-                  variant="text"
-                >
-                  Menu
-                </Button>
-                {/* <Menu
+      <MuiAppBar position="fixed" elevation={2}>
+        <Toolbar>
+          <Grid justifyContent="space-between" alignItems="center" container>
+            <Grid item>
+              <Button
+                startIcon={<DashboardIcon />}
+                aria-controls="menu-appbar"
+                aria-haspopup="true"
+                color="inherit"
+                // onClick={handleSettingsOpen}
+                variant="text"
+              >
+                Menu
+              </Button>
+              {/* <Menu
                   id="menu-appbar"
                   anchorEl={anchorEl}
                   anchorOrigin={{
@@ -112,27 +111,27 @@ function Layout({ children }) {
                   <MenuItem onClick={handleSettingsClose}>Dataset</MenuItem>
                   <MenuItem onClick={handleSettingsClose}>Settings</MenuItem>
                 </Menu> */}
+            </Grid>
+            <Grid item>
+              <Grid container direction="row" alignItems="center">
+                <BubbleChartIcon sx={{ marginRight: 1 }} />
+                <Typography variant="h6" component="div">
+                  REPSYS
+                </Typography>
               </Grid>
-              <Grid item>
-                <Grid container direction="row" alignItems="center">
-                  <BubbleChartIcon sx={{ marginRight: 1 }} />
-                  <Typography variant="h6" component="div">
-                    REPSYS
-                  </Typography>
-                </Grid>
-              </Grid>
-              <Grid item>
-                <FormControlLabel
-                  control={
-                    <Switch
-                      color="secondary"
-                      checked={buildMode}
-                      onChange={() => dispatch(toggleBuildMode())}
-                    />
-                  }
-                  label="Build mode"
-                />
-                {/* <FormControlLabel
+            </Grid>
+            <Grid item>
+              <FormControlLabel
+                control={
+                  <Switch
+                    color="secondary"
+                    checked={buildMode}
+                    onChange={() => dispatch(toggleBuildMode())}
+                  />
+                }
+                label="Build Mode"
+              />
+              {/* <FormControlLabel
                   sx={{
                     marginLeft: 1,
                   }}
@@ -141,23 +140,22 @@ function Layout({ children }) {
                   }
                   label="Dark mode"
                 /> */}
-              </Grid>
             </Grid>
-          </Toolbar>
-        </MuiAppBar>
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            height: '100vh',
-            overflow: 'auto',
-            paddingTop: 4,
-            paddingBottom: 4,
-          }}
-        >
-          <Toolbar />
-          {children}
-        </Box>
+          </Grid>
+        </Toolbar>
+      </MuiAppBar>
+      <Box
+        component="main"
+        sx={{
+          flexGrow: 1,
+          height: '100vh',
+          overflow: 'auto',
+          paddingTop: 3,
+          paddingBottom: 4,
+        }}
+      >
+        <Toolbar />
+        {children}
       </Box>
     </ThemeProvider>
   );

@@ -16,8 +16,8 @@ function SelectField({
       onChange={onChange}
       onBlur={onBlur}
       name={name}
-      helperText={touched[name] && errors[name]}
-      error={touched[name] && Boolean(errors[name])}
+      helperText={errors[name]}
+      error={Boolean(errors[name])}
       variant="outlined"
       margin="normal"
       SelectProps={{

@@ -1,21 +1,26 @@
 import { useState, useEffect } from 'react';
 
-export function fetchItems(path) {
+export function fetchItems(path, params = {}) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(true);
 
+  const encodedParams = new URLSearchParams(params).toString();
+  const fullPath = `/api${path}${encodedParams ? `?${encodedParams}` : ''}`;
+
   useEffect(() => {
     let isActive = true;
 
-    fetch(`/api${path}`)
+    setIsLoading(true);
+
+    fetch(fullPath)
       .then((response) => response.json())
       .then((data) => {
         setTimeout(() => {
           if (isActive) {
             setItems(data);
+            setIsLoading(false);
           }
-          setIsLoading(false);
         }, 300);
       })
       .catch((err) => {
@@ -26,7 +31,7 @@ export function fetchItems(path) {
     return () => {
       isActive = false;
     };
-  }, []);
+  }, [fullPath]);
 
   return { items, isLoading, error };
 }

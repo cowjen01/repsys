@@ -15,8 +15,8 @@ function TextField({
       onBlur={onBlur}
       value={value}
       margin="normal"
-      helperText={touched[name] && errors[name]}
-      error={Boolean(touched[name] && errors[name])}
+      helperText={errors[name]}
+      error={Boolean(errors[name])}
       {...props}
     />
   );

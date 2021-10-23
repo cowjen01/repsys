@@ -10,13 +10,13 @@ import Chip from '@mui/material/Chip';
 import ItemView from './ItemView';
 import { fetchItems } from './api';
 
-function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes, onMetricsClick }) {
+function ItemBarView({ title, model, user, itemsPerPage, modelAttributes, onMetricsClick }) {
   const [page, setPage] = useState(0);
-  const { items, isLoading } = fetchItems(
-    `/recommendations?model=${model}&userId=${userId}&attributes=${encodeURIComponent(
-      JSON.stringify(modelAttributes[model])
-    )}`
-  );
+  const { items, isLoading } = fetchItems('/recommendations', {
+    model,
+    user,
+    attributes: JSON.stringify(modelAttributes[model]),
+  });
 
   const handlePageChange = (e, newPage) => {
     setPage(newPage - 1);
@@ -32,7 +32,15 @@ function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes, onMe
             </Typography>
           </Grid>
           <Grid item>
-            <Chip color="secondary" onClick={onMetricsClick} size="small" clickable icon={<BarChartIcon />} label="Metrics" />
+            <Chip
+              color="secondary"
+              onClick={onMetricsClick}
+              size="small"
+              clickable
+              // variant="outlined"
+              icon={<BarChartIcon />}
+              label="Metrics"
+            />
           </Grid>
         </Grid>
       </Grid>
@@ -40,13 +48,17 @@ function ItemBarView({ title, model, userId, itemsPerPage, modelAttributes, onMe
         <Grid container spacing={2} alignItems="stretch">
           {!isLoading
             ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
-                <Grid key={item.id} item display="flex" md={12 / itemsPerPage}>
+                <Grid key={item.id} item display="flex" xs={12} md={12 / itemsPerPage}>
                   <ItemView
+                    id={item.id}
                     title={item.title}
                     subtitle={item.subtitle.toString()}
                     header={item.header.toString()}
                     description={item.description}
-                    image={item.image}
+                    // image={item.image}
+                    image="foo"
+                    imageWidth={Math.ceil(1000 / itemsPerPage)}
+                    imageHeight={Math.ceil(400 / itemsPerPage)}
                   />
                 </Grid>
               ))
@@ -85,6 +97,7 @@ ItemBarView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number.isRequired,
   model: pt.string.isRequired,
+  onMetricsClick: pt.func.isRequired,
   // userId: pt.string.isRequired,
   // eslint-disable-next-line react/forbid-prop-types
   modelAttributes: pt.any,

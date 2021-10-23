@@ -13,7 +13,7 @@ import SelectField from './SelectField';
 function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
-      <DialogTitle>Configuration form</DialogTitle>
+      <DialogTitle>Recommender Configuration</DialogTitle>
       <Formik
         initialValues={initialValues}
         validate={(values) => {
@@ -21,8 +21,6 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
           const requiredMessage = 'This field is required';
           if (!values.title) {
             errors.title = requiredMessage;
-          } else if (!values.model || values.model === 'null') {
-            errors.model = requiredMessage;
           }
           return errors;
         }}
@@ -50,7 +48,7 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
                   label="Recommendation model"
                   component={SelectField}
                   options={[
-                    { label: 'Select model', value: 'null' },
+                    // { label: 'Select model', value: 'null' },
                     ...models.map((m) => ({ label: m.key, value: m.key })),
                   ]}
                 />
