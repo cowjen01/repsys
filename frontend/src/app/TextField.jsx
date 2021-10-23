@@ -2,11 +2,7 @@
 import React from 'react';
 import MuiTextField from '@mui/material/TextField';
 
-function TextField({
-  field: { name, value, onChange, onBlur },
-  form: { errors, touched },
-  ...props
-}) {
+function TextField({ field: { name, value, onChange, onBlur }, form: { errors }, ...props }) {
   return (
     <MuiTextField
       name={name}

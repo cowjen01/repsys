@@ -5,7 +5,7 @@ import TextField from '@mui/material/TextField';
 
 function SelectField({
   field: { name, value, onChange, onBlur },
-  form: { errors, touched },
+  form: { errors },
   options,
   ...props
 }) {

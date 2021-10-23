@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo } from 'react';
 import pt from 'prop-types';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,8 +12,8 @@ import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
+// import MenuItem from '@mui/material/MenuItem';
+// import Menu from '@mui/material/Menu';
 import Grid from '@mui/material/Grid';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useHotkeys } from 'react-hotkeys-hook';
@@ -21,12 +21,12 @@ import { useHotkeys } from 'react-hotkeys-hook';
 import {
   buildModeSelector,
   darkModeSelector,
-  toggleDarkMode,
+  // toggleDarkMode,
   toggleBuildMode,
 } from './studioSlice';
 
 function Layout({ children }) {
-  const [anchorEl, setAnchorEl] = useState(null);
+  // const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
   const darkMode = useSelector(darkModeSelector);
@@ -68,13 +68,13 @@ function Layout({ children }) {
     [darkMode]
   );
 
-  const handleSettingsOpen = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
+  // const handleSettingsOpen = (event) => {
+  //   setAnchorEl(event.currentTarget);
+  // };
 
-  const handleSettingsClose = () => {
-    setAnchorEl(null);
-  };
+  // const handleSettingsClose = () => {
+  //   setAnchorEl(null);
+  // };
 
   return (
     <ThemeProvider theme={theme}>

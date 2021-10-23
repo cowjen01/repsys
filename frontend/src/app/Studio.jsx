@@ -20,9 +20,8 @@ import {
 import {
   buildModeSelector,
   openSnackbar,
-  openModelMetrics,
-  closeModelMetrics,
-  modelMetricsSelector,
+  setSelectedUser,
+  selectedUserSelector,
 } from './studioSlice';
 import ItemBarView from './ItemBarView';
 import ItemBarEdit from './ItemBarEdit';
@@ -31,18 +30,20 @@ import ItemBarDialog from './ItemBarDialog';
 import Layout from './Layout';
 import Snackbar from './Snackbar';
 import ModelMetrics from './ModelMetrics';
-import UserSelectPanel from './UserSelectPanel';
+import UserPanel from './UserPanel';
+import UserSearch from './UserSearch';
 import { fetchItems } from './api';
 
 function Studio() {
   const layout = useSelector(layoutSelector);
   const buildMode = useSelector(buildModeSelector);
-  const metricsOpen = useSelector(modelMetricsSelector);
+  const selectedUser = useSelector(selectedUserSelector);
   const dispatch = useDispatch();
 
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
-  const [selectedUser, setSelectedUser] = useState(null);
+  const [userSearchOpen, setUserSearchOpen] = useState(false);
+  const [metricsOpen, setMetricsOpen] = useState(false);
 
   const { items: modelData, isLoading: isModelLoading } = fetchItems('/models');
 
@@ -154,7 +155,7 @@ function Studio() {
                               title={bar.title}
                               model={bar.model}
                               user={selectedUser}
-                              onMetricsClick={() => dispatch(openModelMetrics())}
+                              onMetricsClick={() => setMetricsOpen(true)}
                               modelAttributes={bar.modelAttributes}
                               itemsPerPage={bar.itemsPerPage}
                             />
@@ -175,9 +176,10 @@ function Studio() {
                   )}
                 </Grid>
                 <Grid item xs={12} lg={3}>
-                  <UserSelectPanel
+                  <UserPanel
                     selectedUser={selectedUser}
-                    onUserSelect={(user) => setSelectedUser(user)}
+                    onUserSelect={(user) => dispatch(setSelectedUser(user))}
+                    onSearchClick={() => setUserSearchOpen(true)}
                   />
                 </Grid>
               </>
@@ -207,8 +209,11 @@ function Studio() {
           </Grid>
         )}
       </Container>
-      <Drawer anchor="bottom" open={metricsOpen} onClose={() => dispatch(closeModelMetrics())}>
+      <Drawer anchor="bottom" open={metricsOpen} onClose={() => setMetricsOpen(false)}>
         <ModelMetrics />
+      </Drawer>
+      <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
+        <UserSearch onUserSelect={(user) => dispatch(setSelectedUser(user))} />
       </Drawer>
       <Snackbar />
       {buildMode && (

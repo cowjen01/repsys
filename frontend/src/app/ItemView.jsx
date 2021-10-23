@@ -40,6 +40,9 @@ ItemView.defaultProps = {
 };
 
 ItemView.propTypes = {
+  id: pt.number.isRequired,
+  imageWidth: pt.number.isRequired,
+  imageHeight: pt.number.isRequired,
   header: pt.string,
   subtitle: pt.string,
   description: pt.string,

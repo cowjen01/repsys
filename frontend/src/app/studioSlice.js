@@ -8,7 +8,7 @@ export const studioSlice = createSlice({
     darkMode: false,
     snackbarOpen: false,
     snackbarMessage: '',
-    metricsOpen: false,
+    selectedUser: null,
   },
   reducers: {
     toggleBuildMode: (state) => {
@@ -24,23 +24,14 @@ export const studioSlice = createSlice({
     closeSnackbar: (state) => {
       state.snackbarOpen = false;
     },
-    openModelMetrics: (state) => {
-      state.metricsOpen = true;
-    },
-    closeModelMetrics: (state) => {
-      state.metricsOpen = false;
+    setSelectedUser: (state, { payload }) => {
+      state.selectedUser = payload;
     },
   },
 });
 
-export const {
-  toggleBuildMode,
-  openSnackbar,
-  closeSnackbar,
-  toggleDarkMode,
-  openModelMetrics,
-  closeModelMetrics,
-} = studioSlice.actions;
+export const { toggleBuildMode, openSnackbar, closeSnackbar, toggleDarkMode, setSelectedUser } =
+  studioSlice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
 
@@ -50,6 +41,6 @@ export const snackbarOpenSelector = (state) => state.studio.snackbarOpen;
 
 export const snackbarMessageSelector = (state) => state.studio.snackbarMessage;
 
-export const modelMetricsSelector = (state) => state.studio.metricsOpen;
+export const selectedUserSelector = (state) => state.studio.selectedUser;
 
 export default studioSlice.reducer;
