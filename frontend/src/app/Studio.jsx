@@ -40,7 +40,7 @@ function Studio() {
   const selectedUser = useSelector(selectedUserSelector);
   const dispatch = useDispatch();
 
-  const [testInteractions, setTestInteractions] = useState(null);
+  const [customInteractions, setCustomInteractions] = useState(null);
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
   const [userSearchOpen, setUserSearchOpen] = useState(false);
@@ -138,7 +138,7 @@ function Studio() {
             ) : (
               <>
                 <Grid item xs={12} lg={9}>
-                  {selectedUser ? (
+                  {(selectedUser || customInteractions) ? (
                     <Grid container spacing={3}>
                       {layout.map((bar, index) => (
                         <Grid item xs={12} key={bar.id}>
@@ -156,6 +156,7 @@ function Studio() {
                               title={bar.title}
                               model={bar.model}
                               user={selectedUser}
+                              customInteractions={customInteractions}
                               onMetricsClick={() => setMetricsOpen(true)}
                               modelAttributes={bar.modelAttributes}
                               itemsPerPage={bar.itemsPerPage}
@@ -180,14 +181,14 @@ function Studio() {
                   <UserPanel
                     selectedUser={selectedUser}
                     onInteractionsDelete={() => {
-                      setTestInteractions(null);
+                      setCustomInteractions(null);
                     }}
                     onUserSelect={(user) => {
                       dispatch(setSelectedUser(user));
-                      setTestInteractions(null);
+                      setCustomInteractions(null);
                     }}
                     onSearchClick={() => setUserSearchOpen(true)}
-                    testInteractions={testInteractions}
+                    customInteractions={customInteractions}
                   />
                 </Grid>
               </>
@@ -224,12 +225,13 @@ function Studio() {
         <UserSearch
           onUserSelect={(user) => {
             dispatch(setSelectedUser(user));
-            setTestInteractions(null);
+            setCustomInteractions(null);
             setUserSearchOpen(false);
           }}
           onInteractionsSelect={(interactions) => {
             setUserSearchOpen(false);
-            setTestInteractions(interactions);
+            setCustomInteractions(interactions);
+            dispatch(setSelectedUser(null));
           }}
         />
       </Drawer>

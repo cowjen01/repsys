@@ -10,11 +10,17 @@ import Chip from '@mui/material/Chip';
 import ItemView from './ItemView';
 import { fetchItems } from './api';
 
-function ItemBarView({ title, model, user, itemsPerPage, modelAttributes, onMetricsClick }) {
+function ItemBarView({ title, model, user, customInteractions, itemsPerPage, modelAttributes, onMetricsClick }) {
   const [page, setPage] = useState(0);
   const { items, isLoading } = fetchItems('/recommendations', {
     model,
-    user,
+    ...(
+      user ? {
+        user
+      } : {
+        interactions: JSON.stringify(customInteractions.map(x => x.id))
+      }
+    ),
     attributes: JSON.stringify(modelAttributes[model]),
   });
 

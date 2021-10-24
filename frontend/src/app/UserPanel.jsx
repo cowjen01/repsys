@@ -6,7 +6,7 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import { Typography, Box, ListItemText, Paper, Button } from '@mui/material';
-import Grid from '@mui/material/Grid';
+import Skeleton from '@mui/material/Skeleton';
 import Chip from '@mui/material/Chip';
 import TouchAppIcon from '@mui/icons-material/TouchApp';
 import { fetchItems } from './api';
@@ -15,7 +15,7 @@ function UserPanel({
   selectedUser,
   onUserSelect,
   onSearchClick,
-  testInteractions,
+  customInteractions,
   onInteractionsDelete,
 }) {
   const { items: userData, isLoading: isUserLoading } = fetchItems('/users');
@@ -23,17 +23,15 @@ function UserPanel({
     user: selectedUser,
   });
 
-  const interactions = testInteractions || userHistoryData;
+  const interactions = customInteractions || userHistoryData;
 
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
       <Typography variant="h6" component="div" gutterBottom>
         User Selector
       </Typography>
-
       <Autocomplete
         disablePortal
-        disabled={testInteractions !== null}
         value={selectedUser ? { id: selectedUser } : null}
         onChange={(event, newValue) => {
           if (newValue) {
@@ -48,43 +46,49 @@ function UserPanel({
         sx={{ width: '100%', marginBottom: 2 }}
         renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
       />
-      <Button onClick={onSearchClick} startIcon={<PersonSearchIcon />} color="secondary">
+      <Button
+        onClick={onSearchClick}
+        startIcon={<PersonSearchIcon />}
+        variant="contained"
+        color="secondary"
+      >
         More Options
       </Button>
-      {selectedUser && (
-        <Box sx={{ marginTop: 1 }}>
+      {(selectedUser || customInteractions) && (
+        <Box sx={{ marginTop: 2 }}>
           <Typography variant="h6" component="div" gutterBottom>
             User Interactions ({interactions.length})
           </Typography>
-          {testInteractions && (
-            // <Grid item>
+          {customInteractions && (
             <Chip
-              color="primary"
+              // color="primary"
               size="small"
               sx={{ marginBottom: 2 }}
               onDelete={onInteractionsDelete}
-              // variant="outlined"
               icon={<TouchAppIcon />}
               label="Custom Interactions"
             />
-            // </Grid>
           )}
-          <Paper>
-            <List
-              sx={{
-                width: '100%',
-                position: 'relative',
-                overflow: 'auto',
-                maxHeight: 400,
-              }}
-            >
-              {interactions.map((item) => (
-                <ListItem key={item.id}>
-                  <ListItemText primary={item.title} secondary={item.subtitle} />
-                </ListItem>
-              ))}
-            </List>
-          </Paper>
+          {!isUserHistoryLoading ? (
+            <Paper>
+              <List
+                sx={{
+                  width: '100%',
+                  position: 'relative',
+                  overflow: 'auto',
+                  maxHeight: 400,
+                }}
+              >
+                {interactions.map((item) => (
+                  <ListItem key={item.id}>
+                    <ListItemText primary={item.title} secondary={item.subtitle} />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+          ) : (
+            <Skeleton variant="rectangular" height={400} width="100%" />
+          )}
         </Box>
       )}
     </Box>
