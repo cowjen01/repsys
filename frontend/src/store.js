@@ -9,7 +9,7 @@ const STORAGE_STATE_KEY = 'repsysApplicationState';
 const rootReducer = combineReducers({
   studio: studioReducer,
   layout: layoutReducer,
-  settings: settingsReducer
+  settings: settingsReducer,
 });
 
 export const saveStateMiddleware = (storeAPI) => (next) => (action) => {

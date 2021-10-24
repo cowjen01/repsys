@@ -5,7 +5,6 @@ export const slice = createSlice({
   name: 'studio',
   initialState: {
     buildMode: true,
-    darkMode: false,
     snackbarOpen: false,
     snackbarMessage: '',
     selectedUser: null,
@@ -13,9 +12,6 @@ export const slice = createSlice({
   reducers: {
     toggleBuildMode: (state) => {
       state.buildMode = !state.buildMode;
-    },
-    toggleDarkMode: (state) => {
-      state.darkMode = !state.darkMode;
     },
     openSnackbar: (state, { payload }) => {
       state.snackbarMessage = payload;
@@ -30,12 +26,9 @@ export const slice = createSlice({
   },
 });
 
-export const { toggleBuildMode, openSnackbar, closeSnackbar, toggleDarkMode, setSelectedUser } =
-slice.actions;
+export const { toggleBuildMode, openSnackbar, closeSnackbar, setSelectedUser } = slice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
-
-export const darkModeSelector = (state) => state.studio.darkMode;
 
 export const snackbarOpenSelector = (state) => state.studio.snackbarOpen;
 

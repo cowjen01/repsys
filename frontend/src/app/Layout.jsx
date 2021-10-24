@@ -26,8 +26,10 @@ import Divider from '@mui/material/Divider';
 
 import { buildModeSelector, toggleBuildMode } from '../reducers/studio';
 import { darkModeSelector } from '../reducers/settings';
+import SettingsDialog from './SettingsDialog';
 
 function Layout({ children }) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
@@ -57,24 +59,15 @@ function Layout({ children }) {
                 mode: 'dark',
               }),
         },
-        components: {
-          MuiSwitch: {
-            styleOverrides: {
-              track: {
-                backgroundColor: '#fff',
-              },
-            },
-          },
-        },
       }),
     [darkMode]
   );
 
-  const handleSettingsOpen = (event) => {
+  const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
   };
 
-  const handleSettingsClose = () => {
+  const handleMenuClose = () => {
     setAnchorEl(null);
   };
 
@@ -88,7 +81,7 @@ function Layout({ children }) {
               <Button
                 startIcon={<DashboardIcon />}
                 color="inherit"
-                onClick={handleSettingsOpen}
+                onClick={handleMenuOpen}
                 variant="text"
               >
                 Menu
@@ -106,22 +99,27 @@ function Layout({ children }) {
                   horizontal: 'right',
                 }}
                 open={Boolean(anchorEl)}
-                onClose={handleSettingsClose}
+                onClose={handleMenuClose}
               >
-                <MenuItem onClick={handleSettingsClose} selected>
+                <MenuItem onClick={handleMenuClose} selected>
                   <ListItemIcon>
                     <TableRowsIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Recommenders</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleSettingsClose}>
+                <MenuItem onClick={handleMenuClose}>
                   <ListItemIcon>
                     <DonutSmallIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Dataset Analysis</ListItemText>
                 </MenuItem>
                 <Divider />
-                <MenuItem onClick={handleSettingsClose}>
+                <MenuItem
+                  onClick={() => {
+                    setSettingsOpen(true);
+                    handleMenuClose();
+                  }}
+                >
                   <ListItemIcon>
                     <SettingsIcon fontSize="small" />
                   </ListItemIcon>
@@ -143,20 +141,16 @@ function Layout({ children }) {
                   <Switch
                     color="secondary"
                     checked={buildMode}
+                    sx={{
+                      '& .MuiSwitch-track': {
+                        backgroundColor: '#fff',
+                      },
+                    }}
                     onChange={() => dispatch(toggleBuildMode())}
                   />
                 }
                 label="Build Mode"
               />
-              {/* <FormControlLabel
-                  sx={{
-                    marginLeft: 1,
-                  }}
-                  control={
-                    <Switch checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />
-                  }
-                  label="Dark mode"
-                /> */}
             </Grid>
           </Grid>
         </Toolbar>
@@ -174,6 +168,7 @@ function Layout({ children }) {
         <Toolbar />
         {children}
       </Box>
+      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
     </ThemeProvider>
   );
 }

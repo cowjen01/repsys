@@ -138,7 +138,7 @@ function Studio() {
             ) : (
               <>
                 <Grid item xs={12} lg={9}>
-                  {(selectedUser || customInteractions) ? (
+                  {selectedUser || customInteractions ? (
                     <Grid container spacing={3}>
                       {layout.map((bar, index) => (
                         <Grid item xs={12} key={bar.id}>
