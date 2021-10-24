@@ -3,7 +3,7 @@ import MuiSnackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { snackbarOpenSelector, snackbarMessageSelector, closeSnackbar } from './studioSlice';
+import { snackbarOpenSelector, snackbarMessageSelector, closeSnackbar } from '../reducers/studio';
 
 function Snackbar() {
   const dispatch = useDispatch();

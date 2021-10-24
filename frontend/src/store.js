@@ -1,13 +1,15 @@
 import { createStore, applyMiddleware, combineReducers } from '@reduxjs/toolkit';
 
-import studioReducer from './app/studioSlice';
-import layoutReducer from './app/layoutSlice';
+import studioReducer from './reducers/studio';
+import layoutReducer from './reducers/layout';
+import settingsReducer from './reducers/settings';
 
 const STORAGE_STATE_KEY = 'repsysApplicationState';
 
 const rootReducer = combineReducers({
   studio: studioReducer,
   layout: layoutReducer,
+  settings: settingsReducer
 });
 
 export const saveStateMiddleware = (storeAPI) => (next) => (action) => {

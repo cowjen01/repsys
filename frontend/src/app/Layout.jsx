@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import pt from 'prop-types';
 import Box from '@mui/material/Box';
 import Toolbar from '@mui/material/Toolbar';
@@ -12,21 +12,23 @@ import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import Button from '@mui/material/Button';
-// import MenuItem from '@mui/material/MenuItem';
-// import Menu from '@mui/material/Menu';
+import MenuItem from '@mui/material/MenuItem';
+import Menu from '@mui/material/Menu';
 import Grid from '@mui/material/Grid';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useHotkeys } from 'react-hotkeys-hook';
+import DonutSmallIcon from '@mui/icons-material/DonutSmall';
+import TableRowsIcon from '@mui/icons-material/TableRows';
+import SettingsIcon from '@mui/icons-material/Settings';
+import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import Divider from '@mui/material/Divider';
 
-import {
-  buildModeSelector,
-  darkModeSelector,
-  // toggleDarkMode,
-  toggleBuildMode,
-} from './studioSlice';
+import { buildModeSelector, toggleBuildMode } from '../reducers/studio';
+import { darkModeSelector } from '../reducers/settings';
 
 function Layout({ children }) {
-  // const [anchorEl, setAnchorEl] = useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
   const darkMode = useSelector(darkModeSelector);
@@ -68,13 +70,13 @@ function Layout({ children }) {
     [darkMode]
   );
 
-  // const handleSettingsOpen = (event) => {
-  //   setAnchorEl(event.currentTarget);
-  // };
+  const handleSettingsOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
 
-  // const handleSettingsClose = () => {
-  //   setAnchorEl(null);
-  // };
+  const handleSettingsClose = () => {
+    setAnchorEl(null);
+  };
 
   return (
     <ThemeProvider theme={theme}>
@@ -85,32 +87,47 @@ function Layout({ children }) {
             <Grid item>
               <Button
                 startIcon={<DashboardIcon />}
-                aria-controls="menu-appbar"
-                aria-haspopup="true"
                 color="inherit"
-                // onClick={handleSettingsOpen}
+                onClick={handleSettingsOpen}
                 variant="text"
               >
                 Menu
               </Button>
-              {/* <Menu
-                  id="menu-appbar"
-                  anchorEl={anchorEl}
-                  anchorOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  keepMounted
-                  transformOrigin={{
-                    vertical: 'top',
-                    horizontal: 'right',
-                  }}
-                  open={Boolean(anchorEl)}
-                  onClose={handleSettingsClose}
-                >
-                  <MenuItem onClick={handleSettingsClose}>Dataset</MenuItem>
-                  <MenuItem onClick={handleSettingsClose}>Settings</MenuItem>
-                </Menu> */}
+              <Menu
+                id="menu-appbar"
+                anchorEl={anchorEl}
+                anchorOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                keepMounted
+                transformOrigin={{
+                  vertical: 'top',
+                  horizontal: 'right',
+                }}
+                open={Boolean(anchorEl)}
+                onClose={handleSettingsClose}
+              >
+                <MenuItem onClick={handleSettingsClose} selected>
+                  <ListItemIcon>
+                    <TableRowsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Recommenders</ListItemText>
+                </MenuItem>
+                <MenuItem onClick={handleSettingsClose}>
+                  <ListItemIcon>
+                    <DonutSmallIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Dataset Analysis</ListItemText>
+                </MenuItem>
+                <Divider />
+                <MenuItem onClick={handleSettingsClose}>
+                  <ListItemIcon>
+                    <SettingsIcon fontSize="small" />
+                  </ListItemIcon>
+                  <ListItemText>Settings</ListItemText>
+                </MenuItem>
+              </Menu>
             </Grid>
             <Grid item>
               <Grid container direction="row" alignItems="center">

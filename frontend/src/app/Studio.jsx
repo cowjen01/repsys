@@ -16,13 +16,13 @@ import {
   updateBarsOrder,
   duplicateBar,
   updateBar,
-} from './layoutSlice';
+} from '../reducers/layout';
 import {
   buildModeSelector,
   openSnackbar,
   setSelectedUser,
   selectedUserSelector,
-} from './studioSlice';
+} from '../reducers/studio';
 import ItemBarView from './ItemBarView';
 import ItemBarEdit from './ItemBarEdit';
 import ConfirmDialog from './ConfirmDialog';

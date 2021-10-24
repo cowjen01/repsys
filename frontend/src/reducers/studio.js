@@ -1,7 +1,7 @@
 /* eslint-disable no-param-reassign */
 import { createSlice } from '@reduxjs/toolkit';
 
-export const studioSlice = createSlice({
+export const slice = createSlice({
   name: 'studio',
   initialState: {
     buildMode: true,
@@ -31,7 +31,7 @@ export const studioSlice = createSlice({
 });
 
 export const { toggleBuildMode, openSnackbar, closeSnackbar, toggleDarkMode, setSelectedUser } =
-  studioSlice.actions;
+slice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
 
@@ -43,4 +43,4 @@ export const snackbarMessageSelector = (state) => state.studio.snackbarMessage;
 
 export const selectedUserSelector = (state) => state.studio.selectedUser;
 
-export default studioSlice.reducer;
+export default slice.reducer;
