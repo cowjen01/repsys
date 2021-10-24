@@ -58,12 +58,12 @@ function ModelMetrics() {
             chartType="Bar"
             loader={<div>Loading Chart</div>}
             data={[['Method', 'Baseline', 'KNN'], ...benchmarkData]}
-            options={{
-              chart: {
-                title: 'Model Benchmarks',
-                subtitle: 'Comparation of the current model against baseline',
-              },
-            }}
+            // options={{
+            //   chart: {
+            //     title: 'Model Benchmarks',
+            //     subtitle: 'Comparation of the current model against baseline',
+            //   },
+            // }}
           />
         </Grid>
         <Grid item>
@@ -72,12 +72,8 @@ function ModelMetrics() {
             height={300}
             chartType="Histogram"
             loader={<div>Loading Chart</div>}
-            data={[['foo'],...popularityData]}
+            data={[['foo'], ...popularityData]}
             options={{
-              chart: {
-                title: 'Popularity Bias',
-                subtitle: 'Comparation of the current model against baseline',
-              },
               legend: { position: 'none' },
             }}
           />

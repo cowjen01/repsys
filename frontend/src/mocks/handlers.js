@@ -12,6 +12,7 @@ function randomInt(min, max) {
 }
 
 export const handlers = [
+  rest.get('/api/items', (req, res, ctx) => res(ctx.status(200), ctx.json(movies))),
   rest.get('/api/models', (req, res, ctx) => res(ctx.status(200), ctx.json(models))),
   rest.get('/api/users', (req, res, ctx) => res(ctx.status(200), ctx.json(users))),
   rest.get('/api/userSpace', (req, res, ctx) => res(ctx.status(200), ctx.json(userSpace))),

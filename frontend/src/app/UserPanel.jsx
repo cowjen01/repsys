@@ -6,20 +6,40 @@ import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import { Typography, Box, ListItemText, Paper, Button } from '@mui/material';
+import Grid from '@mui/material/Grid';
+import Chip from '@mui/material/Chip';
+import AccountCircleIcon from '@mui/icons-material/AccountCircle';
 
 import { fetchItems } from './api';
 
-function UserPanel({ selectedUser, onUserSelect, onSearchClick }) {
+function UserPanel({ selectedUser, onUserSelect, onSearchClick, testInteractions }) {
   const { items: userData, isLoading: isUserLoading } = fetchItems('/users');
   const { items: userHistoryData, isLoading: isUserHistoryLoading } = fetchItems('/interactions', {
     user: selectedUser,
   });
 
+  const interactions = testInteractions || userHistoryData;
+
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
-      <Typography variant="h6" component="div" gutterBottom>
-        User Selector
-      </Typography>
+      <Grid container spacing={2} alignItems="center" sx={{ marginBottom: 1 }}>
+        <Grid item>
+          <Typography variant="h6" component="div">
+            User Selector
+          </Typography>
+        </Grid>
+        {testInteractions && (
+          <Grid item>
+            <Chip
+              // color="primary"
+              size="small"
+              // variant="outlined"
+              icon={<AccountCircleIcon />}
+              label="Test User"
+            />
+          </Grid>
+        )}
+      </Grid>
       <Autocomplete
         disablePortal
         value={selectedUser ? { id: selectedUser } : null}
@@ -37,12 +57,12 @@ function UserPanel({ selectedUser, onUserSelect, onSearchClick }) {
         renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
       />
       <Button onClick={onSearchClick} startIcon={<PersonSearchIcon />} color="secondary">
-        Advanced search
+        Advanced Options
       </Button>
       {selectedUser && (
         <Box sx={{ marginTop: 1 }}>
           <Typography variant="h6" component="div" gutterBottom>
-            User Interactions ({userHistoryData.length})
+            User Interactions ({interactions.length})
           </Typography>
           <Paper>
             <List
@@ -53,7 +73,7 @@ function UserPanel({ selectedUser, onUserSelect, onSearchClick }) {
                 maxHeight: 400,
               }}
             >
-              {userHistoryData.map((item) => (
+              {interactions.map((item) => (
                 <ListItem key={item.id}>
                   <ListItemText primary={item.title} secondary={item.subtitle} />
                 </ListItem>

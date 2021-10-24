@@ -46,7 +46,7 @@ function Layout({ children }) {
                   light: '#484848',
                   dark: '#000000',
                 },
-                secondary: colors.deepOrange,
+                secondary: colors.red,
                 background: {
                   default: '#fafafa',
                 },

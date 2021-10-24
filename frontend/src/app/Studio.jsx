@@ -40,6 +40,7 @@ function Studio() {
   const selectedUser = useSelector(selectedUserSelector);
   const dispatch = useDispatch();
 
+  const [testInteractions, setTestInteractions] = useState(null);
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
   const [userSearchOpen, setUserSearchOpen] = useState(false);
@@ -178,8 +179,12 @@ function Studio() {
                 <Grid item xs={12} lg={3}>
                   <UserPanel
                     selectedUser={selectedUser}
-                    onUserSelect={(user) => dispatch(setSelectedUser(user))}
+                    onUserSelect={(user) => {
+                      dispatch(setSelectedUser(user));
+                      setTestInteractions(null);
+                    }}
                     onSearchClick={() => setUserSearchOpen(true)}
+                    testInteractions={testInteractions}
                   />
                 </Grid>
               </>
@@ -213,10 +218,17 @@ function Studio() {
         <ModelMetrics />
       </Drawer>
       <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
-        <UserSearch onUserSelect={(user) => {
-          dispatch(setSelectedUser(user))
-          setUserSearchOpen(false);
-        }} />
+        <UserSearch
+          onUserSelect={(user) => {
+            dispatch(setSelectedUser(user));
+            setTestInteractions(null);
+            setUserSearchOpen(false);
+          }}
+          onInteractionsSelect={(interactions) => {
+            setUserSearchOpen(false);
+            setTestInteractions(interactions);
+          }}
+        />
       </Drawer>
       <Snackbar />
       {buildMode && (
