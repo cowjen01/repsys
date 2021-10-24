@@ -83,6 +83,7 @@ function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
           onChange={(event, newValue) => {
             setInteractions(newValue);
           }}
+          openOnFocus
           isOptionEqualToValue={(option, value) => option.id === value.id}
           options={itemsData}
           getOptionLabel={(item) => item.title}

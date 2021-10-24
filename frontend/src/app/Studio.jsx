@@ -179,6 +179,9 @@ function Studio() {
                 <Grid item xs={12} lg={3}>
                   <UserPanel
                     selectedUser={selectedUser}
+                    onInteractionsDelete={() => {
+                      setTestInteractions(null);
+                    }}
                     onUserSelect={(user) => {
                       dispatch(setSelectedUser(user));
                       setTestInteractions(null);
