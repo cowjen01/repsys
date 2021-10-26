@@ -105,7 +105,7 @@ function Layout({ children }) {
                   <ListItemIcon>
                     <TableRowsIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Recommenders</ListItemText>
+                  <ListItemText>Home</ListItemText>
                 </MenuItem>
                 <MenuItem onClick={handleMenuClose}>
                   <ListItemIcon>
