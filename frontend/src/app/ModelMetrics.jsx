@@ -42,7 +42,7 @@ const data2 = [
 
 function ModelMetrics() {
   const benchmarkData = useMemo(() => data.map((x) => [x.name, x.uv, x.pv]), [data]);
-  const popularityData = useMemo(() => data2.map((x) => [x.uv]), [data2]);
+  const popularityData = useMemo(() => data2.map((x) => [null, x.uv]), [data2]);
 
   return (
     <Box
@@ -72,9 +72,12 @@ function ModelMetrics() {
             height={300}
             chartType="Histogram"
             loader={<div>Loading Chart</div>}
-            data={[['foo'], ...popularityData]}
+            data={[['foo', 'goo'], ...popularityData]}
             options={{
               legend: { position: 'none' },
+              histogram: {
+                hideBucketItems: true,
+              },
             }}
           />
         </Grid>

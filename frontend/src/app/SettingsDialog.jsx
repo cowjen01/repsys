@@ -22,7 +22,13 @@ function SettingsDialog({ open, onClose }) {
       <DialogContent>
         <FormGroup>
           <FormControlLabel
-            control={<Switch color="primary" checked={darkMode} onChange={() => dispatch(toggleDarkMode())} />}
+            control={
+              <Switch
+                color="primary"
+                checked={darkMode}
+                onChange={() => dispatch(toggleDarkMode())}
+              />
+            }
             label="Dark Mode"
           />
         </FormGroup>

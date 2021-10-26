@@ -1,5 +1,8 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+
+import '@fontsource/roboto/latin.css';
+
 import App from './App';
 
 if (process.env.NODE_ENV === 'development') {

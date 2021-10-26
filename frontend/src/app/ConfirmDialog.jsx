@@ -15,10 +15,10 @@ function ConfirmDialog({ open, onClose }) {
       aria-labelledby="alert-dialog-title"
       aria-describedby="alert-dialog-description"
     >
-      <DialogTitle id="alert-dialog-title">Are you sure you want to delete this bar?</DialogTitle>
+      <DialogTitle id="alert-dialog-title">Delete this recommender?</DialogTitle>
       <DialogContent>
         <DialogContentText id="alert-dialog-description">
-          Deleting this bar all settings will be lost.
+          Deleting this recommender all settings will be lost.
         </DialogContentText>
       </DialogContent>
       <DialogActions>
