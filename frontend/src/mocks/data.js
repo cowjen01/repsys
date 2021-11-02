@@ -23,6 +23,19 @@ export const models = [
   },
 ];
 
+export const metrics = {
+  knn: {
+    recall20: 0.4,
+    recall50: 0.23,
+    ndcg100: 0.54
+  },
+  vasp: {
+    recall20: 0.34,
+    recall50: 0.14,
+    ndcg100: 0.99
+  }
+};
+
 export const movies = [
   { id: 1, title: 'Subspecies', header: 'Horror', subtitle: 2003 },
   {

@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "repsys"
+version = "0.1.0"
+description = ""
+authors = ["Jan Safarik <cowjen01@gmail.com>"]
+readme = "README.md"
+license = "Apache-2.0"
+include = ["LICENSE.txt", "README.md"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+click = "^8.0.3"
+sanic = "^21.9.1"
+
+[tool.poetry.dev-dependencies]
+black = "^21.10b0"
+flake8 = "^4.0.1"
+pytest = "^6.2.5"
+pytest-cov = "^3.0.0"
+pytest-sanic = "^1.9.1"
+
+[tool.black]
+line-length = 80
+target-version = ["py37", "py38"]
+exclude = "((.eggs | .git | .pytest_cache | build | dist))"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+repsys = "repsys.cli:main"
