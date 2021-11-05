@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
-from repsys import Model
+from repsys import Model, PredictionParam
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 
@@ -19,14 +19,15 @@ class KNN(Model):
     def fit(self):
         self._model.fit(self._splitter.train_data)
 
-    def prediction_params():
-        return {
-            "exclude_history": {
-                "type": "boolean",
-                "label": "Exclude user's history",
-                "default": True,
-            }
-        }
+    def prediction_params(self):
+        return [
+            PredictionParam(
+                key="exclude_history",
+                label="Exclude user's history",
+                type="boolean",
+                default_value=True,
+            )
+        ]
 
     def predict(self, X, **kwargs):
         distances, indexes = self._model.kneighbors(X)

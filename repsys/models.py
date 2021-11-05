@@ -1,10 +1,18 @@
 import logging
-from typing import Any, Text, Dict
+from typing import Text, List
 from numpy.typing import NDArray
 
 from .splitter import Splitter
 
 logger = logging.getLogger(__name__)
+
+
+class PredictionParam:
+    def __init__(self, key, label, type="text", default_value="") -> None:
+        self.key = key
+        self.label = label
+        self.type = type
+        self.default_value = default_value
 
 
 class Model:
@@ -30,7 +38,7 @@ class Model:
     def load_model(self) -> None:
         """Load a trained model from the file system after the server starts up"""
 
-    def prediction_params() -> Dict[Text, Dict[Text, Any]]:
+    def prediction_params(self) -> List[PredictionParam]:
         """Define custom parameters used during the prediction process"""
 
     def __str__(self) -> Text:

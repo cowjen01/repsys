@@ -27,6 +27,12 @@ def train(package):
 @click.option(
     "-p", "--port", "port", default=DEFAULT_SERVER_PORT, show_default=True
 )
-def server(port):
+@click.option(
+    "-m", "--models", "package", default="models.models", show_default=True
+)
+def server(port, package):
     """Start Repsys server."""
-    run_server(port=port)
+    loader = ClassLoader(Model)
+    loader.register_package(package)
+
+    run_server(port=port, model_loader=loader)

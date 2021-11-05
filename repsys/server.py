@@ -7,7 +7,7 @@ from sanic.response import json, file
 logger = logging.getLogger(__name__)
 
 
-def create_app():
+def create_app(model_loader):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -22,27 +22,13 @@ def create_app():
         return json(
             [
                 {
-                    "key": "knn",
+                    "key": k,
                     "attributes": [
-                        {
-                            "key": "n",
-                            "label": "Neighbors",
-                            "type": "number",
-                            "defaultValue": 5,
-                        },
+                        {"key": p.key, "type": p.type, "label": p.label}
+                        for p in model_loader.instances[k].prediction_params()
                     ],
-                },
-                {
-                    "key": "vasp",
-                    "attributes": [
-                        {
-                            "key": "h",
-                            "label": "Some parameter",
-                            "type": "text",
-                        },
-                    ],
-                    "businessRules": ["popularity", "explore"],
-                },
+                }
+                for k in model_loader.instances.keys()
             ]
         )
 
@@ -75,6 +61,6 @@ def create_app():
     return app
 
 
-def run_server(port) -> None:
-    app = create_app()
+def run_server(port, model_loader) -> None:
+    app = create_app(model_loader)
     app.run(host="localhost", port=port)
