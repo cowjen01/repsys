@@ -1,6 +1,10 @@
 import click
 
-from .server import app
+from repsys.models import Model
+
+from .server import run_server
+from .loader import ClassLoader
+from .constants import DEFAULT_SERVER_PORT
 
 
 @click.group()
@@ -10,11 +14,19 @@ def repsys():
 
 
 @repsys.command()
-@click.option("-p", "--port", "port", default=8080, show_default=True)
+@click.option(
+    "-m", "--models", "package", default="models.models", show_default=True
+)
+def train(package):
+    loader = ClassLoader(Model)
+    loader.register_package(package)
+    loader.instances.get("KNN10").name()
+
+
+@repsys.command()
+@click.option(
+    "-p", "--port", "port", default=DEFAULT_SERVER_PORT, show_default=True
+)
 def server(port):
     """Start Repsys server."""
-    app.run(host="0.0.0.0", port=port, debug=True)
-
-
-def main():
-    repsys(prog_name="repsys")
+    run_server(port=port)

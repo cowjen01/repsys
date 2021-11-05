@@ -8,9 +8,14 @@ license = "Apache-2.0"
 include = ["LICENSE.txt", "README.md"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.7.1,<3.10"
 click = "^8.0.3"
 sanic = "^21.9.1"
+coloredlogs = "^15.0.1"
+numpy = "^1.21.4"
+pandas = "^1.3.4"
+Bottleneck = "^1.3.2"
+scipy = "^1.7.1"
 
 [tool.poetry.dev-dependencies]
 black = "^21.10b0"
@@ -29,4 +34,4 @@ requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
-repsys = "repsys.cli:main"
+repsys = "repsys.__main__:main"
