@@ -7,7 +7,7 @@ from sanic.response import json, file
 logger = logging.getLogger(__name__)
 
 
-def create_app(model_loader):
+def create_app(models, dataset):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -25,12 +25,17 @@ def create_app(model_loader):
                     "key": k,
                     "attributes": [
                         {"key": p.key, "type": p.type, "label": p.label}
-                        for p in model_loader.instances[k].prediction_params()
+                        for p in models[k].website_params()
                     ],
                 }
-                for k in model_loader.instances.keys()
+                for k in models.keys()
             ]
         )
+
+    @app.route("/api/predict")
+    def predict(request):
+        model = models.get("KNN10")
+        return
 
     @app.route("/api/users")
     def get_users(request):
@@ -61,6 +66,6 @@ def create_app(model_loader):
     return app
 
 
-def run_server(port, model_loader) -> None:
-    app = create_app(model_loader)
+def run_server(port, models, dataset) -> None:
+    app = create_app(models, dataset)
     app.run(host="localhost", port=port)

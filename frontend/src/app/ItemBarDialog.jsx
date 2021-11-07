@@ -48,7 +48,6 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
                   label="Recommendation model"
                   component={SelectField}
                   options={[
-                    // { label: 'Select model', value: 'null' },
                     ...models.map((m) => ({ label: m.key, value: m.key })),
                   ]}
                 />
