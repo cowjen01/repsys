@@ -14,7 +14,7 @@ function randomInt(min, max) {
 export const handlers = [
   rest.get('/api/metrics', (req, res, ctx) => {
     const model = req.url.searchParams.get('model');
-    return res(ctx.status(200), ctx.json(metrics[model]))
+    return res(ctx.status(200), ctx.json(metrics[model]));
   }),
   rest.get('/api/items', (req, res, ctx) => res(ctx.status(200), ctx.json(movies))),
   rest.get('/api/models', (req, res, ctx) => res(ctx.status(200), ctx.json(models))),

@@ -43,7 +43,11 @@ function UserPanel({
         More Options
       </Button>
       {(selectedUser || customInteractions) && (
-        <UserInteractions selectedUser={selectedUser} onInteractionsDelete={onInteractionsDelete} customInteractions={customInteractions} />
+        <UserInteractions
+          selectedUser={selectedUser}
+          onInteractionsDelete={onInteractionsDelete}
+          customInteractions={customInteractions}
+        />
       )}
     </Box>
   );
@@ -56,7 +60,7 @@ UserPanel.defaultProps = {
 UserPanel.propTypes = {
   selectedUser: pt.shape({
     id: pt.number,
-    label: pt.string
+    label: pt.string,
   }),
   onUserSelect: pt.func.isRequired,
   onSearchClick: pt.func.isRequired,

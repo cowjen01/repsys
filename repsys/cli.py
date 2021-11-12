@@ -17,7 +17,9 @@ def repsys():
 @click.option(
     "-p", "--port", "port", default=DEFAULT_SERVER_PORT, show_default=True
 )
-@click.option("-m", "--models", "models_package", default="models", show_default=True)
+@click.option(
+    "-m", "--models", "models_package", default="models", show_default=True
+)
 @click.option(
     "-d", "--dataset", "dataset_package", default="dataset", show_default=True
 )

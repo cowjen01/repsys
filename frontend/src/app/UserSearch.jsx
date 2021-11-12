@@ -39,7 +39,7 @@ function UserSearch({ onUserSelect, onInteractionsSelect }) {
 
   const { items: userEmbeddings, isLoading: isEmbeddingLoading } = getRequest('/userSpace');
   const { items: itemsData, isLoading } = getRequest('/items', {
-    query: inputValue
+    query: inputValue,
   });
 
   const handleChange = (event, newValue) => {
@@ -53,7 +53,12 @@ function UserSearch({ onUserSelect, onInteractionsSelect }) {
         if (!selectedUser || selectedUser.id === p.id) {
           opacity = '1';
         }
-        return [p.x, p.y, `fill-color: ${colors[p.cluster]}; opacity: ${opacity}`, `User ${p.label}`];
+        return [
+          p.x,
+          p.y,
+          `fill-color: ${colors[p.cluster]}; opacity: ${opacity}`,
+          `User ${p.label}`,
+        ];
       }),
     [userEmbeddings, selectedUser]
   );
@@ -190,7 +195,7 @@ function UserSearch({ onUserSelect, onInteractionsSelect }) {
                     if (userEmbeddings[row]) {
                       setSelectedUser({
                         id: userEmbeddings[row].id,
-                        label: userEmbeddings[row].label
+                        label: userEmbeddings[row].label,
                       });
                     }
                   }

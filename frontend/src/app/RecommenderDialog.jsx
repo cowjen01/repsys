@@ -57,9 +57,7 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
                   fullWidth
                   label="Recommendation model"
                   component={SelectField}
-                  options={[
-                    ...models.map((m) => ({ label: m.key, value: m.key })),
-                  ]}
+                  options={[...models.map((m) => ({ label: m.key, value: m.key }))]}
                 />
                 {model &&
                   model.attributes &&

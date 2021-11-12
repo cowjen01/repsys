@@ -32,7 +32,7 @@ function ThemeWrapper({ children }) {
               }
             : {
                 mode: 'dark',
-                secondary: colors.amber
+                secondary: colors.amber,
               }),
         },
       }),

@@ -10,7 +10,6 @@ import { getRequest } from './api';
 import ItemListView from './ItemListView';
 
 function UserInteractions({ selectedUser, onInteractionsDelete, customInteractions }) {
-
   const { items: userHistoryData, isLoading: isUserHistoryLoading } = getRequest('/interactions', {
     user: selectedUser ? selectedUser.id : null,
   });

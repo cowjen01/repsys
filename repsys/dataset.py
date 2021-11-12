@@ -98,18 +98,18 @@ class Dataset:
     def _load_items_data(self):
         items_data_path = os.path.join(self._unzipped_data_path(), "items.csv")
 
-        items = pd.read_csv(items_data_path, index_col='index')
-        items['id'] = items.index
-        items = items.fillna('')
+        items = pd.read_csv(items_data_path, index_col="index")
+        items["id"] = items.index
+        items = items.fillna("")
 
         return items
 
     def _load_vad_users_data(self):
         users_data_path = os.path.join(self._unzipped_data_path(), "users.csv")
 
-        users = pd.read_csv(users_data_path, index_col='index')
-        users['label'] = users['label'].astype(str)
-        users['id'] = users.index
+        users = pd.read_csv(users_data_path, index_col="index")
+        users["label"] = users["label"].astype(str)
+        users["id"] = users.index
 
         return users
 

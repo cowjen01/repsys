@@ -64,11 +64,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         default_params = {
             p.key: p.default_value for p in model.website_params()
         }
-        clean_params = {
-            k: v
-            for k, v in params.items()
-            if k in default_params
-        }
+        clean_params = {k: v for k, v in params.items() if k in default_params}
         predict_params = {**default_params, **clean_params}
 
         if user_index is not None:

@@ -25,13 +25,13 @@ function RecommenderView({
     model,
     ...(selectedUser
       ? {
-        user: selectedUser.id,
+          user: selectedUser.id,
         }
       : {
           interactions: customInteractions.map((x) => x.id),
         }),
     params: modelAttributes[model],
-    limit: itemsLimit
+    limit: itemsLimit,
   });
 
   const handlePageChange = (e, newPage) => {
