@@ -58,7 +58,7 @@ class KNN(Model):
                 .sum(axis=0)
                 for idx, dist in zip(n_indexes, n_distances)
             ]
-        ).squeeze()
+        ).squeeze(axis=1)
 
         if kwargs["exclude_history"]:
             # remove items user interacted with

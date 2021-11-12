@@ -1,2 +1,3 @@
-data/
+datasets/
 tmp/
+movielens/

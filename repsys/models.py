@@ -18,7 +18,7 @@ class Model:
     def fit(self) -> None:
         raise NotImplementedError("You must implement the `fit` method")
 
-    def predict(self, X) -> NDArray:
+    def predict(self, X, **kwargs) -> NDArray:
         raise NotImplementedError("You must implement the `predict` method")
 
     def save_model(self) -> None:

@@ -10,7 +10,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import TextField from './TextField';
 import SelectField from './SelectField';
 
-function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
+function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
   return (
     <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
       <DialogTitle>Recommender Configuration</DialogTitle>
@@ -89,12 +89,12 @@ function ItemBarDialog({ open, onClose, initialValues, onSubmit, models }) {
   );
 }
 
-ItemBarDialog.defaultProps = {
+RecommenderDialog.defaultProps = {
   initialValues: {},
   models: [],
 };
 
-ItemBarDialog.propTypes = {
+RecommenderDialog.propTypes = {
   open: pt.bool.isRequired,
   onClose: pt.func.isRequired,
   onSubmit: pt.func.isRequired,
@@ -104,4 +104,4 @@ ItemBarDialog.propTypes = {
   models: pt.any,
 };
 
-export default ItemBarDialog;
+export default RecommenderDialog;

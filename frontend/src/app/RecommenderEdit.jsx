@@ -13,7 +13,7 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const ITEM_TYPE = 'itemBar';
 
-function ItemBarPreview({ index, title, onMove, onDelete, onEdit, onDuplicate }) {
+function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }) {
   const dragRef = useRef(null);
   const previewRef = useRef(null);
 
@@ -117,9 +117,9 @@ function ItemBarPreview({ index, title, onMove, onDelete, onEdit, onDuplicate })
   );
 }
 
-ItemBarPreview.defaultProps = {};
+RecommenderEdit.defaultProps = {};
 
-ItemBarPreview.propTypes = {
+RecommenderEdit.propTypes = {
   title: pt.string.isRequired,
   onMove: pt.func.isRequired,
   onDelete: pt.func.isRequired,
@@ -128,4 +128,4 @@ ItemBarPreview.propTypes = {
   onEdit: pt.func.isRequired,
 };
 
-export default ItemBarPreview;
+export default RecommenderEdit;

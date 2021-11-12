@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 // import pt from 'prop-types';
 import Box from '@mui/material/Box';
 import Chart from 'react-google-charts';
@@ -9,8 +9,9 @@ import Tabs from '@mui/material/Tabs';
 import Tab from '@mui/material/Tab';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
+import CircularProgress from '@mui/material/CircularProgress';
 
-import { fetchItems } from './api';
+import { getRequest } from './api';
 
 const colors = ['#2196f3', '#03a9f4', '#4caf50', '#9c27b0', '#ff9800', '#cddc39', '#ffeb3b'];
 
@@ -30,13 +31,16 @@ function TabPanel(props) {
   );
 }
 
-function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
-  const { items: userEmbeddings, isLoading: isEmbeddingLoading } = fetchItems('/userSpace');
-  const { items: itemsData, isLoading } = fetchItems('/items');
-
-  const [selectedUser, setSelectedUser] = useState();
+function UserSearch({ onUserSelect, onInteractionsSelect }) {
+  const [selectedUser, setSelectedUser] = useState(null);
   const [interactions, setInteractions] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
+  const [inputValue, setInputValue] = useState('');
+
+  const { items: userEmbeddings, isLoading: isEmbeddingLoading } = getRequest('/userSpace');
+  const { items: itemsData, isLoading } = getRequest('/items', {
+    query: inputValue
+  });
 
   const handleChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -46,17 +50,13 @@ function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
     () =>
       userEmbeddings.map((p) => {
         let opacity = '0.5';
-        if (!selectedUser || selectedUser === p.id) {
+        if (!selectedUser || selectedUser.id === p.id) {
           opacity = '1';
         }
-        return [p.x, p.y, `fill-color: ${colors[p.cluster]}; opacity: ${opacity}`, `User ${p.id}`];
+        return [p.x, p.y, `fill-color: ${colors[p.cluster]}; opacity: ${opacity}`, `User ${p.label}`];
       }),
     [userEmbeddings, selectedUser]
   );
-
-  if (isLoading) {
-    return null;
-  }
 
   return (
     <Box
@@ -83,13 +83,31 @@ function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
           onChange={(event, newValue) => {
             setInteractions(newValue);
           }}
+          filterOptions={(x) => x}
+          loading={isLoading}
           openOnFocus
           isOptionEqualToValue={(option, value) => option.id === value.id}
           options={itemsData}
           getOptionLabel={(item) => item.title}
           sx={{ width: 400, marginBottom: 2, marginTop: 2 }}
+          onInputChange={(event, newInputValue) => {
+            setInputValue(newInputValue);
+          }}
           renderInput={(params) => (
-            <TextField {...params} variant="filled" label="User interactions" />
+            <TextField
+              {...params}
+              variant="filled"
+              label="User interactions"
+              InputProps={{
+                ...params.InputProps,
+                endAdornment: (
+                  <>
+                    {isLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                    {params.InputProps.endAdornment}
+                  </>
+                ),
+              }}
+            />
           )}
         />
         <Button
@@ -170,7 +188,10 @@ function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
                     const [selectedItem] = selection;
                     const { row } = selectedItem;
                     if (userEmbeddings[row]) {
-                      setSelectedUser(userEmbeddings[row].id);
+                      setSelectedUser({
+                        id: userEmbeddings[row].id,
+                        label: userEmbeddings[row].label
+                      });
                     }
                   }
                 },
@@ -185,11 +206,11 @@ function ModelMetrics({ onUserSelect, onInteractionsSelect }) {
           variant="contained"
           onClick={() => onUserSelect(selectedUser)}
         >
-          Select user {selectedUser}
+          Select user {selectedUser ? selectedUser.label : ''}
         </Button>
       </TabPanel>
     </Box>
   );
 }
 
-export default ModelMetrics;
+export default UserSearch;

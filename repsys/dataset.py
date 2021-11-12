@@ -14,7 +14,7 @@ class Dataset:
         raise NotImplementedError("You must implement the `name` method")
 
     def _processed_data_path(self):
-        return os.path.join(os.getcwd(), "data")
+        return os.path.join(os.getcwd(), "datasets")
 
     def _processed_data_files(self):
         data_path = self._processed_data_path()
@@ -45,25 +45,16 @@ class Dataset:
         with zipfile.ZipFile(data_files[0], "r") as zip_ref:
             zip_ref.extractall(tmp_dir_path)
 
-    def _load_sid_data(self):
-        sid_data_path = os.path.join(
-            self._unzipped_data_path(), "unique_sid.txt"
-        )
-
-        unique_sid = list()
-        with open(sid_data_path, "r") as f:
-            for line in f:
-                unique_sid.append(line.strip())
-
-        return unique_sid
-
     def _load_train_data(self, n_items):
         train_data_path = os.path.join(self._unzipped_data_path(), "train.csv")
 
         tp = pd.read_csv(train_data_path)
-        n_users = tp["uid"].max() + 1
 
+        # internal indexes start from zero
+        n_users = tp["uid"].max() + 1
         rows, cols = tp["uid"], tp["sid"]
+
+        # put one only at places, where uid and sid index meet
         data = sparse.csr_matrix(
             (np.ones_like(rows), (rows, cols)),
             dtype="float64",
@@ -104,6 +95,24 @@ class Dataset:
 
         return data_tr, data_te
 
+    def _load_items_data(self):
+        items_data_path = os.path.join(self._unzipped_data_path(), "items.csv")
+
+        items = pd.read_csv(items_data_path, index_col='index')
+        items['id'] = items.index
+        items = items.fillna('')
+
+        return items
+
+    def _load_vad_users_data(self):
+        users_data_path = os.path.join(self._unzipped_data_path(), "users.csv")
+
+        users = pd.read_csv(users_data_path, index_col='index')
+        users['label'] = users['label'].astype(str)
+        users['id'] = users.index
+
+        return users
+
     def load_dataset(self):
         logger.info(f"Loading '{self.name()}' dataset ...")
 
@@ -116,13 +125,15 @@ class Dataset:
         else:
             logger.info("No proccessed data found, processing now ...")
 
-        unique_sid = self._load_sid_data()
-        self.n_items = len(unique_sid)
+        self.items = self._load_items_data()
+        self.n_items = self.items.shape[0]
 
         self.train_data = self._load_train_data(self.n_items)
         self.n_users = self.train_data.shape[0]
 
-        logger.info(f"Found {self.n_items} items and {self.n_users} users.")
+        self.vad_users = self._load_vad_users_data()
+
+        logger.info(f"Loaded {self.n_items} items and {self.n_users} users.")
 
         self.vad_data_tr, self.vad_data_te = self._load_tr_te_data(
             data_type="validation",

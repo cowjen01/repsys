@@ -23,16 +23,16 @@ import {
   setSelectedUser,
   selectedUserSelector,
 } from '../reducers/studio';
-import ItemBarView from './ItemBarView';
-import ItemBarEdit from './ItemBarEdit';
+import RecommenderView from './RecommenderView';
+import RecommenderEdit from './RecommenderEdit';
 import ConfirmDialog from './ConfirmDialog';
-import ItemBarDialog from './ItemBarDialog';
+import RecommenderDialog from './RecommenderDialog';
 import Layout from './Layout';
 import Snackbar from './Snackbar';
 import ModelMetrics from './ModelMetrics';
 import UserPanel from './UserPanel';
 import UserSearch from './UserSearch';
-import { fetchItems } from './api';
+import { getRequest } from './api';
 
 function Studio() {
   const layout = useSelector(layoutSelector);
@@ -46,7 +46,7 @@ function Studio() {
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
 
-  const { items: modelData, isLoading: isModelLoading } = fetchItems('/models');
+  const { items: modelData, isLoading: isModelLoading } = getRequest('/models');
 
   const modelAttributes = useMemo(
     () =>
@@ -119,7 +119,7 @@ function Studio() {
   return (
     <Layout>
       <ConfirmDialog open={deleteIndex !== undefined} onClose={handleDeleteConfirm} />
-      <ItemBarDialog
+      <RecommenderDialog
         open={barData !== undefined}
         initialValues={barData}
         models={modelData}
@@ -143,7 +143,7 @@ function Studio() {
                       {layout.map((bar, index) => (
                         <Grid item xs={12} key={bar.id}>
                           {buildMode ? (
-                            <ItemBarEdit
+                            <RecommenderEdit
                               onDuplicate={handleBarDuplicate}
                               onDelete={handleBarDelete}
                               onEdit={handleBarEdit}
@@ -152,10 +152,10 @@ function Studio() {
                               onMove={handleBarMove}
                             />
                           ) : (
-                            <ItemBarView
+                            <RecommenderView
                               title={bar.title}
                               model={bar.model}
-                              user={selectedUser}
+                              selectedUser={selectedUser}
                               customInteractions={customInteractions}
                               onMetricsClick={() => setMetricsOpen(true)}
                               modelAttributes={bar.modelAttributes}
@@ -205,7 +205,7 @@ function Studio() {
             )}
             {layout.map((bar, index) => (
               <Grid item xs={12} key={bar.id}>
-                <ItemBarEdit
+                <RecommenderEdit
                   onDuplicate={handleBarDuplicate}
                   onDelete={handleBarDelete}
                   onEdit={handleBarEdit}

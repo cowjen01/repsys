@@ -7,29 +7,29 @@ import Skeleton from '@mui/material/Skeleton';
 import BarChartIcon from '@mui/icons-material/BarChart';
 import Chip from '@mui/material/Chip';
 
-import ItemView from './ItemView';
-import { fetchItems } from './api';
+import ItemCardView from './ItemCardView';
+import { postRequest } from './api';
 
-function ItemBarView({
+function RecommenderView({
   title,
   model,
-  user,
+  selectedUser,
   customInteractions,
   itemsPerPage,
   modelAttributes,
   onMetricsClick,
 }) {
   const [page, setPage] = useState(0);
-  const { items, isLoading } = fetchItems('/recommendations', {
+  const { items, isLoading } = postRequest('/predict', {
     model,
-    ...(user
+    ...(selectedUser
       ? {
-          user,
+        user: selectedUser.id,
         }
       : {
-          interactions: JSON.stringify(customInteractions.map((x) => x.id)),
+          interactions: customInteractions.map((x) => x.id),
         }),
-    attributes: JSON.stringify(modelAttributes[model]),
+    params: modelAttributes[model],
   });
 
   const handlePageChange = (e, newPage) => {
@@ -63,16 +63,12 @@ function ItemBarView({
           {!isLoading
             ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
                 <Grid key={item.id} item display="flex" xs={12} md={12 / itemsPerPage}>
-                  <ItemView
-                    id={item.id}
+                  <ItemCardView
                     title={item.title}
-                    subtitle={item.subtitle.toString()}
-                    header={item.header.toString()}
-                    description={item.description}
-                    // image={item.image}
-                    image="foo"
-                    imageWidth={Math.ceil(1000 / itemsPerPage)}
-                    imageHeight={Math.ceil(400 / itemsPerPage)}
+                    subtitle={item.subtitle}
+                    caption={item.caption}
+                    image={item.image}
+                    imageHeight={Math.ceil(800 / itemsPerPage)}
                   />
                 </Grid>
               ))
@@ -103,11 +99,11 @@ function ItemBarView({
   );
 }
 
-ItemBarView.defaultProps = {
+RecommenderView.defaultProps = {
   modelAttributes: {},
 };
 
-ItemBarView.propTypes = {
+RecommenderView.propTypes = {
   title: pt.string.isRequired,
   itemsPerPage: pt.number.isRequired,
   model: pt.string.isRequired,
@@ -117,4 +113,4 @@ ItemBarView.propTypes = {
   modelAttributes: pt.any,
 };
 
-export default ItemBarView;
+export default RecommenderView;
