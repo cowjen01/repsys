@@ -20,11 +20,10 @@ export const handlers = [
   rest.get('/api/models', (req, res, ctx) => res(ctx.status(200), ctx.json(models))),
   rest.get('/api/users', (req, res, ctx) => res(ctx.status(200), ctx.json(users))),
   rest.get('/api/userSpace', (req, res, ctx) => res(ctx.status(200), ctx.json(userSpace))),
-  rest.get('/api/recommendations', (req, res, ctx) => {
-    const model = req.url.searchParams.get('model');
-    const totalItems = model === 'vasp' ? 20 : 10;
+  rest.post('/api/predict', (req, res, ctx) => {
+    const { limit } = req.body;
     shuffle(movies);
-    return res(ctx.status(200), ctx.json(movies.slice(0, totalItems)));
+    return res(ctx.status(200), ctx.json(movies.slice(0, limit)));
   }),
   rest.get('/api/interactions', (req, res, ctx) => {
     shuffle(movies);

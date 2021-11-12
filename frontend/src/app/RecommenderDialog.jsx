@@ -22,6 +22,9 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
           if (!values.title) {
             errors.title = requiredMessage;
           }
+          if (!values.itemsLimit) {
+            errors.itemsLimit = requiredMessage;
+          }
           return errors;
         }}
         onSubmit={(values, { setSubmitting }) => {
@@ -41,6 +44,13 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
                   label="Items per page"
                   component={SelectField}
                   options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
+                />
+                <Field
+                  name="itemsLimit"
+                  fullWidth
+                  label="Max number of items"
+                  component={TextField}
+                  type="number"
                 />
                 <Field
                   name="model"

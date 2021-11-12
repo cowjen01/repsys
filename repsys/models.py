@@ -8,10 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class Model:
-    def __init__(self) -> None:
-        self.model = None
-        self.dataset = None
-
     def name(self) -> Text:
         raise NotImplementedError("You must implement the `name` method")
 

@@ -110,6 +110,7 @@ function Studio() {
       setBarData({
         title: 'New bar',
         itemsPerPage: 4,
+        itemsLimit: 20,
         model: modelData[0].key,
         modelAttributes,
       });
@@ -160,6 +161,7 @@ function Studio() {
                               onMetricsClick={() => setMetricsOpen(true)}
                               modelAttributes={bar.modelAttributes}
                               itemsPerPage={bar.itemsPerPage}
+                              itemsLimit={bar.itemsLimit}
                             />
                           )}
                         </Grid>

@@ -7,7 +7,6 @@ from repsys import Model, WebsiteParam
 
 class KNN(Model):
     def __init__(self, k=10):
-        super().__init__()
         self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
 
     def name(self):

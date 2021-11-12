@@ -5,7 +5,7 @@ import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import red from '@mui/material/colors/red';
+import * as colors from '@mui/material/colors';
 
 import store from './store';
 import Studio from './app/Studio';
@@ -25,13 +25,14 @@ function ThemeWrapper({ children }) {
                   light: '#484848',
                   dark: '#000000',
                 },
-                secondary: red,
+                secondary: colors.red,
                 background: {
                   default: '#fafafa',
                 },
               }
             : {
                 mode: 'dark',
+                secondary: colors.amber
               }),
         },
       }),
