@@ -29,8 +29,13 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
             [
                 {
                     "key": k,
-                    "attributes": [
-                        {"key": p.key, "type": p.type, "label": p.label}
+                    "params": [
+                        {
+                            "key": p.key,
+                            "type": p.type,
+                            "label": p.label,
+                            "default": p.default_value,
+                        }
                         for p in models[k].website_params()
                     ],
                 }
@@ -126,6 +131,9 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
 
     @app.listener("after_server_stop")
     def on_shutdown(app, loop):
+        for model in models.values():
+            model.save_model()
+
         logger.info("Server has been shut down.")
 
     return app

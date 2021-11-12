@@ -20,13 +20,13 @@ class KNN(Model):
             WebsiteParam(
                 key="exclude_history",
                 label="Exclude user's history",
-                type="boolean",
+                type="bool",
                 default_value=True,
             ),
             WebsiteParam(
                 key="normalize_distances",
                 label="Normalize neighbors distances",
-                type="boolean",
+                type="bool",
                 default_value=True,
             )
         ]

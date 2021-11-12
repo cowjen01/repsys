@@ -1,25 +1,42 @@
 export const models = [
   {
     key: 'knn',
-    attributes: [
+    params: [
       {
         key: 'n',
         label: 'Neighbors',
         type: 'number',
-        defaultValue: 5,
+        default: 5,
+      },
+      {
+        key: 'category',
+        label: 'Movie category',
+        type: 'select',
+        options: ['comedy', 'horror'],
+      },
+      {
+        key: 'exclude',
+        label: 'Exclude history',
+        type: 'bool',
+        default: true,
+      },
+      {
+        key: 'normalize',
+        label: 'Normalize distances',
+        type: 'bool',
+        default: false,
       },
     ],
   },
   {
     key: 'vasp',
-    attributes: [
+    params: [
       {
         key: 'h',
         label: 'Some parameter',
         type: 'text',
       },
     ],
-    businessRules: ['popularity', 'explore'],
   },
 ];
 

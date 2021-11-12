@@ -1,5 +1,7 @@
 import click
 
+from typing import List
+
 from .models import Model
 from .server import run_server
 from .loader import ClassLoader
@@ -29,14 +31,17 @@ def server(port, models_package, dataset_package):
     dataset_loader = ClassLoader(Dataset)
     dataset_loader.register_package(dataset_package)
 
-    dataset = list(dataset_loader.instances.values())[0]
+    dataset: Dataset = list(dataset_loader.instances.values())[0]
     dataset.load_dataset()
 
     model_loader = ClassLoader(Model)
     model_loader.register_package(models_package)
 
-    for model in model_loader.instances.values():
-        model.dataset = dataset
+    models: List[Model] = model_loader.instances.values()
+
+    for model in models:
+        model.update_data(dataset)
         model.fit()
+        # model.load_model()
 
     run_server(port=port, models=model_loader.instances, dataset=dataset)

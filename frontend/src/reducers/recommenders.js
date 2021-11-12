@@ -4,8 +4,8 @@ import { customAlphabet } from 'nanoid';
 
 const nanoid = customAlphabet('1234567890abcdef', 10);
 
-export const layoutSlice = createSlice({
-  name: 'layout',
+export const slice = createSlice({
+  name: 'recommenders',
   initialState: [],
   reducers: {
     addBar: {
@@ -56,8 +56,8 @@ export const layoutSlice = createSlice({
   },
 });
 
-export const { addBar, removeBar, updateBarsOrder, duplicateBar, updateBar } = layoutSlice.actions;
+export const { addBar, removeBar, updateBarsOrder, duplicateBar, updateBar } = slice.actions;
 
-export const layoutSelector = (state) => state.layout;
+export const recommendersSelector = (state) => state.recommenders;
 
-export default layoutSlice.reducer;
+export default slice.reducer;

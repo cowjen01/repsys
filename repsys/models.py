@@ -3,6 +3,7 @@ from typing import Text, List
 from numpy.typing import NDArray
 
 from .website import WebsiteParam
+from .dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,9 @@ class Model:
 
     def website_params(self) -> List[WebsiteParam]:
         """Define custom parameters used during the prediction process"""
+
+    def update_data(self, ds: Dataset) -> None:
+        self.dataset = ds
 
     def __str__(self) -> Text:
         return f"Model '{self.name()}'"

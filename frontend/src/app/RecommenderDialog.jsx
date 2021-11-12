@@ -9,6 +9,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 import TextField from './TextField';
 import SelectField from './SelectField';
+import CheckboxField from './CheckboxField';
 
 function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
   return (
@@ -40,46 +41,52 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
                 <Field name="title" label="Title" fullWidth component={TextField} />
                 <Field
                   name="itemsPerPage"
-                  fullWidth
                   label="Items per page"
                   component={SelectField}
                   options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
                 />
                 <Field
                   name="itemsLimit"
-                  fullWidth
                   label="Max number of items"
                   component={TextField}
                   type="number"
                 />
                 <Field
                   name="model"
-                  fullWidth
                   label="Recommendation model"
                   component={SelectField}
                   options={[...models.map((m) => ({ label: m.key, value: m.key }))]}
                 />
                 {model &&
-                  model.attributes &&
-                  model.attributes.map((a) => (
-                    <Field
-                      key={a.key}
-                      name={`modelAttributes.${values.model}.${a.key}`}
-                      type={a.type || 'text'}
-                      fullWidth
-                      label={a.label}
-                      component={TextField}
-                    />
-                  ))}
-                {model && model.businessRules && model.businessRules.length && (
-                  <Field
-                    name={`businessRule.${values.model}`}
-                    fullWidth
-                    label="Business rule"
-                    component={SelectField}
-                    options={model.businessRules.map((b) => ({ label: b, value: b }))}
-                  />
-                )}
+                  model.params &&
+                  model.params.map((a) => {
+                    const name = `modelParams.${values.model}.${a.key}`;
+                    if (a.type === 'select') {
+                      return (
+                        <Field
+                          key={a.key}
+                          name={name}
+                          label={a.label}
+                          component={SelectField}
+                          options={a.options.map((b) => ({ label: b, value: b }))}
+                        />
+                      );
+                    }
+                    if (a.type === 'bool') {
+                      return (
+                        <Field key={a.key} name={name} label={a.label} component={CheckboxField} />
+                      );
+                    }
+                    return (
+                      <Field
+                        key={a.key}
+                        name={name}
+                        label={a.label}
+                        component={TextField}
+                        type={a.type}
+                      />
+                    );
+                  })}
               </DialogContent>
               <DialogActions>
                 <Button onClick={onClose} color="secondary">

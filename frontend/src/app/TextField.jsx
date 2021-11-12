@@ -9,6 +9,7 @@ function TextField({ field: { name, value, onChange, onBlur }, form: { errors },
       variant="outlined"
       onChange={onChange}
       onBlur={onBlur}
+      fullWidth
       value={value}
       margin="normal"
       helperText={errors[name]}

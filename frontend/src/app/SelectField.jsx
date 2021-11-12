@@ -16,6 +16,7 @@ function SelectField({
       onChange={onChange}
       onBlur={onBlur}
       name={name}
+      fullWidth
       helperText={errors[name]}
       error={Boolean(errors[name])}
       variant="outlined"

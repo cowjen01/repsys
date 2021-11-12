@@ -11,12 +11,12 @@ import AlertTitle from '@mui/material/AlertTitle';
 
 import {
   addBar,
-  layoutSelector,
+  recommendersSelector,
   removeBar,
   updateBarsOrder,
   duplicateBar,
   updateBar,
-} from '../reducers/layout';
+} from '../reducers/recommenders';
 import {
   buildModeSelector,
   openSnackbar,
@@ -35,7 +35,7 @@ import UserSearch from './UserSearch';
 import { getRequest } from './api';
 
 function Studio() {
-  const layout = useSelector(layoutSelector);
+  const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const dispatch = useDispatch();
@@ -48,13 +48,10 @@ function Studio() {
 
   const { items: modelData, isLoading: isModelLoading } = getRequest('/models');
 
-  const modelAttributes = useMemo(
+  const defaultModelParams = useMemo(
     () =>
       Object.fromEntries(
-        modelData.map((m) => [
-          m.key,
-          Object.fromEntries(m.attributes.map((a) => [a.key, a.defaultValue || ''])),
-        ])
+        modelData.map((m) => [m.key, Object.fromEntries(m.params.map((a) => [a.key, a.default]))])
       ),
     [modelData]
   );
@@ -101,7 +98,15 @@ function Studio() {
 
   const handleBarEdit = (index) => {
     if (!isModelLoading) {
-      setBarData(layout[index]);
+      // TODO: deep merge of model params
+      const params = {
+        ...defaultModelParams,
+        ...recommenders[index].modelParams,
+      };
+      setBarData({
+        ...recommenders[index],
+        modelParams: params,
+      });
     }
   };
 
@@ -112,7 +117,7 @@ function Studio() {
         itemsPerPage: 4,
         itemsLimit: 20,
         model: modelData[0].key,
-        modelAttributes,
+        modelParams: defaultModelParams,
       });
     }
   };
@@ -130,7 +135,7 @@ function Studio() {
       <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
         {!buildMode ? (
           <Grid container spacing={4}>
-            {layout.length === 0 ? (
+            {recommenders.length === 0 ? (
               <Grid item xs={12}>
                 <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
                   There are no recommenders, switch to the Build Mode to create one.
@@ -141,27 +146,27 @@ function Studio() {
                 <Grid item xs={12} lg={9}>
                   {selectedUser || customInteractions ? (
                     <Grid container spacing={3}>
-                      {layout.map((bar, index) => (
-                        <Grid item xs={12} key={bar.id}>
+                      {recommenders.map((rec, index) => (
+                        <Grid item xs={12} key={rec.id}>
                           {buildMode ? (
                             <RecommenderEdit
                               onDuplicate={handleBarDuplicate}
                               onDelete={handleBarDelete}
                               onEdit={handleBarEdit}
-                              title={bar.title}
+                              title={rec.title}
                               index={index}
                               onMove={handleBarMove}
                             />
                           ) : (
                             <RecommenderView
-                              title={bar.title}
-                              model={bar.model}
+                              title={rec.title}
+                              model={rec.model}
                               selectedUser={selectedUser}
                               customInteractions={customInteractions}
                               onMetricsClick={() => setMetricsOpen(true)}
-                              modelAttributes={bar.modelAttributes}
-                              itemsPerPage={bar.itemsPerPage}
-                              itemsLimit={bar.itemsLimit}
+                              modelParams={rec.modelParams}
+                              itemsPerPage={rec.itemsPerPage}
+                              itemsLimit={rec.itemsLimit}
                             />
                           )}
                         </Grid>
@@ -198,20 +203,20 @@ function Studio() {
           </Grid>
         ) : (
           <Grid container spacing={3}>
-            {layout.length === 0 && (
+            {recommenders.length === 0 && (
               <Grid item xs={12}>
                 <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
                   There are no recommenders, press the Add button to create one.
                 </Typography>
               </Grid>
             )}
-            {layout.map((bar, index) => (
-              <Grid item xs={12} key={bar.id}>
+            {recommenders.map((rec, index) => (
+              <Grid item xs={12} key={rec.id}>
                 <RecommenderEdit
                   onDuplicate={handleBarDuplicate}
                   onDelete={handleBarDelete}
                   onEdit={handleBarEdit}
-                  title={bar.title}
+                  title={rec.title}
                   index={index}
                   onMove={handleBarMove}
                 />

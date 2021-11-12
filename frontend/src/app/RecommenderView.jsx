@@ -17,7 +17,7 @@ function RecommenderView({
   customInteractions,
   itemsPerPage,
   itemsLimit,
-  modelAttributes,
+  modelParams,
   onMetricsClick,
 }) {
   const [page, setPage] = useState(0);
@@ -30,7 +30,7 @@ function RecommenderView({
       : {
           interactions: customInteractions.map((x) => x.id),
         }),
-    params: modelAttributes[model],
+    params: modelParams[model],
     limit: itemsLimit,
   });
 
