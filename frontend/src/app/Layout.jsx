@@ -57,7 +57,6 @@ function Layout({ children }) {
                 Menu
               </Button>
               <Menu
-                id="menu-appbar"
                 anchorEl={anchorEl}
                 anchorOrigin={{
                   vertical: 'top',
@@ -75,14 +74,14 @@ function Layout({ children }) {
                   <ListItemIcon>
                     <TableRowsIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Home</ListItemText>
+                  <ListItemText>Recommenders</ListItemText>
                 </MenuItem>
-                <MenuItem onClick={handleMenuClose}>
+                {/* <MenuItem onClick={handleMenuClose}>
                   <ListItemIcon>
                     <DonutSmallIcon fontSize="small" />
                   </ListItemIcon>
                   <ListItemText>Dataset Analysis</ListItemText>
-                </MenuItem>
+                </MenuItem> */}
                 <Divider />
                 <MenuItem
                   onClick={() => {

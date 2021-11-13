@@ -6,8 +6,6 @@ import Fab from '@mui/material/Fab';
 import AddIcon from '@mui/icons-material/Add';
 import { Typography } from '@mui/material';
 import Drawer from '@mui/material/Drawer';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
 
 import {
   addBar,
@@ -32,6 +30,7 @@ import Snackbar from './Snackbar';
 import ModelMetrics from './ModelMetrics';
 import UserPanel from './UserPanel';
 import UserSearch from './UserSearch';
+import ItemDetailDialog from './ItemDetailDialog';
 import { getRequest } from './api';
 
 function Studio() {
@@ -40,9 +39,10 @@ function Studio() {
   const selectedUser = useSelector(selectedUserSelector);
   const dispatch = useDispatch();
 
-  const [customInteractions, setCustomInteractions] = useState(null);
+  const [customInteractions, setCustomInteractions] = useState([]);
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
+  const [itemData, setItemData] = useState();
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
 
@@ -76,6 +76,14 @@ function Studio() {
     // if (index === layout.length - 1) {
     //   divRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     // }
+  };
+
+  const handleItemClick = (data) => {
+    setItemData(data);
+  };
+
+  const handleItemDetailClose = () => {
+    setItemData(undefined);
   };
 
   const handleBarDialogClose = () => {
@@ -132,6 +140,11 @@ function Studio() {
         onClose={handleBarDialogClose}
         onSubmit={handleBarSubmit}
       />
+      <ItemDetailDialog
+        open={itemData !== undefined}
+        data={itemData}
+        onClose={handleItemDetailClose}
+      />
       <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
         {!buildMode ? (
           <Grid container spacing={4}>
@@ -144,55 +157,33 @@ function Studio() {
             ) : (
               <>
                 <Grid item xs={12} lg={9}>
-                  {selectedUser || customInteractions ? (
-                    <Grid container spacing={3}>
-                      {recommenders.map((rec, index) => (
-                        <Grid item xs={12} key={rec.id}>
-                          {buildMode ? (
-                            <RecommenderEdit
-                              onDuplicate={handleBarDuplicate}
-                              onDelete={handleBarDelete}
-                              onEdit={handleBarEdit}
-                              title={rec.title}
-                              index={index}
-                              onMove={handleBarMove}
-                            />
-                          ) : (
-                            <RecommenderView
-                              title={rec.title}
-                              model={rec.model}
-                              selectedUser={selectedUser}
-                              customInteractions={customInteractions}
-                              onMetricsClick={() => setMetricsOpen(true)}
-                              modelParams={rec.modelParams}
-                              itemsPerPage={rec.itemsPerPage}
-                              itemsLimit={rec.itemsLimit}
-                            />
-                          )}
-                        </Grid>
-                      ))}
-                    </Grid>
-                  ) : (
-                    <>
-                      <Typography variant="h6" component="div" gutterBottom>
-                        User Recommendations
-                      </Typography>
-                      <Alert severity="warning" sx={{ marginTop: 0 }}>
-                        <AlertTitle>Empty User</AlertTitle>
-                        Select a user from the right panel to see some recommendations.
-                      </Alert>
-                    </>
-                  )}
+                  <Grid container spacing={3}>
+                    {recommenders.map((rec) => (
+                      <Grid item xs={12} key={rec.id}>
+                        <RecommenderView
+                          title={rec.title}
+                          model={rec.model}
+                          selectedUser={selectedUser}
+                          customInteractions={customInteractions}
+                          onMetricsClick={() => setMetricsOpen(true)}
+                          modelParams={rec.modelParams}
+                          itemsPerPage={rec.itemsPerPage}
+                          itemsLimit={rec.itemsLimit}
+                          onItemClick={handleItemClick}
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
                 </Grid>
                 <Grid item xs={12} lg={3}>
                   <UserPanel
                     selectedUser={selectedUser}
                     onInteractionsDelete={() => {
-                      setCustomInteractions(null);
+                      setCustomInteractions([]);
                     }}
                     onUserSelect={(user) => {
                       dispatch(setSelectedUser(user));
-                      setCustomInteractions(null);
+                      setCustomInteractions([]);
                     }}
                     onSearchClick={() => setUserSearchOpen(true)}
                     customInteractions={customInteractions}
@@ -206,7 +197,7 @@ function Studio() {
             {recommenders.length === 0 && (
               <Grid item xs={12}>
                 <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
-                  There are no recommenders, press the Add button to create one.
+                  There are no recommenders, press the add button to create one.
                 </Typography>
               </Grid>
             )}
@@ -230,9 +221,10 @@ function Studio() {
       </Drawer>
       <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
         <UserSearch
+          customInteractions={customInteractions}
           onUserSelect={(user) => {
             dispatch(setSelectedUser(user));
-            setCustomInteractions(null);
+            setCustomInteractions([]);
             setUserSearchOpen(false);
           }}
           onInteractionsSelect={(interactions) => {

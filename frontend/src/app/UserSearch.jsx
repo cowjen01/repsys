@@ -10,14 +10,18 @@ import Tab from '@mui/material/Tab';
 import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import CircularProgress from '@mui/material/CircularProgress';
+import InputLabel from '@mui/material/InputLabel';
+import MenuItem from '@mui/material/MenuItem';
+import FormControl from '@mui/material/FormControl';
+import Select from '@mui/material/Select';
+import { useSelector, useDispatch } from 'react-redux';
 
 import { getRequest } from './api';
+import { favouriteUsersSelector } from '../reducers/studio';
 
 const colors = ['#2196f3', '#03a9f4', '#4caf50', '#9c27b0', '#ff9800', '#cddc39', '#ffeb3b'];
 
-function TabPanel(props) {
-  const { children, value, index, ...other } = props;
-
+function TabPanel({ children, value, index, ...other }) {
   return (
     <div
       role="tabpanel"
@@ -31,11 +35,13 @@ function TabPanel(props) {
   );
 }
 
-function UserSearch({ onUserSelect, onInteractionsSelect }) {
+function UserSearch({ onUserSelect, onInteractionsSelect, customInteractions }) {
   const [selectedUser, setSelectedUser] = useState(null);
-  const [interactions, setInteractions] = useState([]);
+  const [interactions, setInteractions] = useState(customInteractions);
   const [activeTab, setActiveTab] = useState(0);
   const [inputValue, setInputValue] = useState('');
+
+  const favouriteUsers = useSelector(favouriteUsersSelector);
 
   const { items: userEmbeddings, isLoading: isEmbeddingLoading } = getRequest('/userSpace');
   const { items: itemsData, isLoading } = getRequest('/items', {
@@ -72,6 +78,7 @@ function UserSearch({ onUserSelect, onInteractionsSelect }) {
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleChange} centered>
           <Tab label="Test User" />
+          <Tab label="Favourite User" />
           <Tab label="User Space" />
         </Tabs>
       </Box>
@@ -126,6 +133,35 @@ function UserSearch({ onUserSelect, onInteractionsSelect }) {
         </Button>
       </TabPanel>
       <TabPanel value={activeTab} index={1}>
+        <Typography variant="h6" component="div">
+          Favourite Users
+        </Typography>
+        <Typography variant="body2" component="div">
+          Select a user from the list of favourites.
+        </Typography>
+        <Autocomplete
+          disablePortal
+          value={selectedUser}
+          onChange={(event, newValue) => {
+            setSelectedUser(newValue);
+          }}
+          isOptionEqualToValue={(option, value) => option.id === value.id}
+          options={favouriteUsers}
+          getOptionLabel={(user) => `User ${user.label}`}
+          sx={{ width: '100%', marginBottom: 2, marginTop: 2 }}
+          renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
+        />
+        <Button
+          disabled={!selectedUser}
+          color="secondary"
+          startIcon={<CheckIcon />}
+          variant="contained"
+          onClick={() => onUserSelect(selectedUser)}
+        >
+          Select user {selectedUser ? selectedUser.label : ''}
+        </Button>
+      </TabPanel>
+      <TabPanel value={activeTab} index={2}>
         <Typography variant="h6" component="div">
           User Space Selector
         </Typography>

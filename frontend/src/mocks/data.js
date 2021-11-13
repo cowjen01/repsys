@@ -1,6 +1,6 @@
 export const models = [
   {
-    key: 'knn',
+    key: 'KNN10',
     params: [
       {
         key: 'n',
@@ -29,7 +29,7 @@ export const models = [
     ],
   },
   {
-    key: 'vasp',
+    key: 'VASP',
     params: [
       {
         key: 'h',

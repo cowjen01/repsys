@@ -4,7 +4,10 @@ import List from '@mui/material/List';
 import { Typography, Box, Paper, Button } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from '@mui/material/Chip';
+import Grid from '@mui/material/Grid';
 import TouchAppIcon from '@mui/icons-material/TouchApp';
+import ListSubheader from '@mui/material/ListSubheader';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 import { getRequest } from './api';
 import ItemListView from './ItemListView';
@@ -14,31 +17,30 @@ function UserInteractions({ selectedUser, onInteractionsDelete, customInteractio
     user: selectedUser ? selectedUser.id : null,
   });
 
-  const interactions = customInteractions || userHistoryData;
+  const interactions = customInteractions.length > 0 ? customInteractions : userHistoryData;
 
   return (
     <Box sx={{ marginTop: 2 }}>
-      <Typography variant="h6" component="div" gutterBottom>
-        User Interactions ({interactions.length})
-      </Typography>
-      {customInteractions && (
+      {customInteractions.length > 0 && (
         <Chip
           // color="primary"
-          size="small"
+          // size="small"
           sx={{ marginBottom: 2 }}
           onDelete={onInteractionsDelete}
-          icon={<TouchAppIcon />}
-          label="Custom Interactions"
+          icon={<FilterListIcon />}
+          label="Custom interactions"
         />
       )}
+
       {!isUserHistoryLoading ? (
         <Paper>
           <List
+            subheader={<ListSubheader>Interactions history ({interactions.length})</ListSubheader>}
             sx={{
               width: '100%',
               position: 'relative',
               overflow: 'auto',
-              maxHeight: 400,
+              maxHeight: 380,
             }}
           >
             {interactions.map((item) => (
@@ -53,7 +55,7 @@ function UserInteractions({ selectedUser, onInteractionsDelete, customInteractio
           </List>
         </Paper>
       ) : (
-        <Skeleton variant="rectangular" height={400} width="100%" />
+        <Skeleton variant="rectangular" height={380} width="100%" />
       )}
     </Box>
   );

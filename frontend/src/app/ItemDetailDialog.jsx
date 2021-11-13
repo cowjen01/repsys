@@ -7,28 +7,29 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 
-function ConfirmDialog({ open, onClose }) {
+function ItemDetailDialog({ open, onClose, data }) {
+  if (!data) {
+    return null;
+  }
+
   return (
-    <Dialog open={open} onClose={() => onClose(false)} maxWidth="sm" fullWidth>
-      <DialogTitle>Delete this recommender?</DialogTitle>
+    <Dialog open={open} maxWidth="sm" fullWidth onClose={() => onClose(false)}>
+      <DialogTitle>{data.title}</DialogTitle>
       <DialogContent>
-        <DialogContentText>Deleting this recommender all settings will be lost.</DialogContentText>
+        <DialogContentText>{data.description || 'No description provided.'}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color="secondary" onClick={() => onClose(false)}>
-          Cancel
-        </Button>
-        <Button color="secondary" onClick={() => onClose(true)} autoFocus>
-          Delete
+        <Button color="secondary" onClick={onClose} autoFocus>
+          Close
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
 
-ConfirmDialog.propTypes = {
+ItemDetailDialog.propTypes = {
   open: pt.bool.isRequired,
   onClose: pt.func.isRequired,
 };
 
-export default ConfirmDialog;
+export default ItemDetailDialog;

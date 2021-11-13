@@ -9,6 +9,7 @@ import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import IconButton from '@mui/material/IconButton';
+import Stack from '@mui/material/Stack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 
 const ITEM_TYPE = 'itemBar';
@@ -102,7 +103,7 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
           {title}
         </Typography>
       </Box>
-      <Box>
+      <Stack direction="row" spacing={1}>
         <IconButton onClick={() => onEdit(index)}>
           <EditIcon />
         </IconButton>
@@ -112,7 +113,7 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
         <IconButton onClick={() => onDelete(index)}>
           <DeleteIcon />
         </IconButton>
-      </Box>
+      </Stack>
     </Paper>
   );
 }

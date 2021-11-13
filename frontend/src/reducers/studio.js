@@ -8,6 +8,7 @@ export const slice = createSlice({
     snackbarOpen: false,
     snackbarMessage: '',
     selectedUser: null,
+    favouriteUsers: [],
   },
   reducers: {
     toggleBuildMode: (state) => {
@@ -23,10 +24,25 @@ export const slice = createSlice({
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
     },
+    addUserToFavourites: (state) => {
+      state.favouriteUsers.push(state.selectedUser);
+    },
+    removeUserFromFavourites: (state) => {
+      state.favouriteUsers = state.favouriteUsers.filter(
+        (user) => user.id !== state.selectedUser.id
+      );
+    },
   },
 });
 
-export const { toggleBuildMode, openSnackbar, closeSnackbar, setSelectedUser } = slice.actions;
+export const {
+  toggleBuildMode,
+  openSnackbar,
+  closeSnackbar,
+  setSelectedUser,
+  addUserToFavourites,
+  removeUserFromFavourites,
+} = slice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
 
@@ -35,5 +51,7 @@ export const snackbarOpenSelector = (state) => state.studio.snackbarOpen;
 export const snackbarMessageSelector = (state) => state.studio.snackbarMessage;
 
 export const selectedUserSelector = (state) => state.studio.selectedUser;
+
+export const favouriteUsersSelector = (state) => state.studio.favouriteUsers;
 
 export default slice.reducer;
