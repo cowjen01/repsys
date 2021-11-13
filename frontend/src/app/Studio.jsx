@@ -20,6 +20,7 @@ import {
   openSnackbar,
   setSelectedUser,
   selectedUserSelector,
+  sessionRecordSelector,
 } from '../reducers/studio';
 import RecommenderView from './RecommenderView';
 import RecommenderEdit from './RecommenderEdit';
@@ -37,6 +38,7 @@ function Studio() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const selectedUser = useSelector(selectedUserSelector);
+  const sessionRecord = useSelector(sessionRecordSelector);
   const dispatch = useDispatch();
 
   const [customInteractions, setCustomInteractions] = useState([]);
@@ -79,7 +81,11 @@ function Studio() {
   };
 
   const handleItemClick = (data) => {
-    setItemData(data);
+    if (sessionRecord) {
+      setCustomInteractions((arr) => [data, ...arr]);
+    } else {
+      setItemData(data);
+    }
   };
 
   const handleItemDetailClose = () => {

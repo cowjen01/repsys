@@ -77,9 +77,9 @@ function UserSearch({ onUserSelect, onInteractionsSelect, customInteractions }) 
     >
       <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
         <Tabs value={activeTab} onChange={handleChange} centered>
-          <Tab label="Test User" />
-          <Tab label="Favourite User" />
-          <Tab label="User Space" />
+          <Tab label="Simulator" />
+          <Tab label="Favourites" />
+          <Tab label="Embeddings" />
         </Tabs>
       </Box>
       <TabPanel value={activeTab} index={0}>
@@ -158,7 +158,7 @@ function UserSearch({ onUserSelect, onInteractionsSelect, customInteractions }) 
           variant="contained"
           onClick={() => onUserSelect(selectedUser)}
         >
-          Select user {selectedUser ? selectedUser.label : ''}
+          Select user
         </Button>
       </TabPanel>
       <TabPanel value={activeTab} index={2}>

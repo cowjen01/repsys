@@ -32,6 +32,7 @@ function RecommenderView({
   onMetricsClick,
 }) {
   const [page, setPage] = useState(0);
+
   const { items, isLoading } = postRequest('/predict', {
     model,
     ...(selectedUser
@@ -51,7 +52,7 @@ function RecommenderView({
 
   useEffect(() => {
     setPage(0);
-  }, [selectedUser]);
+  }, [selectedUser, customInteractions.length]);
 
   return (
     <Grid container spacing={1}>
@@ -113,7 +114,7 @@ function RecommenderView({
               ))
             : [...Array(itemsPerPage).keys()].map((i) => (
                 <Grid key={i} item display="flex" md={12 / itemsPerPage}>
-                  <Skeleton variant="rectangular" height={155} width="100%" />
+                  <Skeleton variant="rectangular" height={250} width="100%" />
                 </Grid>
               ))}
           {!isLoading && items.length === 0 && (

@@ -8,7 +8,7 @@ import CardActionArea from '@mui/material/CardActionArea';
 
 function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick }) {
   return (
-    <Card sx={{ width: '100%', height: '100%' }}>
+    <Card sx={{ width: '100%', height: 250 }}>
       <CardActionArea
         sx={{ height: '100%', flexDirection: 'column', alignItems: 'stretch' }}
         onClick={onClick}

@@ -3,10 +3,7 @@ import pt from 'prop-types';
 import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
-import { Typography, Box, Button, Grid } from '@mui/material';
-import Checkbox from '@mui/material/Checkbox';
-import FavoriteBorder from '@mui/icons-material/FavoriteBorder';
-import Favorite from '@mui/icons-material/Favorite';
+import Box from '@mui/material/Box';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import Paper from '@mui/material/Paper';
 import List from '@mui/material/List';
@@ -14,8 +11,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import ListItemText from '@mui/material/ListItemText';
-import Divider from '@mui/material/Divider';
-import ListSubheader from '@mui/material/ListSubheader';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useSelector, useDispatch } from 'react-redux';
 import FavoriteIcon from '@mui/icons-material/Favorite';
@@ -26,6 +21,10 @@ import {
   addUserToFavourites,
   removeUserFromFavourites,
   favouriteUsersSelector,
+  sessionRecordSelector,
+  toggleSessionRecord,
+  openSnackbar,
+  setSelectedUser,
 } from '../reducers/studio';
 
 function UserPanel({
@@ -38,6 +37,15 @@ function UserPanel({
   const { items: userData, isLoading: isUserLoading } = getRequest('/users');
   const dispatch = useDispatch();
   const favouriteUsers = useSelector(favouriteUsersSelector);
+  const sessionRecord = useSelector(sessionRecordSelector);
+
+  const handleSessionRecord = () => {
+    dispatch(toggleSessionRecord());
+    dispatch(setSelectedUser(null));
+    if (!sessionRecord) {
+      dispatch(openSnackbar('Recording started - click on items to interact.'));
+    }
+  };
 
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
@@ -58,6 +66,7 @@ function UserPanel({
       </Grid> */}
       <Autocomplete
         disablePortal
+        disabled={sessionRecord}
         value={selectedUser}
         onChange={(event, newValue) => {
           onUserSelect(newValue);
@@ -68,24 +77,6 @@ function UserPanel({
         sx={{ width: '100%', marginBottom: 2 }}
         renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
       />
-      {/* <Paper>
-<Button
-        onClick={onSearchClick}
-        startIcon={<PersonSearchIcon />}
-        // variant="contained"
-        color="secondary"
-      >
-        More Options
-      </Button>
-      <Button
-        onClick={onSearchClick}
-        startIcon={<RadioButtonCheckedIcon />}
-        // variant="contained"
-        color="secondary"
-      >
-        Record Session
-      </Button>
-      </Paper> */}
       <Paper>
         <List>
           {selectedUser && (
@@ -109,19 +100,19 @@ function UserPanel({
           )}
 
           <ListItem disablePadding>
-            <ListItemButton onClick={onSearchClick}>
+            <ListItemButton disabled={sessionRecord} onClick={onSearchClick}>
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
-              <ListItemText primary="Open search options" />
+              <ListItemText primary="Search options" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton>
+            <ListItemButton onClick={handleSessionRecord}>
               <ListItemIcon>
-                <RadioButtonCheckedIcon />
+                <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
               </ListItemIcon>
-              <ListItemText primary="Record new session" />
+              <ListItemText primary={sessionRecord ? 'Stop recording' : 'Record session'} />
             </ListItemButton>
           </ListItem>
         </List>

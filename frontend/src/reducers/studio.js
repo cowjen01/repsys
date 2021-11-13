@@ -9,10 +9,14 @@ export const slice = createSlice({
     snackbarMessage: '',
     selectedUser: null,
     favouriteUsers: [],
+    sessionRecord: false,
   },
   reducers: {
     toggleBuildMode: (state) => {
       state.buildMode = !state.buildMode;
+    },
+    toggleSessionRecord: (state) => {
+      state.sessionRecord = !state.sessionRecord;
     },
     openSnackbar: (state, { payload }) => {
       state.snackbarMessage = payload;
@@ -42,6 +46,7 @@ export const {
   setSelectedUser,
   addUserToFavourites,
   removeUserFromFavourites,
+  toggleSessionRecord,
 } = slice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
@@ -53,5 +58,7 @@ export const snackbarMessageSelector = (state) => state.studio.snackbarMessage;
 export const selectedUserSelector = (state) => state.studio.selectedUser;
 
 export const favouriteUsersSelector = (state) => state.studio.favouriteUsers;
+
+export const sessionRecordSelector = (state) => state.studio.sessionRecord;
 
 export default slice.reducer;
