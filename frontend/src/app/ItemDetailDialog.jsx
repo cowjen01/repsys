@@ -1,35 +1,35 @@
 import React from 'react';
-import pt from 'prop-types';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { useDispatch, useSelector } from 'react-redux';
 
-function ItemDetailDialog({ open, onClose, data }) {
-  if (!data) {
-    return null;
-  }
+import { closeItemDetailDialog, itemDetailDialogSelector } from '../reducers/studio';
+
+function ItemDetailDialog() {
+  const dialog = useSelector(itemDetailDialogSelector);
+  const dispatch = useDispatch();
+
+  const handleClose = () => {
+    dispatch(closeItemDetailDialog());
+  };
 
   return (
-    <Dialog open={open} maxWidth="sm" fullWidth onClose={() => onClose(false)}>
-      <DialogTitle>{data.title}</DialogTitle>
+    <Dialog open={dialog.open} maxWidth="sm" fullWidth onClose={handleClose}>
+      <DialogTitle>{dialog.title}</DialogTitle>
       <DialogContent>
-        <DialogContentText>{data.description || 'No description provided.'}</DialogContentText>
+        <DialogContentText>{dialog.content}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color="secondary" onClick={onClose} autoFocus>
+        <Button color="secondary" onClick={handleClose} autoFocus>
           Close
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
-
-ItemDetailDialog.propTypes = {
-  open: pt.bool.isRequired,
-  onClose: pt.func.isRequired,
-};
 
 export default ItemDetailDialog;

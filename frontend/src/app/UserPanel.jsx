@@ -21,56 +21,50 @@ import {
   addUserToFavourites,
   removeUserFromFavourites,
   favouriteUsersSelector,
-  sessionRecordSelector,
-  toggleSessionRecord,
+  sessionRecordingSelector,
+  toggleSessionRecording,
   openSnackbar,
   setSelectedUser,
+  customInteractionsSelector,
+  selectedUserSelector,
+  clearCustomInteractions,
 } from '../reducers/studio';
 
-function UserPanel({
-  selectedUser,
-  onUserSelect,
-  onSearchClick,
-  customInteractions,
-  onInteractionsDelete,
-}) {
-  const { items: userData, isLoading: isUserLoading } = getRequest('/users');
+function UserPanel({ onSearchClick }) {
   const dispatch = useDispatch();
   const favouriteUsers = useSelector(favouriteUsersSelector);
-  const sessionRecord = useSelector(sessionRecordSelector);
+  const sessionRecord = useSelector(sessionRecordingSelector);
+  const customInteractions = useSelector(customInteractionsSelector);
+  const selectedUser = useSelector(selectedUserSelector);
 
-  const handleSessionRecord = () => {
-    dispatch(toggleSessionRecord());
+  const { items: userData, isLoading: isUserLoading } = getRequest('/users');
+
+  const handleSessionRecording = () => {
+    dispatch(toggleSessionRecording());
     dispatch(setSelectedUser(null));
     if (!sessionRecord) {
-      dispatch(openSnackbar('Recording started - click on items to interact.'));
+      dispatch(
+        openSnackbar({
+          message: 'Recording started - click on items to interact.',
+          severity: 'warning',
+        })
+      );
     }
+  };
+
+  const handleUserSelect = (event, user) => {
+    dispatch(setSelectedUser(user));
+    dispatch(clearCustomInteractions());
   };
 
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
-      {/* <Typography variant="h6" component="div" gutterBottom>
-        User Selector
-      </Typography> */}
-      {/* <Grid container alignItems="center" sx={{ marginBottom: 1 }}>
-        <Grid item>
-          <Typography variant="h6" component="div">
-            {selectedUser ? `User ${selectedUser.label}` : `User Selector`}
-          </Typography>
-        </Grid>
-        {selectedUser && (
-          <Grid item>
-            <Checkbox color="secondary" icon={<FavoriteBorder />} checkedIcon={<Favorite />} />
-          </Grid>
-        )}
-      </Grid> */}
       <Autocomplete
         disablePortal
         disabled={sessionRecord}
         value={selectedUser}
-        onChange={(event, newValue) => {
-          onUserSelect(newValue);
-        }}
+        loading={isUserLoading}
+        onChange={handleUserSelect}
         isOptionEqualToValue={(option, value) => option.id === value.id}
         options={userData}
         getOptionLabel={(user) => `User ${user.label}`}
@@ -98,7 +92,6 @@ function UserPanel({
               )}
             </ListItem>
           )}
-
           <ListItem disablePadding>
             <ListItemButton disabled={sessionRecord} onClick={onSearchClick}>
               <ListItemIcon>
@@ -108,7 +101,7 @@ function UserPanel({
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton onClick={handleSessionRecord}>
+            <ListItemButton onClick={handleSessionRecording}>
               <ListItemIcon>
                 <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
               </ListItemIcon>
@@ -117,28 +110,12 @@ function UserPanel({
           </ListItem>
         </List>
       </Paper>
-
-      {(selectedUser || customInteractions.length > 0) && (
-        <UserInteractions
-          selectedUser={selectedUser}
-          onInteractionsDelete={onInteractionsDelete}
-          customInteractions={customInteractions}
-        />
-      )}
+      {(selectedUser || customInteractions.length > 0) && <UserInteractions />}
     </Box>
   );
 }
 
-UserPanel.defaultProps = {
-  selectedUser: null,
-};
-
 UserPanel.propTypes = {
-  selectedUser: pt.shape({
-    id: pt.number,
-    label: pt.string,
-  }),
-  onUserSelect: pt.func.isRequired,
   onSearchClick: pt.func.isRequired,
 };
 

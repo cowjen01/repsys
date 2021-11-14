@@ -6,8 +6,9 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
+import { PersistGate } from 'redux-persist/integration/react';
 
-import store from './store';
+import store, { persistor } from './store';
 import Studio from './app/Studio';
 import { darkModeSelector } from './reducers/settings';
 
@@ -49,12 +50,14 @@ ThemeWrapper.propTypes = {
 function App() {
   return (
     <Provider store={store}>
-      <DndProvider backend={HTML5Backend}>
-        <ThemeWrapper>
-          <CssBaseline />
-          <Studio />
-        </ThemeWrapper>
-      </DndProvider>
+      <PersistGate loading={null} persistor={persistor}>
+        <DndProvider backend={HTML5Backend}>
+          <ThemeWrapper>
+            <CssBaseline />
+            <Studio />
+          </ThemeWrapper>
+        </DndProvider>
+      </PersistGate>
     </Provider>
   );
 }

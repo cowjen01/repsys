@@ -52,6 +52,7 @@ ItemCardView.propTypes = {
   subtitle: pt.string,
   image: pt.string,
   title: pt.string.isRequired,
+  onClick: pt.func.isRequired,
 };
 
 export default ItemCardView;

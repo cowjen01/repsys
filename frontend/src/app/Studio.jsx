@@ -15,13 +15,7 @@ import {
   duplicateBar,
   updateBar,
 } from '../reducers/recommenders';
-import {
-  buildModeSelector,
-  openSnackbar,
-  setSelectedUser,
-  selectedUserSelector,
-  sessionRecordSelector,
-} from '../reducers/studio';
+import { buildModeSelector, openConfirmDialog, openSnackbar } from '../reducers/studio';
 import RecommenderView from './RecommenderView';
 import RecommenderEdit from './RecommenderEdit';
 import ConfirmDialog from './ConfirmDialog';
@@ -37,14 +31,10 @@ import { getRequest } from './api';
 function Studio() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
-  const selectedUser = useSelector(selectedUserSelector);
-  const sessionRecord = useSelector(sessionRecordSelector);
   const dispatch = useDispatch();
 
-  const [customInteractions, setCustomInteractions] = useState([]);
   const [deleteIndex, setDeleteIndex] = useState();
   const [barData, setBarData] = useState();
-  const [itemData, setItemData] = useState();
   const [userSearchOpen, setUserSearchOpen] = useState(false);
   const [metricsOpen, setMetricsOpen] = useState(false);
 
@@ -64,12 +54,16 @@ function Studio() {
 
   const handleBarDelete = (index) => {
     setDeleteIndex(index);
+    dispatch(
+      openConfirmDialog({
+        title: 'Delete this recommender?',
+        content: 'Deleting this recommender all settings will be lost.',
+      })
+    );
   };
 
-  const handleDeleteConfirm = (isAgree) => {
-    if (isAgree) {
-      dispatch(removeBar(deleteIndex));
-    }
+  const handleDeleteConfirm = () => {
+    dispatch(removeBar(deleteIndex));
     setDeleteIndex(undefined);
   };
 
@@ -78,18 +72,6 @@ function Studio() {
     // if (index === layout.length - 1) {
     //   divRef.current.scrollIntoView({ behavior: 'smooth', block: 'end', inline: 'nearest' });
     // }
-  };
-
-  const handleItemClick = (data) => {
-    if (sessionRecord) {
-      setCustomInteractions((arr) => [data, ...arr]);
-    } else {
-      setItemData(data);
-    }
-  };
-
-  const handleItemDetailClose = () => {
-    setItemData(undefined);
   };
 
   const handleBarDialogClose = () => {
@@ -106,7 +88,11 @@ function Studio() {
     } else {
       dispatch(updateBar(data));
     }
-    dispatch(openSnackbar('All settings applied!'));
+    dispatch(
+      openSnackbar({
+        message: 'All settings applied!',
+      })
+    );
     handleBarDialogClose();
   };
 
@@ -138,7 +124,7 @@ function Studio() {
 
   return (
     <Layout>
-      <ConfirmDialog open={deleteIndex !== undefined} onClose={handleDeleteConfirm} />
+      <ConfirmDialog onConfirm={handleDeleteConfirm} />
       <RecommenderDialog
         open={barData !== undefined}
         initialValues={barData}
@@ -146,11 +132,7 @@ function Studio() {
         onClose={handleBarDialogClose}
         onSubmit={handleBarSubmit}
       />
-      <ItemDetailDialog
-        open={itemData !== undefined}
-        data={itemData}
-        onClose={handleItemDetailClose}
-      />
+      <ItemDetailDialog />
       <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
         {!buildMode ? (
           <Grid container spacing={4}>
@@ -164,36 +146,18 @@ function Studio() {
               <>
                 <Grid item xs={12} lg={9}>
                   <Grid container spacing={3}>
-                    {recommenders.map((rec) => (
-                      <Grid item xs={12} key={rec.id}>
+                    {recommenders.map((recommender) => (
+                      <Grid item xs={12} key={recommender.id}>
                         <RecommenderView
-                          title={rec.title}
-                          model={rec.model}
-                          selectedUser={selectedUser}
-                          customInteractions={customInteractions}
-                          onMetricsClick={() => setMetricsOpen(true)}
-                          modelParams={rec.modelParams}
-                          itemsPerPage={rec.itemsPerPage}
-                          itemsLimit={rec.itemsLimit}
-                          onItemClick={handleItemClick}
+                          onMetricsOpen={() => setMetricsOpen(true)}
+                          recommender={recommender}
                         />
                       </Grid>
                     ))}
                   </Grid>
                 </Grid>
                 <Grid item xs={12} lg={3}>
-                  <UserPanel
-                    selectedUser={selectedUser}
-                    onInteractionsDelete={() => {
-                      setCustomInteractions([]);
-                    }}
-                    onUserSelect={(user) => {
-                      dispatch(setSelectedUser(user));
-                      setCustomInteractions([]);
-                    }}
-                    onSearchClick={() => setUserSearchOpen(true)}
-                    customInteractions={customInteractions}
-                  />
+                  <UserPanel onSearchClick={() => setUserSearchOpen(true)} />
                 </Grid>
               </>
             )}
@@ -225,7 +189,7 @@ function Studio() {
       <Drawer anchor="bottom" open={metricsOpen} onClose={() => setMetricsOpen(false)}>
         <ModelMetrics />
       </Drawer>
-      <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
+      {/* <Drawer anchor="right" open={userSearchOpen} onClose={() => setUserSearchOpen(false)}>
         <UserSearch
           customInteractions={customInteractions}
           onUserSelect={(user) => {
@@ -239,7 +203,7 @@ function Studio() {
             dispatch(setSelectedUser(null));
           }}
         />
-      </Drawer>
+      </Drawer> */}
       <Snackbar />
       {buildMode && (
         <Fab

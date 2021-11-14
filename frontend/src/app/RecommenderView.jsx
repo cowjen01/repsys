@@ -1,37 +1,35 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import pt from 'prop-types';
 import Typography from '@mui/material/Typography';
 import Grid from '@mui/material/Grid';
-import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
-import BarChartIcon from '@mui/icons-material/BarChart';
-import Chip from '@mui/material/Chip';
 import Alert from '@mui/material/Alert';
 import AlertTitle from '@mui/material/AlertTitle';
-import LabelIcon from '@mui/icons-material/Label';
 import Stack from '@mui/material/Stack';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import Box from '@mui/material/Box';
 import IconButton from '@mui/material/IconButton';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import { useSelector, useDispatch } from 'react-redux';
 
 import ItemCardView from './ItemCardView';
 import { postRequest } from './api';
+import {
+  customInteractionsSelector,
+  selectedUserSelector,
+  sessionRecordingSelector,
+  addCustomInteraction,
+  openItemDetailDialog,
+} from '../reducers/studio';
 
-function RecommenderView({
-  title,
-  model,
-  selectedUser,
-  customInteractions,
-  itemsPerPage,
-  itemsLimit,
-  onItemClick,
-  modelParams,
-  onMetricsClick,
-}) {
+function RecommenderView({ recommender }) {
+  const dispatch = useDispatch();
+  const customInteractions = useSelector(customInteractionsSelector);
+  const selectedUser = useSelector(selectedUserSelector);
+  const sessionRecording = useSelector(sessionRecordingSelector);
+
   const [page, setPage] = useState(0);
+
+  const { title, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
   const { items, isLoading } = postRequest('/predict', {
     model,
@@ -46,8 +44,17 @@ function RecommenderView({
     limit: itemsLimit,
   });
 
-  const handlePageChange = (e, newPage) => {
-    setPage(newPage - 1);
+  const handleItemClick = (item) => {
+    if (sessionRecording) {
+      dispatch(addCustomInteraction(item));
+    } else {
+      dispatch(
+        openItemDetailDialog({
+          title: item.title,
+          content: item.description,
+        })
+      );
+    }
   };
 
   useEffect(() => {
@@ -60,14 +67,6 @@ function RecommenderView({
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid item>
             {/* <Stack direction="row" spacing={1}>
-              <Chip
-                // color="primary"
-                size="small"
-                // clickable
-                // variant="outlined"
-                icon={<BookmarkIcon />}
-                label={title}
-              />
               <Chip
                 // color="primary"
                 size="small"
@@ -96,7 +95,6 @@ function RecommenderView({
           </Grid>
         </Grid>
       </Grid>
-
       <Grid item xs={12}>
         <Grid container spacing={2}>
           {!isLoading
@@ -108,7 +106,7 @@ function RecommenderView({
                     caption={item.caption}
                     image={item.image}
                     imageHeight={Math.ceil(600 / itemsPerPage)}
-                    onClick={() => onItemClick(item)}
+                    onClick={() => handleItemClick(item)}
                   />
                 </Grid>
               ))
@@ -131,19 +129,15 @@ function RecommenderView({
   );
 }
 
-RecommenderView.defaultProps = {
-  modelParams: {},
-  customInteractions: [],
-};
-
 RecommenderView.propTypes = {
-  title: pt.string.isRequired,
-  itemsPerPage: pt.number.isRequired,
-  model: pt.string.isRequired,
-  onMetricsClick: pt.func.isRequired,
-  customInteractions: pt.array,
-  // eslint-disable-next-line react/forbid-prop-types
-  modelParams: pt.any,
+  recommender: pt.shape({
+    title: pt.string,
+    itemsPerPage: pt.number,
+    itemsLimit: pt.number,
+    model: pt.string,
+    // eslint-disable-next-line react/forbid-prop-types
+    modelParams: pt.any,
+  }).isRequired,
 };
 
 export default RecommenderView;

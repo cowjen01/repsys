@@ -1,10 +1,11 @@
-import { createStore, applyMiddleware, combineReducers } from '@reduxjs/toolkit';
+import { createStore, combineReducers } from '@reduxjs/toolkit';
+import { persistStore, persistReducer } from 'redux-persist';
+import storage from 'redux-persist/lib/storage';
+import stateReconciler from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import studioReducer from './reducers/studio';
 import recommendersReducer from './reducers/recommenders';
 import settingsReducer from './reducers/settings';
-
-const STORAGE_STATE_KEY = 'repsysApplicationState';
 
 const rootReducer = combineReducers({
   studio: studioReducer,
@@ -12,21 +13,17 @@ const rootReducer = combineReducers({
   settings: settingsReducer,
 });
 
-export const saveStateMiddleware = (storeAPI) => (next) => (action) => {
-  const result = next(action);
-  localStorage.setItem(STORAGE_STATE_KEY, JSON.stringify(storeAPI.getState()));
-  return result;
+const persistConfig = {
+  key: 'root',
+  storage,
+  stateReconciler,
 };
 
-export const restoreState = () => {
-  if (localStorage.getItem(STORAGE_STATE_KEY) !== null) {
-    return JSON.parse(localStorage.getItem(STORAGE_STATE_KEY));
-  }
-  return {};
-};
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-const middlewareEnhancer = applyMiddleware(saveStateMiddleware);
-
-const store = createStore(rootReducer, restoreState(), middlewareEnhancer);
+const store = createStore(persistedReducer);
+const persistor = persistStore(store);
 
 export default store;
+
+export { persistor };

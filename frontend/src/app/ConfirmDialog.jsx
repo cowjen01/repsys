@@ -6,20 +6,35 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
+import { useDispatch, useSelector } from 'react-redux';
 
-function ConfirmDialog({ open, onClose }) {
+import { closeConfirmDialog, confirmDialogSelector } from '../reducers/studio';
+
+function ConfirmDialog({ onConfirm }) {
+  const dialog = useSelector(confirmDialogSelector);
+  const dispatch = useDispatch();
+
+  const handleClose = () => {
+    dispatch(closeConfirmDialog());
+  };
+
+  const handleConfirm = () => {
+    handleClose();
+    onConfirm();
+  };
+
   return (
-    <Dialog open={open} onClose={() => onClose(false)} maxWidth="sm" fullWidth>
-      <DialogTitle>Delete this recommender?</DialogTitle>
+    <Dialog open={dialog.open} onClose={handleClose} maxWidth="sm" fullWidth>
+      <DialogTitle>{dialog.title}</DialogTitle>
       <DialogContent>
-        <DialogContentText>Deleting this recommender all settings will be lost.</DialogContentText>
+        <DialogContentText>{dialog.content}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color="secondary" onClick={() => onClose(false)}>
+        <Button color="secondary" onClick={handleClose}>
           Cancel
         </Button>
-        <Button color="secondary" onClick={() => onClose(true)} autoFocus>
-          Delete
+        <Button color="secondary" onClick={handleConfirm} autoFocus>
+          Confirm
         </Button>
       </DialogActions>
     </Dialog>
@@ -27,8 +42,7 @@ function ConfirmDialog({ open, onClose }) {
 }
 
 ConfirmDialog.propTypes = {
-  open: pt.bool.isRequired,
-  onClose: pt.func.isRequired,
+  onConfirm: pt.func.isRequired,
 };
 
 export default ConfirmDialog;

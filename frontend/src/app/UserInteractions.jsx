@@ -1,21 +1,44 @@
 import React from 'react';
-import pt from 'prop-types';
-import List from '@mui/material/List';
-import { Typography, Box, Paper, Button } from '@mui/material';
+import { Box, Paper } from '@mui/material';
 import Skeleton from '@mui/material/Skeleton';
 import Chip from '@mui/material/Chip';
-import Grid from '@mui/material/Grid';
-import TouchAppIcon from '@mui/icons-material/TouchApp';
-import ListSubheader from '@mui/material/ListSubheader';
 import FilterListIcon from '@mui/icons-material/FilterList';
+import { useSelector, useDispatch } from 'react-redux';
+import { FixedSizeList } from 'react-window';
 
 import { getRequest } from './api';
 import ItemListView from './ItemListView';
+import {
+  clearCustomInteractions,
+  customInteractionsSelector,
+  selectedUserSelector,
+} from '../reducers/studio';
 
-function UserInteractions({ selectedUser, onInteractionsDelete, customInteractions }) {
+function renderRow({ index, style, data }) {
+  const item = data[index];
+  return (
+    <ItemListView
+      image={item.image}
+      key={item.id}
+      id={item.id}
+      title={item.title}
+      subtitle={item.subtitle}
+    />
+  );
+}
+
+function UserInteractions() {
+  const dispatch = useDispatch();
+  const customInteractions = useSelector(customInteractionsSelector);
+  const selectedUser = useSelector(selectedUserSelector);
+
   const { items: userHistoryData, isLoading: isUserHistoryLoading } = getRequest('/interactions', {
     user: selectedUser ? selectedUser.id : null,
   });
+
+  const handleDelete = () => {
+    dispatch(clearCustomInteractions());
+  };
 
   const interactions = customInteractions.length > 0 ? customInteractions : userHistoryData;
 
@@ -23,36 +46,23 @@ function UserInteractions({ selectedUser, onInteractionsDelete, customInteractio
     <Box sx={{ marginTop: 2 }}>
       {customInteractions.length > 0 && (
         <Chip
-          // color="primary"
-          // size="small"
           sx={{ marginBottom: 2 }}
-          onDelete={onInteractionsDelete}
+          onDelete={handleDelete}
           icon={<FilterListIcon />}
           label="Custom interactions"
         />
       )}
-
       {!isUserHistoryLoading ? (
         <Paper>
-          <List
-            subheader={<ListSubheader>Interactions history ({interactions.length})</ListSubheader>}
-            sx={{
-              width: '100%',
-              position: 'relative',
-              overflow: 'auto',
-              maxHeight: 380,
-            }}
+          <FixedSizeList
+            height={380}
+            itemData={interactions}
+            itemSize={100}
+            itemCount={interactions.length}
+            overscanCount={10}
           >
-            {interactions.map((item) => (
-              <ItemListView
-                image={item.image}
-                key={item.id}
-                id={item.id}
-                title={item.title}
-                subtitle={item.subtitle}
-              />
-            ))}
-          </List>
+            {renderRow}
+          </FixedSizeList>
         </Paper>
       ) : (
         <Skeleton variant="rectangular" height={380} width="100%" />

@@ -3,12 +3,11 @@ import MuiSnackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { snackbarOpenSelector, snackbarMessageSelector, closeSnackbar } from '../reducers/studio';
+import { snackbarSelector, closeSnackbar } from '../reducers/studio';
 
 function Snackbar() {
   const dispatch = useDispatch();
-  const snackbarOpen = useSelector(snackbarOpenSelector);
-  const snackbarMessage = useSelector(snackbarMessageSelector);
+  const snackbar = useSelector(snackbarSelector);
 
   const handleClose = () => {
     dispatch(closeSnackbar());
@@ -16,7 +15,7 @@ function Snackbar() {
 
   return (
     <MuiSnackbar
-      open={snackbarOpen}
+      open={snackbar.open}
       autoHideDuration={3000}
       onClose={handleClose}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
@@ -25,10 +24,10 @@ function Snackbar() {
         elevation={6}
         variant="filled"
         onClose={handleClose}
-        severity="success"
+        severity={snackbar.severity}
         sx={{ width: '100%' }}
       >
-        {snackbarMessage}
+        {snackbar.message}
       </Alert>
     </MuiSnackbar>
   );

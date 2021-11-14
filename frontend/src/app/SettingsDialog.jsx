@@ -1,5 +1,4 @@
 import React from 'react';
-import pt from 'prop-types';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
 import DialogActions from '@mui/material/DialogActions';
@@ -11,13 +10,19 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { darkModeSelector, toggleDarkMode } from '../reducers/settings';
+import { closeSettingsDialog, settingsDialogOpenSelector } from '../reducers/studio';
 
-function SettingsDialog({ open, onClose }) {
+function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
+  const dialogOpen = useSelector(settingsDialogOpenSelector);
   const dispatch = useDispatch();
 
+  const handleClose = () => {
+    dispatch(closeSettingsDialog());
+  };
+
   return (
-    <Dialog open={open} fullWidth maxWidth="sm" onClose={() => onClose(false)}>
+    <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Repsys Settings</DialogTitle>
       <DialogContent>
         <FormGroup>
@@ -34,17 +39,12 @@ function SettingsDialog({ open, onClose }) {
         </FormGroup>
       </DialogContent>
       <DialogActions>
-        <Button color="secondary" onClick={() => onClose(false)}>
+        <Button color="secondary" onClick={handleClose}>
           Close
         </Button>
       </DialogActions>
     </Dialog>
   );
 }
-
-SettingsDialog.propTypes = {
-  open: pt.bool.isRequired,
-  onClose: pt.func.isRequired,
-};
 
 export default SettingsDialog;

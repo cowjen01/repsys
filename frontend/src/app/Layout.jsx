@@ -14,21 +14,21 @@ import Menu from '@mui/material/Menu';
 import Grid from '@mui/material/Grid';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useHotkeys } from 'react-hotkeys-hook';
-import DonutSmallIcon from '@mui/icons-material/DonutSmall';
+// import DonutSmallIcon from '@mui/icons-material/DonutSmall';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import SettingsIcon from '@mui/icons-material/Settings';
 import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
 
-import { buildModeSelector, toggleBuildMode } from '../reducers/studio';
+import { buildModeSelector, toggleBuildMode, openSettingsDialog } from '../reducers/studio';
 import SettingsDialog from './SettingsDialog';
 
 function Layout({ children }) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [anchorEl, setAnchorEl] = useState(null);
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
+
+  const [anchorEl, setAnchorEl] = useState(null);
 
   useHotkeys('cmd+b', () => {
     dispatch(toggleBuildMode());
@@ -85,7 +85,7 @@ function Layout({ children }) {
                 <Divider />
                 <MenuItem
                   onClick={() => {
-                    setSettingsOpen(true);
+                    dispatch(openSettingsDialog());
                     handleMenuClose();
                   }}
                 >
@@ -137,7 +137,7 @@ function Layout({ children }) {
         <Toolbar />
         {children}
       </Box>
-      <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+      <SettingsDialog />
     </>
   );
 }
