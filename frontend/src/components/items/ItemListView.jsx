@@ -3,9 +3,17 @@ import pt from 'prop-types';
 import { ListItemAvatar, Avatar, ListItemText, ListItem } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 
-function ItemListView({ title, subtitle, image }) {
+const typographyProps = {
+  style: {
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+};
+
+function ItemListView({ title, subtitle, image, style }) {
   return (
-    <ListItem>
+    <ListItem style={style}>
       <ListItemAvatar>
         {image ? (
           <Avatar src={image} />
@@ -15,20 +23,27 @@ function ItemListView({ title, subtitle, image }) {
           </Avatar>
         )}
       </ListItemAvatar>
-      <ListItemText primary={title} secondary={subtitle} />
+      <ListItemText
+        primaryTypographyProps={typographyProps}
+        secondaryTypographyProps={typographyProps}
+        primary={title}
+        secondary={subtitle}
+      />
     </ListItem>
   );
 }
 
 ItemListView.defaultProps = {
   subtitle: '',
-  image: '',
+  image: null,
 };
 
 ItemListView.propTypes = {
   subtitle: pt.string,
   image: pt.string,
   title: pt.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  style: pt.any.isRequired,
 };
 
 export default ItemListView;

@@ -12,10 +12,13 @@ import {
   selectedUserSelector,
 } from '../../reducers/root';
 
+const INTERACTIONS_HEIGHT = 330;
+
 function renderRow({ index, style, data }) {
   const item = data[index];
   return (
     <ItemListView
+      style={style}
       image={item.image}
       key={item.id}
       id={item.id}
@@ -65,17 +68,16 @@ function UserInteractionsList() {
             Interactions ({interactions.length})
           </Typography>
           <FixedSizeList
-            height={330}
+            height={INTERACTIONS_HEIGHT}
             itemData={interactions}
-            itemSize={100}
+            itemSize={70}
             itemCount={interactions.length}
-            overscanCount={15}
           >
             {renderRow}
           </FixedSizeList>
         </Paper>
       ) : (
-        <Skeleton variant="rectangular" height={330} width="100%" />
+        <Skeleton variant="rectangular" height={INTERACTIONS_HEIGHT} width="100%" />
       )}
     </Box>
   );
