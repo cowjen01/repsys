@@ -14,8 +14,12 @@ export const slice = createSlice({
     toggleBuildMode: (state) => {
       state.buildMode = !state.buildMode;
     },
-    toggleSessionRecording: (state) => {
+    toggleSessionRecording: (state, { payload }) => {
       state.sessionRecording = !state.sessionRecording;
+      state.selectedUser = null;
+      if (payload) {
+        state.customInteractions = payload;
+      }
     },
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
@@ -32,7 +36,7 @@ export const slice = createSlice({
       state.customInteractions = payload;
     },
     addCustomInteraction: (state, { payload }) => {
-      state.customInteractions.push(payload);
+      state.customInteractions.unshift(payload);
     },
   },
 });

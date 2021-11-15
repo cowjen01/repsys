@@ -27,6 +27,6 @@ export const handlers = [
   }),
   rest.get('/api/interactions', (req, res, ctx) => {
     shuffle(movies);
-    return res(ctx.status(200), ctx.json(movies.slice(0, randomInt(5, 30))));
+    return res(ctx.status(200), ctx.json(movies.slice(0, randomInt(5, 50))));
   }),
 ];

@@ -65,7 +65,7 @@ function RecEditDialog({ models }) {
                   name="itemsPerPage"
                   label="Items per page"
                   component={SelectField}
-                  options={[1, 2, 3, 4].map((i) => ({ label: i, value: i }))}
+                  options={[1, 3, 4].map((i) => ({ label: i, value: i }))}
                 />
                 <Field
                   name="itemsLimit"

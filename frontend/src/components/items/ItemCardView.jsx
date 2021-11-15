@@ -4,14 +4,14 @@ import { Typography, Card, CardContent, CardMedia, CardActionArea } from '@mui/m
 
 function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick }) {
   return (
-    <Card sx={{ width: '100%' }}>
+    <Card sx={{ width: '100%', height: '100%' }}>
       <CardActionArea
         sx={{ height: '100%', flexDirection: 'column', alignItems: 'stretch' }}
         onClick={onClick}
       >
         {image && (
           <CardMedia
-            sx={{ height: imageHeight, objectPosition: 'top' }}
+            sx={{ maxHeight: imageHeight, objectPosition: 'top' }}
             component="img"
             image={image}
           />

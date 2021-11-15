@@ -1,16 +1,15 @@
-import React from 'react';
-import { Box, Paper, Skeleton, Chip, Typography } from '@mui/material';
-import FilterListIcon from '@mui/icons-material/FilterList';
+import React, { useEffect } from 'react';
+import { Paper, Skeleton, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import { FixedSizeList } from 'react-window';
 
-import { getRequest } from '../../api';
 import { ItemListView } from '../items';
+import { customInteractionsSelector, selectedUserSelector } from '../../reducers/root';
 import {
-  setCustomInteractions,
-  customInteractionsSelector,
-  selectedUserSelector,
-} from '../../reducers/root';
+  fetchInteractions,
+  interactionsSelector,
+  interactionsStatusSelector,
+} from '../../reducers/interactions';
 
 const INTERACTIONS_HEIGHT = 330;
 
@@ -32,54 +31,44 @@ function UserInteractionsList() {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
+  const userInteractions = useSelector(interactionsSelector);
+  const status = useSelector(interactionsStatusSelector);
 
-  const { items: userHistoryData, isLoading: isUserHistoryLoading } = getRequest('/interactions', {
-    user: selectedUser ? selectedUser.id : null,
-  });
+  useEffect(() => {
+    if (selectedUser) {
+      dispatch(fetchInteractions(selectedUser.id));
+    }
+  }, [selectedUser, dispatch]);
 
-  const handleDelete = () => {
-    dispatch(setCustomInteractions([]));
-  };
+  const interactions = customInteractions.length ? customInteractions : userInteractions;
 
-  const interactions = customInteractions.length > 0 ? customInteractions : userHistoryData;
+  if (selectedUser && status !== 'succeeded') {
+    return <Skeleton variant="rectangular" height={INTERACTIONS_HEIGHT + 48} width="100%" />;
+  }
 
   return (
-    <Box sx={{ marginTop: 2 }}>
-      {customInteractions.length > 0 && (
-        <Chip
-          sx={{ marginBottom: 2 }}
-          onDelete={handleDelete}
-          icon={<FilterListIcon />}
-          label="Custom interactions"
-        />
-      )}
-      {!isUserHistoryLoading ? (
-        <Paper>
-          <Typography
-            sx={{
-              paddingLeft: '16px',
-              paddingRight: '16px',
-              lineHeight: '48px',
-              color: 'rgba(0, 0, 0, 0.6)',
-            }}
-            variant="subtitle2"
-            component="div"
-          >
-            Interactions ({interactions.length})
-          </Typography>
-          <FixedSizeList
-            height={INTERACTIONS_HEIGHT}
-            itemData={interactions}
-            itemSize={70}
-            itemCount={interactions.length}
-          >
-            {renderRow}
-          </FixedSizeList>
-        </Paper>
-      ) : (
-        <Skeleton variant="rectangular" height={INTERACTIONS_HEIGHT} width="100%" />
-      )}
-    </Box>
+    <Paper>
+      <Typography
+        sx={{
+          paddingLeft: '16px',
+          paddingRight: '16px',
+          lineHeight: '48px',
+          color: 'rgba(0, 0, 0, 0.6)',
+        }}
+        variant="subtitle2"
+        component="div"
+      >
+        Interactions ({interactions.length})
+      </Typography>
+      <FixedSizeList
+        height={INTERACTIONS_HEIGHT}
+        itemData={interactions}
+        itemSize={70}
+        itemCount={interactions.length}
+      >
+        {renderRow}
+      </FixedSizeList>
+    </Paper>
   );
 }
 

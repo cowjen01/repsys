@@ -12,9 +12,9 @@ import {
   favouriteUsersSelector,
   sessionRecordingSelector,
   toggleSessionRecording,
-  setSelectedUser,
   selectedUserSelector,
 } from '../../reducers/root';
+import { interactionsSelector } from '../../reducers/interactions';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
 
 function UserOptionsList() {
@@ -22,10 +22,14 @@ function UserOptionsList() {
   const favouriteUsers = useSelector(favouriteUsersSelector);
   const sessionRecord = useSelector(sessionRecordingSelector);
   const selectedUser = useSelector(selectedUserSelector);
+  const userInteractions = useSelector(interactionsSelector);
 
   const handleRecordBtnClick = () => {
-    dispatch(toggleSessionRecording());
-    dispatch(setSelectedUser(null));
+    if (selectedUser) {
+      dispatch(toggleSessionRecording(userInteractions));
+    } else {
+      dispatch(toggleSessionRecording());
+    }
     if (!sessionRecord) {
       dispatch(
         openSnackbar({

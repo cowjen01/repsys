@@ -1,6 +1,7 @@
 import React from 'react';
-import { TextField, Autocomplete, Box } from '@mui/material';
+import { TextField, Autocomplete, Box, Chip } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 import { getRequest } from '../../api';
 import {
@@ -26,6 +27,10 @@ function UserPanel() {
     dispatch(setCustomInteractions([]));
   };
 
+  const handleDelete = () => {
+    dispatch(setCustomInteractions([]));
+  };
+
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
       <Autocomplete
@@ -41,7 +46,19 @@ function UserPanel() {
         renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
       />
       <UserOptionsList />
-      {(selectedUser || customInteractions.length > 0) && <UserInteractionsList />}
+      {(selectedUser || customInteractions.length > 0) && (
+        <Box sx={{ marginTop: 2 }}>
+          {customInteractions.length > 0 && (
+            <Chip
+              sx={{ marginBottom: 2 }}
+              onDelete={handleDelete}
+              icon={<FilterListIcon />}
+              label="Custom interactions"
+            />
+          )}
+          <UserInteractionsList />
+        </Box>
+      )}
     </Box>
   );
 }

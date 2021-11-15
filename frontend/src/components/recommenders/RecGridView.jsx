@@ -106,7 +106,11 @@ function RecGridView({ recommender }) {
               ))
             : [...Array(itemsPerPage).keys()].map((i) => (
                 <Grid key={i} item display="flex" md={12 / itemsPerPage}>
-                  <Skeleton variant="rectangular" height={250} width="100%" />
+                  <Skeleton
+                    variant="rectangular"
+                    height={Math.ceil(600 / itemsPerPage) + 100}
+                    width="100%"
+                  />
                 </Grid>
               ))}
           {!isLoading && items.length === 0 && (
