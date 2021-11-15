@@ -8,7 +8,7 @@ export const slice = createSlice({
   name: 'recommenders',
   initialState: [],
   reducers: {
-    addBar: {
+    addRecommender: {
       reducer(state, action) {
         state.push(action.payload);
       },
@@ -21,17 +21,17 @@ export const slice = createSlice({
         };
       },
     },
-    updateBarsOrder: (state, action) => {
+    updateRecommendersOrder: (state, action) => {
       const { dragIndex, hoverIndex } = action.payload;
       [state[dragIndex], state[hoverIndex]] = [state[hoverIndex], state[dragIndex]];
     },
-    updateBar: (state, action) => {
+    updateRecommender: (state, action) => {
       const bar = state.find(({ id }) => id === action.payload.id);
       if (bar) {
         Object.assign(bar, action.payload);
       }
     },
-    duplicateBar: {
+    duplicateRecommender: {
       reducer(state, action) {
         const { index, id } = action.payload;
         const source = state[index];
@@ -50,13 +50,19 @@ export const slice = createSlice({
         };
       },
     },
-    removeBar: (state, action) => {
+    deleteRecommender: (state, action) => {
       state.splice(action.payload, 1);
     },
   },
 });
 
-export const { addBar, removeBar, updateBarsOrder, duplicateBar, updateBar } = slice.actions;
+export const {
+  addRecommender,
+  deleteRecommender,
+  updateRecommendersOrder,
+  duplicateRecommender,
+  updateRecommender,
+} = slice.actions;
 
 export const recommendersSelector = (state) => state.recommenders;
 

@@ -1,22 +1,44 @@
 import React, { useMemo } from 'react';
 import pt from 'prop-types';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
 import { Formik, Field } from 'formik';
-import DialogTitle from '@mui/material/DialogTitle';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import { useDispatch, useSelector } from 'react-redux';
 
-import TextField from './TextField';
-import SelectField from './SelectField';
-import CheckboxField from './CheckboxField';
+import { addRecommender, updateRecommender } from '../../reducers/recommenders';
+import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
+import { TextField, SelectField, CheckboxField } from '../fields';
 
-function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
+function RecEditDialog({ models }) {
+  const dialog = useSelector(recEditDialogSelector);
+  const dispatch = useDispatch();
+
+  const handleClose = () => {
+    dispatch(closeRecEditDialog());
+  };
+
+  const handleSubmit = (values) => {
+    const data = {
+      ...values,
+      itemsPerPage: parseInt(values.itemsPerPage, 10),
+    };
+    if (!values.id) {
+      dispatch(addRecommender(data));
+    } else {
+      dispatch(updateRecommender(data));
+    }
+    dispatch(
+      openSnackbar({
+        message: 'All settings applied!',
+      })
+    );
+    handleClose();
+  };
+
   return (
-    <Dialog open={open} fullWidth maxWidth="sm" onClose={onClose}>
+    <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Recommender Configuration</DialogTitle>
       <Formik
-        initialValues={initialValues}
+        initialValues={dialog.data}
         validate={(values) => {
           const errors = {};
           const requiredMessage = 'This field is required';
@@ -29,7 +51,7 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
           return errors;
         }}
         onSubmit={(values, { setSubmitting }) => {
-          onSubmit(values);
+          handleSubmit(values);
           setSubmitting(false);
         }}
       >
@@ -89,7 +111,7 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
                   })}
               </DialogContent>
               <DialogActions>
-                <Button onClick={onClose} color="secondary">
+                <Button onClick={handleClose} color="secondary">
                   Close
                 </Button>
                 <Button onClick={submitForm} color="secondary" disabled={isSubmitting} autoFocus>
@@ -104,19 +126,13 @@ function RecommenderDialog({ open, onClose, initialValues, onSubmit, models }) {
   );
 }
 
-RecommenderDialog.defaultProps = {
-  initialValues: {},
+RecEditDialog.defaultProps = {
   models: [],
 };
 
-RecommenderDialog.propTypes = {
-  open: pt.bool.isRequired,
-  onClose: pt.func.isRequired,
-  onSubmit: pt.func.isRequired,
-  // eslint-disable-next-line react/forbid-prop-types
-  initialValues: pt.any,
+RecEditDialog.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   models: pt.any,
 };
 
-export default RecommenderDialog;
+export default RecEditDialog;

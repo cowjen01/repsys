@@ -2,14 +2,9 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 export const slice = createSlice({
-  name: 'studio',
+  name: 'root',
   initialState: {
     buildMode: false,
-    snackbar: {
-      open: false,
-      message: '',
-      severity: 'success',
-    },
     selectedUser: null,
     favouriteUsers: [],
     sessionRecording: false,
@@ -22,16 +17,6 @@ export const slice = createSlice({
     toggleSessionRecording: (state) => {
       state.sessionRecording = !state.sessionRecording;
     },
-    openSnackbar: (state, { payload }) => {
-      state.snackbar = {
-        open: true,
-        message: payload.message || '',
-        severity: payload.severity || 'success',
-      };
-    },
-    closeSnackbar: (state) => {
-      state.snackbar.open = false;
-    },
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
     },
@@ -43,37 +28,33 @@ export const slice = createSlice({
         (user) => user.id !== state.selectedUser.id
       );
     },
+    setCustomInteractions: (state, { payload }) => {
+      state.customInteractions = payload;
+    },
     addCustomInteraction: (state, { payload }) => {
       state.customInteractions.push(payload);
-    },
-    clearCustomInteractions: (state) => {
-      state.customInteractions = [];
     },
   },
 });
 
 export const {
   toggleBuildMode,
-  openSnackbar,
-  closeSnackbar,
   setSelectedUser,
   addUserToFavourites,
   removeUserFromFavourites,
   toggleSessionRecording,
   addCustomInteraction,
-  clearCustomInteractions,
+  setCustomInteractions,
 } = slice.actions;
 
-export const buildModeSelector = (state) => state.studio.buildMode;
+export const buildModeSelector = (state) => state.root.buildMode;
 
-export const snackbarSelector = (state) => state.studio.snackbar;
+export const selectedUserSelector = (state) => state.root.selectedUser;
 
-export const selectedUserSelector = (state) => state.studio.selectedUser;
+export const favouriteUsersSelector = (state) => state.root.favouriteUsers;
 
-export const favouriteUsersSelector = (state) => state.studio.favouriteUsers;
+export const sessionRecordingSelector = (state) => state.root.sessionRecording;
 
-export const sessionRecordingSelector = (state) => state.studio.sessionRecording;
-
-export const customInteractionsSelector = (state) => state.studio.customInteractions;
+export const customInteractionsSelector = (state) => state.root.customInteractions;
 
 export default slice.reducer;

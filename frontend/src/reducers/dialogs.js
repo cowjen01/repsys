@@ -9,19 +9,41 @@ export const slice = createSlice({
       open: false,
       title: '',
       content: '',
+      params: null,
     },
     itemDetailDialog: {
       open: false,
       title: '',
       content: '',
     },
+    snackbar: {
+      open: false,
+      message: '',
+      severity: 'success',
+    },
+    userSelectDialogOpen: false,
+    recEditDialog: {
+      open: false,
+      data: null,
+    },
   },
   reducers: {
+    openSnackbar: (state, { payload }) => {
+      state.snackbar = {
+        open: true,
+        message: payload.message || '',
+        severity: payload.severity || 'success',
+      };
+    },
+    closeSnackbar: (state) => {
+      state.snackbar.open = false;
+    },
     openConfirmDialog: (state, { payload }) => {
       state.confirmDialog = {
         open: true,
         title: payload.title || '',
         content: payload.content || '',
+        params: payload.params,
       };
     },
     closeConfirmDialog: (state) => {
@@ -43,22 +65,51 @@ export const slice = createSlice({
     closeSettingsDialog: (state) => {
       state.settingsDialogOpen = false;
     },
+    openUserSelectDialog: (state) => {
+      state.userSelectDialogOpen = true;
+    },
+    closeUserSelectDialog: (state) => {
+      state.userSelectDialogOpen = false;
+    },
+    openRecEditDialog: (state, { payload }) => {
+      state.recEditDialog = {
+        open: true,
+        data: payload,
+      };
+    },
+    closeRecEditDialog: (state) => {
+      state.recEditDialog = {
+        open: false,
+      };
+    },
   },
 });
 
 export const {
+  openSnackbar,
+  closeSnackbar,
   openSettingsDialog,
   closeSettingsDialog,
   openConfirmDialog,
   closeConfirmDialog,
   openItemDetailDialog,
   closeItemDetailDialog,
+  openUserSelectDialog,
+  closeUserSelectDialog,
+  openRecEditDialog,
+  closeRecEditDialog,
 } = slice.actions;
 
-export const settingsDialogOpenSelector = (state) => state.dialogs.settingsDialogOpen;
+export const snackbarSelector = (state) => state.dialogs.snackbar;
+
+export const settingsDialogSelector = (state) => state.dialogs.settingsDialogOpen;
 
 export const confirmDialogSelector = (state) => state.dialogs.confirmDialog;
 
 export const itemDetailDialogSelector = (state) => state.dialogs.itemDetailDialog;
+
+export const userSelectDialogSelector = (state) => state.dialogs.userSelectDialogOpen;
+
+export const recEditDialogSelector = (state) => state.dialogs.recEditDialog;
 
 export default slice.reducer;

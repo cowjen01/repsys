@@ -8,9 +8,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
 import { PersistGate } from 'redux-persist/integration/react';
 
-import store, { persistor } from './store';
-import Studio from './app/Studio';
+import { store, persistor } from './store';
 import { darkModeSelector } from './reducers/settings';
+import App from './components/App';
 
 function ThemeWrapper({ children }) {
   const darkMode = useSelector(darkModeSelector);
@@ -47,14 +47,14 @@ ThemeWrapper.propTypes = {
   children: pt.node.isRequired,
 };
 
-function App() {
+function Root() {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <DndProvider backend={HTML5Backend}>
           <ThemeWrapper>
             <CssBaseline />
-            <Studio />
+            <App />
           </ThemeWrapper>
         </DndProvider>
       </PersistGate>
@@ -62,4 +62,4 @@ function App() {
   );
 }
 
-export default App;
+export default Root;

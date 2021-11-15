@@ -1,10 +1,7 @@
 import React from 'react';
 import pt from 'prop-types';
-import ListItemAvatar from '@mui/material/ListItemAvatar';
-import Avatar from '@mui/material/Avatar';
+import { ListItemAvatar, Avatar, ListItemText, ListItem } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
-import ListItemText from '@mui/material/ListItemText';
-import ListItem from '@mui/material/ListItem';
 
 function ItemListView({ title, subtitle, image }) {
   return (

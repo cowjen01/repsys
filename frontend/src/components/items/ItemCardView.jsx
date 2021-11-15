@@ -1,10 +1,6 @@
 import React from 'react';
 import pt from 'prop-types';
-import Typography from '@mui/material/Typography';
-import Card from '@mui/material/Card';
-import CardContent from '@mui/material/CardContent';
-import CardMedia from '@mui/material/CardMedia';
-import CardActionArea from '@mui/material/CardActionArea';
+import { Typography, Card, CardContent, CardMedia, CardActionArea } from '@mui/material';
 
 function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick }) {
   return (

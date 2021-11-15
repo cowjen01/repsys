@@ -1,51 +1,52 @@
 import React, { useState } from 'react';
 import pt from 'prop-types';
-import Box from '@mui/material/Box';
-import Toolbar from '@mui/material/Toolbar';
-import MuiAppBar from '@mui/material/AppBar';
-import Typography from '@mui/material/Typography';
-import Switch from '@mui/material/Switch';
-import FormControlLabel from '@mui/material/FormControlLabel';
+import {
+  Box,
+  Toolbar,
+  AppBar,
+  Typography,
+  Switch,
+  FormControlLabel,
+  Button,
+  MenuItem,
+  Menu,
+  Grid,
+  ListItemText,
+  ListItemIcon,
+  Divider,
+} from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
-import BubbleChartIcon from '@mui/icons-material/BubbleChart';
-import Button from '@mui/material/Button';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
-import Grid from '@mui/material/Grid';
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useHotkeys } from 'react-hotkeys-hook';
+import BubbleChartIcon from '@mui/icons-material/BubbleChart';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 // import DonutSmallIcon from '@mui/icons-material/DonutSmall';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import SettingsIcon from '@mui/icons-material/Settings';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import Divider from '@mui/material/Divider';
 
 import { openSettingsDialog } from '../reducers/dialogs';
-import { buildModeSelector, toggleBuildMode } from '../reducers/studio';
-import SettingsDialog from './SettingsDialog';
+import { buildModeSelector, toggleBuildMode } from '../reducers/root';
 
 function Layout({ children }) {
   const dispatch = useDispatch();
   const buildMode = useSelector(buildModeSelector);
 
-  const [anchorEl, setAnchorEl] = useState(null);
+  const [menuAnchor, setMenuAnchor] = useState(null);
 
   useHotkeys('cmd+b', () => {
     dispatch(toggleBuildMode());
   });
 
   const handleMenuOpen = (event) => {
-    setAnchorEl(event.currentTarget);
+    setMenuAnchor(event.currentTarget);
   };
 
   const handleMenuClose = () => {
-    setAnchorEl(null);
+    setMenuAnchor(null);
   };
 
   return (
     <>
-      <MuiAppBar position="fixed" elevation={2}>
+      <AppBar position="fixed" elevation={2}>
         <Toolbar>
           <Grid justifyContent="space-between" alignItems="center" container>
             <Grid item>
@@ -58,7 +59,7 @@ function Layout({ children }) {
                 Menu
               </Button>
               <Menu
-                anchorEl={anchorEl}
+                anchorEl={menuAnchor}
                 anchorOrigin={{
                   vertical: 'top',
                   horizontal: 'right',
@@ -68,7 +69,7 @@ function Layout({ children }) {
                   vertical: 'top',
                   horizontal: 'right',
                 }}
-                open={Boolean(anchorEl)}
+                open={Boolean(menuAnchor)}
                 onClose={handleMenuClose}
               >
                 <MenuItem onClick={handleMenuClose} selected>
@@ -124,7 +125,7 @@ function Layout({ children }) {
             </Grid>
           </Grid>
         </Toolbar>
-      </MuiAppBar>
+      </AppBar>
       <Box
         component="main"
         sx={{
@@ -138,7 +139,6 @@ function Layout({ children }) {
         <Toolbar />
         {children}
       </Box>
-      <SettingsDialog />
     </>
   );
 }

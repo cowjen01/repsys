@@ -1,9 +1,8 @@
 import React from 'react';
-import MuiSnackbar from '@mui/material/Snackbar';
-import Alert from '@mui/material/Alert';
+import { Alert, Snackbar as MuiSnackbar } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { snackbarSelector, closeSnackbar } from '../reducers/studio';
+import { snackbarSelector, closeSnackbar } from '../reducers/dialogs';
 
 function Snackbar() {
   const dispatch = useDispatch();

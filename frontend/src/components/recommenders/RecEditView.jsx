@@ -1,22 +1,27 @@
 /* eslint-disable no-param-reassign */
 import React, { useRef } from 'react';
 import pt from 'prop-types';
-import Typography from '@mui/material/Typography';
-import Paper from '@mui/material/Paper';
-import Box from '@mui/material/Box';
 import { useDrag, useDrop } from 'react-dnd';
 import DragIndicatorIcon from '@mui/icons-material/DragIndicator';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import IconButton from '@mui/material/IconButton';
-import Stack from '@mui/material/Stack';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { Typography, Paper, Box, IconButton, Stack } from '@mui/material';
+import { useDispatch } from 'react-redux';
 
-const ITEM_TYPE = 'itemBar';
+import { updateRecommendersOrder, duplicateRecommender } from '../../reducers/recommenders';
+import { openConfirmDialog } from '../../reducers/dialogs';
 
-function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }) {
+const ITEM_TYPE = 'recommender';
+
+function RecEditView({ index, title, onEdit, modelsLoading }) {
+  const dispatch = useDispatch();
   const dragRef = useRef(null);
   const previewRef = useRef(null);
+
+  const handleMove = (dragIndex, hoverIndex) => {
+    dispatch(updateRecommendersOrder({ dragIndex, hoverIndex }));
+  };
 
   const [{ handlerId }, drop] = useDrop({
     accept: ITEM_TYPE,
@@ -50,7 +55,7 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
         return;
       }
 
-      onMove(dragIndex, hoverIndex);
+      handleMove(dragIndex, hoverIndex);
 
       item.index = hoverIndex;
     },
@@ -66,6 +71,22 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
 
   drag(dragRef);
   drop(preview(previewRef));
+
+  const handleDelete = () => {
+    dispatch(
+      openConfirmDialog({
+        title: 'Delete this recommender?',
+        content: 'Deleting this recommender all settings will be lost.',
+        params: {
+          index,
+        },
+      })
+    );
+  };
+
+  const handleDuplicate = () => {
+    dispatch(duplicateRecommender(index));
+  };
 
   return (
     <Paper
@@ -104,13 +125,13 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
         </Typography>
       </Box>
       <Stack direction="row" spacing={1}>
-        <IconButton onClick={() => onEdit(index)}>
+        <IconButton disabled={modelsLoading} onClick={() => onEdit(index)}>
           <EditIcon />
         </IconButton>
-        <IconButton onClick={() => onDuplicate(index)}>
+        <IconButton onClick={handleDuplicate}>
           <ContentCopyIcon />
         </IconButton>
-        <IconButton onClick={() => onDelete(index)}>
+        <IconButton onClick={handleDelete}>
           <DeleteIcon />
         </IconButton>
       </Stack>
@@ -118,15 +139,11 @@ function RecommenderEdit({ index, title, onMove, onDelete, onEdit, onDuplicate }
   );
 }
 
-RecommenderEdit.defaultProps = {};
-
-RecommenderEdit.propTypes = {
+RecEditView.propTypes = {
   title: pt.string.isRequired,
-  onMove: pt.func.isRequired,
-  onDelete: pt.func.isRequired,
   index: pt.number.isRequired,
-  onDuplicate: pt.func.isRequired,
   onEdit: pt.func.isRequired,
+  modelsLoading: pt.bool.isRequired,
 };
 
-export default RecommenderEdit;
+export default RecEditView;

@@ -1,20 +1,22 @@
 import React from 'react';
-import Button from '@mui/material/Button';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import FormGroup from '@mui/material/FormGroup';
-import FormControlLabel from '@mui/material/FormControlLabel';
-import Switch from '@mui/material/Switch';
-import DialogTitle from '@mui/material/DialogTitle';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Switch,
+  FormControlLabel,
+  FormGroup,
+} from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { darkModeSelector, toggleDarkMode } from '../reducers/settings';
-import { closeSettingsDialog, settingsDialogOpenSelector } from '../reducers/dialogs';
+import { darkModeSelector, toggleDarkMode } from '../../reducers/settings';
+import { closeSettingsDialog, settingsDialogSelector } from '../../reducers/dialogs';
 
 function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
-  const dialogOpen = useSelector(settingsDialogOpenSelector);
+  const dialogOpen = useSelector(settingsDialogSelector);
   const dispatch = useDispatch();
 
   const handleClose = () => {

@@ -40,7 +40,7 @@ const data2 = [
   },
 ];
 
-function ModelMetrics() {
+function RecMetricsDialog() {
   const benchmarkData = useMemo(() => data.map((x) => [x.name, x.uv, x.pv]), [data]);
   const popularityData = useMemo(() => data2.map((x) => [null, x.uv]), [data2]);
 
@@ -86,4 +86,4 @@ function ModelMetrics() {
   );
 }
 
-export default ModelMetrics;
+export default RecMetricsDialog;

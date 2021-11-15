@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 
 import '@fontsource/roboto/latin.css';
 
-import App from './App';
+import Root from './Root';
 
 if (process.env.NODE_ENV === 'development') {
   // eslint-disable-next-line global-require
@@ -11,6 +11,6 @@ if (process.env.NODE_ENV === 'development') {
   worker.start({ onUnhandledRequest: 'bypass' });
 }
 
-const app = React.createElement(App);
+const app = React.createElement(Root);
 
 ReactDOM.render(app, document.getElementById('root'));

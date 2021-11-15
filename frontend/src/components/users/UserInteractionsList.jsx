@@ -1,18 +1,16 @@
 import React from 'react';
-import { Box, Paper } from '@mui/material';
-import Skeleton from '@mui/material/Skeleton';
-import Chip from '@mui/material/Chip';
+import { Box, Paper, Skeleton, Chip, Typography } from '@mui/material';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import { useSelector, useDispatch } from 'react-redux';
 import { FixedSizeList } from 'react-window';
 
-import { getRequest } from './api';
-import ItemListView from './ItemListView';
+import { getRequest } from '../../api';
+import { ItemListView } from '../items';
 import {
-  clearCustomInteractions,
+  setCustomInteractions,
   customInteractionsSelector,
   selectedUserSelector,
-} from '../reducers/studio';
+} from '../../reducers/root';
 
 function renderRow({ index, style, data }) {
   const item = data[index];
@@ -27,7 +25,7 @@ function renderRow({ index, style, data }) {
   );
 }
 
-function UserInteractions() {
+function UserInteractionsList() {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
@@ -37,7 +35,7 @@ function UserInteractions() {
   });
 
   const handleDelete = () => {
-    dispatch(clearCustomInteractions());
+    dispatch(setCustomInteractions([]));
   };
 
   const interactions = customInteractions.length > 0 ? customInteractions : userHistoryData;
@@ -54,21 +52,33 @@ function UserInteractions() {
       )}
       {!isUserHistoryLoading ? (
         <Paper>
+          <Typography
+            sx={{
+              paddingLeft: '16px',
+              paddingRight: '16px',
+              lineHeight: '48px',
+              color: 'rgba(0, 0, 0, 0.6)',
+            }}
+            variant="subtitle2"
+            component="div"
+          >
+            Interactions ({interactions.length})
+          </Typography>
           <FixedSizeList
-            height={380}
+            height={330}
             itemData={interactions}
             itemSize={100}
             itemCount={interactions.length}
-            overscanCount={10}
+            overscanCount={15}
           >
             {renderRow}
           </FixedSizeList>
         </Paper>
       ) : (
-        <Skeleton variant="rectangular" height={380} width="100%" />
+        <Skeleton variant="rectangular" height={330} width="100%" />
       )}
     </Box>
   );
 }
 
-export default UserInteractions;
+export default UserInteractionsList;

@@ -1,27 +1,21 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import pt from 'prop-types';
-import Typography from '@mui/material/Typography';
-import Grid from '@mui/material/Grid';
-import Skeleton from '@mui/material/Skeleton';
-import Alert from '@mui/material/Alert';
-import AlertTitle from '@mui/material/AlertTitle';
-import Stack from '@mui/material/Stack';
-import IconButton from '@mui/material/IconButton';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import { useSelector, useDispatch } from 'react-redux';
+import { Typography, Grid, Skeleton, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
 
-import ItemCardView from './ItemCardView';
-import { postRequest } from './api';
-import { openItemDetailDialog } from '../reducers/dialogs';
+import { ItemCardView } from '../items';
+import { postRequest } from '../../api';
+import { openItemDetailDialog } from '../../reducers/dialogs';
 import {
   customInteractionsSelector,
   selectedUserSelector,
   sessionRecordingSelector,
   addCustomInteraction,
-} from '../reducers/studio';
+} from '../../reducers/root';
 
-function RecommenderView({ recommender }) {
+function RecGridView({ recommender }) {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
@@ -129,7 +123,7 @@ function RecommenderView({ recommender }) {
   );
 }
 
-RecommenderView.propTypes = {
+RecGridView.propTypes = {
   recommender: pt.shape({
     title: pt.string,
     itemsPerPage: pt.number,
@@ -140,4 +134,4 @@ RecommenderView.propTypes = {
   }).isRequired,
 };
 
-export default RecommenderView;
+export default RecGridView;
