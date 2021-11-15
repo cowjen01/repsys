@@ -62,52 +62,45 @@ function App() {
   return (
     <Layout>
       <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
-        {!buildMode ? (
-          <Grid container spacing={4}>
-            {recommenders.length === 0 ? (
-              <Grid item xs={12}>
-                <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
-                  There are no recommenders, switch to the Build Mode to create one.
-                </Typography>
-              </Grid>
-            ) : (
-              <>
-                <Grid item xs={12} lg={9}>
-                  <Grid container spacing={3}>
-                    {recommenders.map((recommender) => (
+        <Grid container spacing={!buildMode ? 4 : 3}>
+          {recommenders.length === 0 ? (
+            <Grid item xs={12}>
+              <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
+                {!buildMode
+                  ? 'There are no recommenders, switch to the Build Mode to create one.'
+                  : 'There are no recommenders, press the add button to create one.'}
+              </Typography>
+            </Grid>
+          ) : (
+            <>
+              <Grid item xs={12} lg={!buildMode ? 9 : 12}>
+                <Grid container spacing={3}>
+                  {recommenders.map((recommender, index) =>
+                    !buildMode ? (
                       <Grid item xs={12} key={recommender.id}>
                         <RecGridView recommender={recommender} />
                       </Grid>
-                    ))}
-                  </Grid>
+                    ) : (
+                      <Grid item xs={12} key={recommender.id}>
+                        <RecEditView
+                          modelsLoading={modelsLoading}
+                          onEdit={handleRecommenderEdit}
+                          title={recommender.title}
+                          index={index}
+                        />
+                      </Grid>
+                    )
+                  )}
                 </Grid>
+              </Grid>
+              {!buildMode && (
                 <Grid item xs={12} lg={3}>
                   <UserPanel />
                 </Grid>
-              </>
-            )}
-          </Grid>
-        ) : (
-          <Grid container spacing={3}>
-            {recommenders.length === 0 && (
-              <Grid item xs={12}>
-                <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
-                  There are no recommenders, press the add button to create one.
-                </Typography>
-              </Grid>
-            )}
-            {recommenders.map((rec, index) => (
-              <Grid item xs={12} key={rec.id}>
-                <RecEditView
-                  modelsLoading={modelsLoading}
-                  onEdit={handleRecommenderEdit}
-                  title={rec.title}
-                  index={index}
-                />
-              </Grid>
-            ))}
-          </Grid>
-        )}
+              )}
+            </>
+          )}
+        </Grid>
       </Container>
       <ConfirmDialog onConfirm={handleRecDeleteConfirm} />
       <RecEditDialog models={modelsData} />
