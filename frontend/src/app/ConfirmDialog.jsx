@@ -8,7 +8,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { closeConfirmDialog, confirmDialogSelector } from '../reducers/studio';
+import { closeConfirmDialog, confirmDialogSelector } from '../reducers/dialogs';
 
 function ConfirmDialog({ onConfirm }) {
   const dialog = useSelector(confirmDialogSelector);

@@ -13,12 +13,12 @@ import { useSelector, useDispatch } from 'react-redux';
 
 import ItemCardView from './ItemCardView';
 import { postRequest } from './api';
+import { openItemDetailDialog } from '../reducers/dialogs';
 import {
   customInteractionsSelector,
   selectedUserSelector,
   sessionRecordingSelector,
   addCustomInteraction,
-  openItemDetailDialog,
 } from '../reducers/studio';
 
 function RecommenderView({ recommender }) {

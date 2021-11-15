@@ -7,7 +7,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 
-import { closeItemDetailDialog, itemDetailDialogSelector } from '../reducers/studio';
+import { closeItemDetailDialog, itemDetailDialogSelector } from '../reducers/dialogs';
 
 function ItemDetailDialog() {
   const dialog = useSelector(itemDetailDialogSelector);

@@ -10,7 +10,7 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { useDispatch, useSelector } from 'react-redux';
 
 import { darkModeSelector, toggleDarkMode } from '../reducers/settings';
-import { closeSettingsDialog, settingsDialogOpenSelector } from '../reducers/studio';
+import { closeSettingsDialog, settingsDialogOpenSelector } from '../reducers/dialogs';
 
 function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);

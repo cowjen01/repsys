@@ -15,7 +15,8 @@ import {
   duplicateBar,
   updateBar,
 } from '../reducers/recommenders';
-import { buildModeSelector, openConfirmDialog, openSnackbar } from '../reducers/studio';
+import { buildModeSelector, openSnackbar } from '../reducers/studio';
+import { openConfirmDialog } from '../reducers/dialogs';
 import RecommenderView from './RecommenderView';
 import RecommenderEdit from './RecommenderEdit';
 import ConfirmDialog from './ConfirmDialog';

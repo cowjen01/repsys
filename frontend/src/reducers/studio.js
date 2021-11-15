@@ -14,17 +14,6 @@ export const slice = createSlice({
     favouriteUsers: [],
     sessionRecording: false,
     customInteractions: [],
-    settingsDialogOpen: false,
-    confirmDialog: {
-      open: false,
-      title: '',
-      content: '',
-    },
-    itemDetailDialog: {
-      open: false,
-      title: '',
-      content: '',
-    },
   },
   reducers: {
     toggleBuildMode: (state) => {
@@ -42,32 +31,6 @@ export const slice = createSlice({
     },
     closeSnackbar: (state) => {
       state.snackbar.open = false;
-    },
-    openConfirmDialog: (state, { payload }) => {
-      state.confirmDialog = {
-        open: true,
-        title: payload.title || '',
-        content: payload.content || '',
-      };
-    },
-    closeConfirmDialog: (state) => {
-      state.confirmDialog.open = false;
-    },
-    openItemDetailDialog: (state, { payload }) => {
-      state.itemDetailDialog = {
-        open: true,
-        title: payload.title || '',
-        content: payload.content || 'No description provided.',
-      };
-    },
-    closeItemDetailDialog: (state) => {
-      state.itemDetailDialog.open = false;
-    },
-    openSettingsDialog: (state) => {
-      state.settingsDialogOpen = true;
-    },
-    closeSettingsDialog: (state) => {
-      state.settingsDialogOpen = false;
     },
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
@@ -99,12 +62,6 @@ export const {
   toggleSessionRecording,
   addCustomInteraction,
   clearCustomInteractions,
-  openSettingsDialog,
-  closeSettingsDialog,
-  openConfirmDialog,
-  closeConfirmDialog,
-  openItemDetailDialog,
-  closeItemDetailDialog,
 } = slice.actions;
 
 export const buildModeSelector = (state) => state.studio.buildMode;
@@ -118,11 +75,5 @@ export const favouriteUsersSelector = (state) => state.studio.favouriteUsers;
 export const sessionRecordingSelector = (state) => state.studio.sessionRecording;
 
 export const customInteractionsSelector = (state) => state.studio.customInteractions;
-
-export const settingsDialogOpenSelector = (state) => state.studio.settingsDialogOpen;
-
-export const confirmDialogSelector = (state) => state.studio.confirmDialog;
-
-export const itemDetailDialogSelector = (state) => state.studio.itemDetailDialog;
 
 export default slice.reducer;

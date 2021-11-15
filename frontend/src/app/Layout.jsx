@@ -21,7 +21,8 @@ import ListItemText from '@mui/material/ListItemText';
 import ListItemIcon from '@mui/material/ListItemIcon';
 import Divider from '@mui/material/Divider';
 
-import { buildModeSelector, toggleBuildMode, openSettingsDialog } from '../reducers/studio';
+import { openSettingsDialog } from '../reducers/dialogs';
+import { buildModeSelector, toggleBuildMode } from '../reducers/studio';
 import SettingsDialog from './SettingsDialog';
 
 function Layout({ children }) {
