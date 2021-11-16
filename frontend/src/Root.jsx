@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import pt from 'prop-types';
 import { Provider, useSelector } from 'react-redux';
 import { DndProvider } from 'react-dnd';

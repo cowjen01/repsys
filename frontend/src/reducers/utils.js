@@ -1,7 +1,7 @@
 function requestStateHandler(thunk) {
   return (builder) => {
     builder
-      .addCase(thunk.pending, (state, action) => {
+      .addCase(thunk.pending, (state) => {
         state.status = 'loading';
       })
       .addCase(thunk.fulfilled, (state, action) => {
