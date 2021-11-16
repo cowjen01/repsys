@@ -1,6 +1,7 @@
-/* eslint-disable no-param-reassign */
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+
+import { requestStateHandler } from './utils';
 
 export const fetchInteractions = createAsyncThunk(
   'interactions/fetchInteractions',
@@ -17,27 +18,14 @@ export const fetchInteractions = createAsyncThunk(
 export const slice = createSlice({
   name: 'interactions',
   initialState: {
-    interactions: [],
+    data: [],
     status: 'idle',
     error: null,
   },
-  extraReducers(builder) {
-    builder
-      .addCase(fetchInteractions.pending, (state, action) => {
-        state.status = 'loading';
-      })
-      .addCase(fetchInteractions.fulfilled, (state, action) => {
-        state.status = 'succeeded';
-        state.interactions = action.payload;
-      })
-      .addCase(fetchInteractions.rejected, (state, action) => {
-        state.status = 'failed';
-        state.error = action.error.message;
-      });
-  },
+  extraReducers: requestStateHandler(fetchInteractions),
 });
 
-export const interactionsSelector = (state) => state.interactions.interactions;
+export const interactionsSelector = (state) => state.interactions.data;
 export const interactionsStatusSelector = (state) => state.interactions.status;
 
 export default slice.reducer;

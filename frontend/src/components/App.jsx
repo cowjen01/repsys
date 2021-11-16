@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Typography, Grid, Fab, Container } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -10,53 +10,26 @@ import { RecEditView, RecGridView, RecEditDialog } from './recommenders';
 import { UserPanel, UserSelectDialog } from './users';
 import { ItemDetailDialog } from './items';
 import Layout from './Layout';
-import { getRequest } from '../api';
 import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
 import ConfirmDialog from './ConfirmDialog';
+import { fetchModels } from '../reducers/models';
 
 function App() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
 
-  const { items: modelsData, isLoading: modelsLoading } = getRequest('/models');
-
-  const defaultModelParams = useMemo(
-    () =>
-      Object.fromEntries(
-        modelsData.map((m) => [m.key, Object.fromEntries(m.params.map((a) => [a.key, a.default]))])
-      ),
-    [modelsData]
-  );
+  useEffect(() => {
+    dispatch(fetchModels());
+  }, []);
 
   const handleRecDeleteConfirm = ({ index }) => {
     dispatch(deleteRecommender(index));
   };
 
-  const handleRecommenderEdit = (index) => {
-    const params = {
-      ...defaultModelParams,
-      ...recommenders[index].modelParams,
-    };
-    dispatch(
-      openRecEditDialog({
-        ...recommenders[index],
-        modelParams: params,
-      })
-    );
-  };
-
   const handleRecommenderAdd = () => {
-    dispatch(
-      openRecEditDialog({
-        title: 'New bar',
-        itemsPerPage: 4,
-        itemsLimit: 20,
-        model: modelsData[0].key,
-        modelParams: defaultModelParams,
-      })
-    );
+    dispatch(openRecEditDialog());
   };
 
   return (
@@ -82,12 +55,7 @@ function App() {
                       </Grid>
                     ) : (
                       <Grid item xs={12} key={recommender.id}>
-                        <RecEditView
-                          modelsLoading={modelsLoading}
-                          onEdit={handleRecommenderEdit}
-                          title={recommender.title}
-                          index={index}
-                        />
+                        <RecEditView title={recommender.title} index={index} />
                       </Grid>
                     )
                   )}
@@ -103,14 +71,13 @@ function App() {
         </Grid>
       </Container>
       <ConfirmDialog onConfirm={handleRecDeleteConfirm} />
-      <RecEditDialog models={modelsData} />
+      <RecEditDialog />
       <ItemDetailDialog />
       <UserSelectDialog />
       <Snackbar />
       <SettingsDialog />
       {buildMode && (
         <Fab
-          disabled={modelsLoading}
           sx={{
             position: 'absolute',
             bottom: 32,

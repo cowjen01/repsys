@@ -10,11 +10,11 @@ import { Typography, Paper, Box, IconButton, Stack } from '@mui/material';
 import { useDispatch } from 'react-redux';
 
 import { updateRecommendersOrder, duplicateRecommender } from '../../reducers/recommenders';
-import { openConfirmDialog } from '../../reducers/dialogs';
+import { openConfirmDialog, openRecEditDialog } from '../../reducers/dialogs';
 
 const ITEM_TYPE = 'recommender';
 
-function RecEditView({ index, title, onEdit, modelsLoading }) {
+function RecEditView({ index, title }) {
   const dispatch = useDispatch();
   const dragRef = useRef(null);
   const previewRef = useRef(null);
@@ -84,6 +84,10 @@ function RecEditView({ index, title, onEdit, modelsLoading }) {
     );
   };
 
+  const handleEdit = () => {
+    dispatch(openRecEditDialog(index));
+  };
+
   const handleDuplicate = () => {
     dispatch(duplicateRecommender(index));
   };
@@ -125,7 +129,7 @@ function RecEditView({ index, title, onEdit, modelsLoading }) {
         </Typography>
       </Box>
       <Stack direction="row" spacing={1}>
-        <IconButton disabled={modelsLoading} onClick={() => onEdit(index)}>
+        <IconButton onClick={handleEdit}>
           <EditIcon />
         </IconButton>
         <IconButton onClick={handleDuplicate}>
@@ -142,8 +146,6 @@ function RecEditView({ index, title, onEdit, modelsLoading }) {
 RecEditView.propTypes = {
   title: pt.string.isRequired,
   index: pt.number.isRequired,
-  onEdit: pt.func.isRequired,
-  modelsLoading: pt.bool.isRequired,
 };
 
 export default RecEditView;

@@ -2,7 +2,6 @@ import React, { useMemo } from 'react';
 // import pt from 'prop-types';
 import Box from '@mui/material/Box';
 import Grid from '@mui/material/Grid';
-import Chart from 'react-google-charts';
 
 const data = [
   {
@@ -44,46 +43,48 @@ function RecMetricsDialog() {
   const benchmarkData = useMemo(() => data.map((x) => [x.name, x.uv, x.pv]), [data]);
   const popularityData = useMemo(() => data2.map((x) => [null, x.uv]), [data2]);
 
-  return (
-    <Box
-      sx={{
-        p: 2,
-      }}
-    >
-      <Grid container spacing={2} justifyContent="center" flexDirection="row">
-        <Grid item>
-          <Chart
-            width={500}
-            height={300}
-            chartType="Bar"
-            loader={<div>Loading Chart</div>}
-            data={[['Method', 'Baseline', 'KNN'], ...benchmarkData]}
-            // options={{
-            //   chart: {
-            //     title: 'Model Benchmarks',
-            //     subtitle: 'Comparation of the current model against baseline',
-            //   },
-            // }}
-          />
-        </Grid>
-        <Grid item>
-          <Chart
-            width={500}
-            height={300}
-            chartType="Histogram"
-            loader={<div>Loading Chart</div>}
-            data={[['foo', 'goo'], ...popularityData]}
-            options={{
-              legend: { position: 'none' },
-              histogram: {
-                hideBucketItems: true,
-              },
-            }}
-          />
-        </Grid>
-      </Grid>
-    </Box>
-  );
+  return null;
+
+  // return (
+  //   <Box
+  //     sx={{
+  //       p: 2,
+  //     }}
+  //   >
+  //     <Grid container spacing={2} justifyContent="center" flexDirection="row">
+  //       <Grid item>
+  //         <Chart
+  //           width={500}
+  //           height={300}
+  //           chartType="Bar"
+  //           loader={<div>Loading Chart</div>}
+  //           data={[['Method', 'Baseline', 'KNN'], ...benchmarkData]}
+  //           // options={{
+  //           //   chart: {
+  //           //     title: 'Model Benchmarks',
+  //           //     subtitle: 'Comparation of the current model against baseline',
+  //           //   },
+  //           // }}
+  //         />
+  //       </Grid>
+  //       <Grid item>
+  //         <Chart
+  //           width={500}
+  //           height={300}
+  //           chartType="Histogram"
+  //           loader={<div>Loading Chart</div>}
+  //           data={[['foo', 'goo'], ...popularityData]}
+  //           options={{
+  //             legend: { position: 'none' },
+  //             histogram: {
+  //               hideBucketItems: true,
+  //             },
+  //           }}
+  //         />
+  //       </Grid>
+  //     </Grid>
+  //   </Box>
+  // );
 }
 
 export default RecMetricsDialog;

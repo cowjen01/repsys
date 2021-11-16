@@ -25,5 +25,13 @@
   "rules": {
     "react/jsx-props-no-spreading": "off",
     "import/prefer-default-export": "off"
-  }
+  },
+  "overrides": [
+    {
+      "files": ["src/reducers/*.js"],
+      "rules": {
+        "no-param-reassign": "off"
+      }
+    }
+  ]
 }

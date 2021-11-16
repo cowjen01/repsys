@@ -24,7 +24,7 @@ export const slice = createSlice({
     userSelectDialogOpen: false,
     recEditDialog: {
       open: false,
-      data: null,
+      index: null,
     },
   },
   reducers: {
@@ -74,12 +74,13 @@ export const slice = createSlice({
     openRecEditDialog: (state, { payload }) => {
       state.recEditDialog = {
         open: true,
-        data: payload,
+        index: payload,
       };
     },
     closeRecEditDialog: (state) => {
       state.recEditDialog = {
         open: false,
+        index: null,
       };
     },
   },
