@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import pt from 'prop-types';
 import {
   Box,
@@ -14,7 +14,6 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { getRequest } from '../../api';
 import {
   customInteractionsSelector,
   favouriteUsersSelector,
@@ -22,6 +21,7 @@ import {
   setSelectedUser,
 } from '../../reducers/root';
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
+import { fetchItems, itemsSelector, itemsStatusSelector } from '../../reducers/items';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -37,20 +37,20 @@ TabPanel.propTypes = {
   index: pt.number.isRequired,
 };
 
+let timerID;
+
 function UserSelectDialog() {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const dialogOpen = useSelector(userSelectDialogSelector);
-  const [user, setUser] = useState(null);
-  const [interactions, setInteractions] = useState(customInteractions);
-  const [activeTab, setActiveTab] = useState(0);
-  const [inputValue, setInputValue] = useState('');
-
+  const itemsData = useSelector(itemsSelector);
+  const itemsStatus = useSelector(itemsStatusSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
 
-  const { items: itemsData, isLoading } = getRequest('/items', {
-    query: inputValue,
-  });
+  const [user, setUser] = useState();
+  const [interactions, setInteractions] = useState(customInteractions);
+  const [activeTab, setActiveTab] = useState(0);
+  const [queryString, setQueryString] = useState('');
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -71,6 +71,21 @@ function UserSelectDialog() {
     dispatch(setSelectedUser(null));
     handleDialogClose();
   };
+
+  const handleQueryStringChange = (e, value) => {
+    clearTimeout(timerID);
+    timerID = setTimeout(() => {
+      if (value.length >= 3) {
+        setQueryString(value);
+      }
+    }, 300);
+  };
+
+  useEffect(() => {
+    if (queryString.length) {
+      dispatch(fetchItems(queryString));
+    }
+  }, [queryString, dispatch]);
 
   return (
     <Drawer anchor="right" open={dialogOpen} onClose={handleDialogClose}>
@@ -99,15 +114,13 @@ function UserSelectDialog() {
               setInteractions(newValue);
             }}
             filterOptions={(x) => x}
-            loading={isLoading}
+            loading={itemsStatus === 'loading'}
             openOnFocus
             isOptionEqualToValue={(option, value) => option.id === value.id}
             options={itemsData}
             getOptionLabel={(item) => item.title}
             sx={{ width: 400, marginBottom: 2, marginTop: 2 }}
-            onInputChange={(event, newInputValue) => {
-              setInputValue(newInputValue);
-            }}
+            onInputChange={handleQueryStringChange}
             renderInput={(params) => (
               <TextField
                 {...params}
@@ -117,7 +130,9 @@ function UserSelectDialog() {
                   ...params.InputProps,
                   endAdornment: (
                     <>
-                      {isLoading ? <CircularProgress color="inherit" size={20} /> : null}
+                      {itemsStatus === 'loading' ? (
+                        <CircularProgress color="inherit" size={20} />
+                      ) : null}
                       {params.InputProps.endAdornment}
                     </>
                   ),

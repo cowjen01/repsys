@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import pt from 'prop-types';
-import { Typography, Card, CardContent, CardMedia, CardActionArea } from '@mui/material';
+import { Typography, Card, CardContent, CardMedia, CardActionArea, Skeleton } from '@mui/material';
 
 function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
+
   return (
     <Card sx={{ width: '100%', height: '100%' }}>
       <CardActionArea
@@ -11,11 +13,21 @@ function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick })
       >
         {image && (
           <CardMedia
-            sx={{ maxHeight: imageHeight, objectPosition: 'top' }}
+            sx={{ height: imageHeight, objectPosition: 'top', display: !imageLoaded ? 'none' : 'block' }}
             component="img"
             image={image}
+            onLoad={() => setImageLoaded(true)}
           />
         )}
+        {
+          !imageLoaded && (
+            <Skeleton
+              variant="rectangular"
+              height={imageHeight}
+              width="100%"
+            />
+          )
+        }
         <CardContent>
           {caption && (
             <Typography noWrap sx={{ fontSize: 13 }} color="text.secondary" gutterBottom>
