@@ -6,7 +6,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Typography, Grid, Skeleton, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
 
 import { ItemCardView } from '../items';
-import { postRequest } from '../../api';
+import { fetchPredictions } from './api';
 import { openItemDetailDialog } from '../../reducers/dialogs';
 import {
   customInteractionsSelector,
@@ -25,7 +25,7 @@ function RecGridView({ recommender }) {
 
   const { title, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
-  const { items, isLoading } = postRequest('/predict', {
+  const { items, isLoading } = fetchPredictions({
     model,
     ...(selectedUser
       ? {

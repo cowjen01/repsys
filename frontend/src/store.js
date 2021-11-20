@@ -12,6 +12,7 @@ import dialogsReducer from './reducers/dialogs';
 import interactionsReducer from './reducers/interactions';
 import modelsReducer from './reducers/models';
 import itemsReducer from './reducers/items';
+import usersReducer from './reducers/users';
 
 const combinedReducers = combineReducers({
   root: rootReducer,
@@ -20,14 +21,15 @@ const combinedReducers = combineReducers({
   dialogs: dialogsReducer,
   interactions: interactionsReducer,
   models: modelsReducer,
-  items: itemsReducer
+  items: itemsReducer,
+  users: usersReducer
 });
 
 const persistConfig = {
   key: 'repsys',
   storage,
   stateReconciler,
-  blacklist: ['dialogs', 'interactions', 'models', 'items'],
+  blacklist: ['dialogs', 'interactions', 'models', 'items', 'users'],
 };
 
 const persistedReducer = persistReducer(persistConfig, combinedReducers);

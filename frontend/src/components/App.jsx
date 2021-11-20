@@ -14,6 +14,7 @@ import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
 import ConfirmDialog from './ConfirmDialog';
 import { fetchModels } from '../reducers/models';
+import { fetchUsers } from '../reducers/users';
 
 function App() {
   const recommenders = useSelector(recommendersSelector);
@@ -22,6 +23,7 @@ function App() {
 
   useEffect(() => {
     dispatch(fetchModels());
+    dispatch(fetchUsers());
   }, []);
 
   const handleRecDeleteConfirm = ({ index }) => {
