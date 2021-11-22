@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-export function fetchPredictions(path, body = {}) {
+export function fetchPredictions(body) {
   const [items, setItems] = useState([]);
   const [error, setError] = useState();
   const [isLoading, setIsLoading] = useState(true);

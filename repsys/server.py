@@ -34,6 +34,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
                             "key": p.key,
                             "type": p.type,
                             "label": p.label,
+                            "options": p.select_options,
                             "default": p.default_value,
                         }
                         for p in models[k].website_params()
@@ -131,6 +132,8 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
 
     @app.listener("after_server_stop")
     def on_shutdown(app, loop):
+        logger.info("Calling models to save their state.")
+
         for model in models.values():
             model.save_model()
 

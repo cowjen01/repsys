@@ -51,7 +51,7 @@ function RecEditDialog() {
       models.map((m) => [m.key, Object.fromEntries(m.params.map((a) => [a.key, a.default]))])
     );
 
-    if (!dialog.index) {
+    if (dialog.index === null) {
       return {
         title: 'New bar',
         itemsPerPage: 4,
@@ -62,7 +62,7 @@ function RecEditDialog() {
     }
 
     return recommenders[dialog.index];
-  }, [dialog.index, modelsStatus]);
+  }, [dialog, modelsStatus]);
 
   return (
     <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>

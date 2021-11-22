@@ -100,6 +100,7 @@ class Dataset:
 
         items = pd.read_csv(items_data_path, index_col="index")
         items["id"] = items.index
+        items["subtitle"] = items["subtitle"].fillna('')
         items = items.fillna("")
 
         return items

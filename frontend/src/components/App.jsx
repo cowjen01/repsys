@@ -31,7 +31,7 @@ function App() {
   };
 
   const handleRecommenderAdd = () => {
-    dispatch(openRecEditDialog());
+    dispatch(openRecEditDialog(null));
   };
 
   return (

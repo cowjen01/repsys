@@ -1,6 +1,7 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from repsys import Model, WebsiteParam
+import pickle
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 
@@ -28,8 +29,18 @@ class KNN(Model):
                 label="Normalize neighbors distances",
                 type="bool",
                 default_value=True,
-            )
+            ),
+            WebsiteParam(
+                key="movie_genre",
+                label="Movie genre",
+                type="select",
+                select_options=self.dataset.get_genres().tolist(),
+            ),
         ]
+
+    def save_model(self) -> None:
+        knn_pickle = open("./models/knn", "wb")
+        pickle.dump(self.model, knn_pickle)
 
     def predict(self, X, **kwargs):
         distances, indexes = self.model.kneighbors(X)
@@ -58,6 +69,15 @@ class KNN(Model):
                 for idx, dist in zip(n_indexes, n_distances)
             ]
         ).squeeze(axis=1)
+
+        if kwargs["movie_genre"]:
+            # exclude movies without the genre
+            genre_mask = (
+                ~self.dataset.items["subtitle"]
+                .str.contains(kwargs["movie_genre"])
+                .sort_index()
+            )
+            predictions[:, genre_mask] = 0
 
         if kwargs["exclude_history"]:
             # remove items user interacted with
