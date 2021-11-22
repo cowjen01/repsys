@@ -25,12 +25,6 @@ class KNN(Model):
                 default_value=True,
             ),
             WebsiteParam(
-                key="normalize_distances",
-                label="Normalize neighbors distances",
-                type="bool",
-                default_value=True,
-            ),
-            WebsiteParam(
                 key="movie_genre",
                 label="Movie genre",
                 type="select",
@@ -52,10 +46,9 @@ class KNN(Model):
         # invert the distance into weight
         n_distances = 1 - n_distances
 
-        if kwargs["normalize_distances"]:
-            # normalize the distances
-            sums = n_distances.sum(axis=1)
-            n_distances = n_distances / sums[:, np.newaxis]
+        # normalize distances
+        sums = n_distances.sum(axis=1)
+        n_distances = n_distances / sums[:, np.newaxis]
 
         # 1) get interactions of the nearest neighbors
         # 2) multiply them by a distance from the user
