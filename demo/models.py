@@ -1,9 +1,11 @@
 import numpy as np
+import os
 from sklearn.neighbors import NearestNeighbors
 from repsys import Model, WebsiteParam
 import pickle
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
+# https://keras.io/examples/structured_data/collaborative_filtering_movielens/
 
 
 class KNN(Model):
@@ -14,7 +16,10 @@ class KNN(Model):
         return "KNN10"
 
     def fit(self):
-        self.model.fit(self.dataset.train_data)
+        if os.path.isfile(self._model_file_path()):
+            self.model = pickle.load(open(self._model_file_path(), "rb"))
+        else:
+            self.model.fit(self.dataset.train_data)
 
     def website_params(self):
         return [
@@ -32,8 +37,11 @@ class KNN(Model):
             ),
         ]
 
+    def _model_file_path(self):
+        return f"./checkpoints/{self.name()}"
+
     def save_model(self) -> None:
-        knn_pickle = open("./models/knn", "wb")
+        knn_pickle = open(self._model_file_path(), "wb")
         pickle.dump(self.model, knn_pickle)
 
     def predict(self, X, **kwargs):

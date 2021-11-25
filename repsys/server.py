@@ -1,19 +1,17 @@
 import logging
 import os
-from typing import Dict, Text
 from sanic import Sanic
 from sanic.response import json, file
 import numpy as np
 from sanic import exceptions
 from scipy import sparse
 
-from .models import Model
-from .dataset import Dataset
+from repsys.core import RepsysCore
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[Text, Model], dataset: Dataset):
+def create_app(core: RepsysCore):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -25,24 +23,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
 
     @app.route("/api/models")
     def get_models(request):
-        return json(
-            [
-                {
-                    "key": k,
-                    "params": [
-                        {
-                            "key": p.key,
-                            "type": p.type,
-                            "label": p.label,
-                            "options": p.select_options,
-                            "default": p.default_value,
-                        }
-                        for p in models[k].website_params()
-                    ],
-                }
-                for k in models.keys()
-            ]
-        )
+        return json([m.to_dict() for m in core.models.keys()])
 
     @app.route("/api/predict", methods=["POST"])
     def post_prediction(request):
@@ -62,7 +43,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         if not model_name:
             raise exceptions.InvalidUsage("Model name must be specified.")
 
-        model = models.get(model_name)
+        model = core.get_model(model_name)
 
         if not model:
             raise exceptions.NotFound(f"Model '{model_name}' was not found.")
@@ -70,37 +51,30 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         default_params = {
             p.key: p.default_value for p in model.website_params()
         }
-        clean_params = {k: v for k, v in params.items() if k in default_params}
-        predict_params = {**default_params, **clean_params}
+        cleaned_params = {
+            k: v for k, v in params.items() if k in default_params
+        }
+        predict_params = {**default_params, **cleaned_params}
 
         if user_index is not None:
             try:
-                X = dataset.vad_data_tr[user_index]
+                user_index = int(user_index)
+                X = core.get_user_history(user_index)
             except Exception:
                 raise exceptions.NotFound(f"User '{user_index}' was not found.")
 
         else:
             interactions = np.array(interactions)
-            X = sparse.csr_matrix(
-                (
-                    np.ones_like(interactions),
-                    (np.zeros_like(interactions), interactions),
-                ),
-                dtype="float64",
-                shape=(1, dataset.n_items),
-            )
+            X = core.from_interactions(interactions)
 
         prediction = model.predict(X, **predict_params)
-
-        idxs = (-prediction[0]).argsort()[:limit]
-
-        items = dataset.items.loc[idxs]
+        items = core.prediction_to_items(prediction, limit)
 
         return json(items.to_dict("records"))
 
     @app.route("/api/users")
     def get_users(request):
-        return json(dataset.vad_users.to_dict("records"))
+        return json(core.dataset.vad_users.to_dict("records"))
 
     @app.route("/api/items")
     def get_items(request):
@@ -109,10 +83,9 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         if not query_str or len(query_str) == 0:
             return json([])
 
-        df = dataset.items
-        df = df[df["title"].str.contains(query_str, case=False)]
+        items = core.filter_items("title", query_str)
 
-        return json(df.to_dict("records"))
+        return json(items.to_dict("records"))
 
     @app.route("/api/interactions")
     def get_interactions(request):
@@ -122,11 +95,10 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
             raise exceptions.InvalidUsage("User must be specified.")
 
         try:
-            interactions = dataset.vad_data_tr[int(user_index)]
+            user_index = int(user_index)
+            items = core.get_interacted_items(user_index)
         except Exception:
             raise exceptions.NotFound(f"User '{user_index}' was not found.")
-
-        items = dataset.items.loc[(interactions > 0).indices]
 
         return json(items.to_dict("records"))
 
@@ -134,14 +106,13 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
     def on_shutdown(app, loop):
         logger.info("Calling models to save their state.")
 
-        for model in models.values():
-            model.save_model()
+        core.save_models()
 
         logger.info("Server has been shut down.")
 
     return app
 
 
-def run_server(port, models, dataset) -> None:
-    app = create_app(models, dataset)
-    app.run(host="localhost", port=port)
+def run_server(port: int, core: RepsysCore) -> None:
+    app = create_app(core)
+    app.run(host="localhost", port=port, debug=False, access_log=False)

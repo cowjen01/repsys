@@ -24,12 +24,9 @@ class ClassLoader:
 
         if isinstance(instance, self.cls):
             name = instance.name()
-            logger.info(
-                f"Registered instance of '{self.cls.__name__}' called '{name}'."
-            )
             self.instances[name] = instance
         else:
-            raise Exception("Invalid class instance")
+            raise Exception("Invalid class instance.")
 
     def _import_submodules(self, package_path) -> None:
         package = importlib.import_module(package_path)

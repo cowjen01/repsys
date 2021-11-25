@@ -1,5 +1,5 @@
 class WebsiteParam:
-    """Optional parameter passed to the prediction method."""
+    """Optional parameter passed to the prediction method"""
 
     def __init__(
         self, key, label, select_options=[], type="text", default_value=""
@@ -9,3 +9,12 @@ class WebsiteParam:
         self.type = type
         self.select_options = select_options
         self.default_value = default_value
+
+    def to_dict(self):
+        return {
+            "key": self.key,
+            "type": self.type,
+            "label": self.label,
+            "options": self.select_options,
+            "default": self.default_value,
+        }

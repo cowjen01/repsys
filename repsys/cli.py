@@ -1,12 +1,18 @@
 import click
+import logging
+import sys
 
 from typing import List
 
-from .models import Model
-from .server import run_server
-from .loader import ClassLoader
-from .dataset import Dataset
-from .constants import DEFAULT_SERVER_PORT
+from repsys.core import RepsysCore
+
+from repsys.models import Model
+from repsys.server import run_server
+from repsys.loader import ClassLoader
+from repsys.dataset import Dataset
+from repsys.constants import DEFAULT_SERVER_PORT
+
+logger = logging.getLogger(__name__)
 
 
 @click.group()
@@ -31,17 +37,26 @@ def server(port, models_package, dataset_package):
     dataset_loader = ClassLoader(Dataset)
     dataset_loader.register_package(dataset_package)
 
+    if len(dataset_loader.instances) != 1:
+        logger.exception("One instance of Dataset class must be defined.")
+        sys.exit(1)
+
     dataset: Dataset = list(dataset_loader.instances.values())[0]
     dataset.load_dataset()
 
     model_loader = ClassLoader(Model)
     model_loader.register_package(models_package)
 
+    if len(model_loader.instances) == 0:
+        logger.exception(
+            "At least one instance of Model class must be defined."
+        )
+        sys.exit(1)
+
     models: List[Model] = model_loader.instances.values()
 
-    for model in models:
-        model.update_data(dataset)
-        model.fit()
-        # model.load_model()
+    core = RepsysCore(models=models, dataset=dataset)
 
-    run_server(port=port, models=model_loader.instances, dataset=dataset)
+    core.init_models()
+
+    run_server(port=port, core=core)
