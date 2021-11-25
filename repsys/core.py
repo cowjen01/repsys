@@ -16,13 +16,13 @@ class RepsysCore:
         self.dataset = dataset
 
     def init_models(self) -> None:
-        for model in self.models:
+        for model in self.models.values():
             logger.info(f"Initiating model called '{model.name()}'.")
             model.update_data(self.dataset)
             model.fit()
 
     def save_models(self) -> None:
-        for model in self.models:
+        for model in self.models.values():
             model.save_model()
 
     def get_model(self, model_name):

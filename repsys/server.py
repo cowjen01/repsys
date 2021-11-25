@@ -23,7 +23,7 @@ def create_app(core: RepsysCore):
 
     @app.route("/api/models")
     def get_models(request):
-        return json([m.to_dict() for m in core.models.keys()])
+        return json([m.to_dict() for m in core.models.values()])
 
     @app.route("/api/predict", methods=["POST"])
     def post_prediction(request):

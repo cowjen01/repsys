@@ -53,7 +53,7 @@ def server(port, models_package, dataset_package):
         )
         sys.exit(1)
 
-    models: List[Model] = model_loader.instances.values()
+    models: List[Model] = model_loader.instances
 
     core = RepsysCore(models=models, dataset=dataset)
 
