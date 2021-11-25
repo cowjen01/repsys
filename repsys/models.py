@@ -35,7 +35,7 @@ class Model:
 
     def to_dict(self):
         return {
-            "name": self.name(),
+            "key": self.name(),
             "params": [p.to_dict() for p in self.website_params()],
         }
 
