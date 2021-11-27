@@ -1,6 +1,6 @@
 export const models = [
   {
-    name: 'KNN10',
+    name: 'KNNFoo',
     params: [
       {
         name: 'n',

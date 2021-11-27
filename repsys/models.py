@@ -48,12 +48,18 @@ class Model(ABC):
 
 
 class ScikitModel(Model):
-    def _checkpoint_path(self, dir_path) -> Text:
-        return os.path.join(dir_path, self.name())
-
     def save(self, dir_path) -> None:
-        checkpoint = open(self._checkpoint_path(dir_path), "wb")
-        pickle.dump(self.model, checkpoint)
+        checkpoint = open(os.path.join(dir_path, self.name()), "wb")
+        pickle.dump(self.serialize(), checkpoint)
 
     def load(self, dir_path) -> None:
-        self.model = pickle.load(open(self._checkpoint_path(dir_path), "rb"))
+        checkpoint = pickle.load(
+            open(os.path.join(dir_path, self.name()), "rb")
+        )
+        self.unserialize(checkpoint)
+
+    def serialize(self):
+        return self.model
+
+    def unserialize(self, state):
+        self.model = state

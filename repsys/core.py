@@ -48,7 +48,7 @@ class RepsysCore:
             logger.error("There are no checkpoints to unzip.")
             sys.exit(1)
 
-        zip_files.sort()
+        zip_files.sort(reverse=True)
 
         create_dir(self._tmp_dir_path())
 

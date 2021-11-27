@@ -25,7 +25,7 @@ function RecGridView({ recommender }) {
 
   const { title, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
-  const { items, isLoading } = fetchPredictions({
+  const { items, isLoading, error } = fetchPredictions({
     model,
     ...(selectedUser
       ? {
@@ -60,64 +60,66 @@ function RecGridView({ recommender }) {
       <Grid item xs={12}>
         <Grid container alignItems="center" justifyContent="space-between">
           <Grid item>
-            {/* <Stack direction="row" spacing={1}>
-              <Chip
-                // color="primary"
-                size="small"
-                // clickable
-                // variant="outlined"
-                icon={<LightbulbIcon />}
-                label={model}
-              />
-            </Stack> */}
             <Typography variant="h6" component="div">
               {title}
             </Typography>
           </Grid>
-          <Grid item>
-            <Stack direction="row">
-              <IconButton disabled={page === 0} onClick={() => setPage(page - 1)}>
-                <KeyboardArrowLeftIcon />
-              </IconButton>
-              <IconButton
-                disabled={page === Math.ceil(items.length / itemsPerPage) - 1}
-                onClick={() => setPage(page + 1)}
-              >
-                <KeyboardArrowRightIcon />
-              </IconButton>
-            </Stack>
-          </Grid>
+          {!isLoading && !error && (
+            <Grid item>
+              <Stack direction="row">
+                <IconButton disabled={page === 0} onClick={() => setPage(page - 1)}>
+                  <KeyboardArrowLeftIcon />
+                </IconButton>
+                <IconButton
+                  disabled={page === Math.ceil(items.length / itemsPerPage) - 1}
+                  onClick={() => setPage(page + 1)}
+                >
+                  <KeyboardArrowRightIcon />
+                </IconButton>
+              </Stack>
+            </Grid>
+          )}
         </Grid>
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={2}>
-          {!isLoading
-            ? items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
-                <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
-                  <ItemCardView
-                    title={item.title}
-                    subtitle={item.subtitle}
-                    caption={item.caption}
-                    image={item.image}
-                    imageHeight={Math.ceil(600 / itemsPerPage)}
-                    onClick={() => handleItemClick(item)}
-                  />
-                </Grid>
-              ))
-            : [...Array(itemsPerPage).keys()].map((i) => (
-                <Grid key={i} item display="flex" md={12 / itemsPerPage}>
-                  <Skeleton
-                    variant="rectangular"
-                    height={Math.ceil(600 / itemsPerPage) + 100}
-                    width="100%"
-                  />
-                </Grid>
-              ))}
-          {!isLoading && items.length === 0 && (
+          {!isLoading &&
+            !error &&
+            items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
+              <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
+                <ItemCardView
+                  title={item.title}
+                  subtitle={item.subtitle}
+                  caption={item.caption}
+                  image={item.image}
+                  imageHeight={Math.ceil(600 / itemsPerPage)}
+                  onClick={() => handleItemClick(item)}
+                />
+              </Grid>
+            ))}
+          {isLoading &&
+            [...Array(itemsPerPage).keys()].map((i) => (
+              <Grid key={i} item display="flex" md={12 / itemsPerPage}>
+                <Skeleton
+                  variant="rectangular"
+                  height={Math.ceil(600 / itemsPerPage) + 100}
+                  width="100%"
+                />
+              </Grid>
+            ))}
+          {!isLoading && !error && items.length === 0 && (
             <Grid item xs={12}>
               <Alert severity="warning">
                 <AlertTitle>No recommended items</AlertTitle>
                 The model has not returned any recommendations.
+              </Alert>
+            </Grid>
+          )}
+          {!isLoading && error && (
+            <Grid item xs={12}>
+              <Alert severity="error">
+                <AlertTitle>API Error</AlertTitle>
+                {error}
               </Alert>
             </Grid>
           )}

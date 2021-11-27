@@ -1,5 +1,4 @@
 import React, { useMemo, useCallback } from 'react';
-import pt from 'prop-types';
 import { Formik, Field } from 'formik';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
@@ -24,23 +23,26 @@ function RecEditDialog() {
     dispatch(closeRecEditDialog());
   };
 
-  const handleSubmit = useCallback((values) => {
-    const data = {
-      ...values,
-      itemsPerPage: parseInt(values.itemsPerPage, 10),
-    };
-    if (!values.id) {
-      dispatch(addRecommender(data));
-    } else {
-      dispatch(updateRecommender(data));
-    }
-    dispatch(
-      openSnackbar({
-        message: 'All settings applied!',
-      })
-    );
-    handleClose();
-  }, [dispatch]);
+  const handleSubmit = useCallback(
+    (values) => {
+      const data = {
+        ...values,
+        itemsPerPage: parseInt(values.itemsPerPage, 10),
+      };
+      if (!values.id) {
+        dispatch(addRecommender(data));
+      } else {
+        dispatch(updateRecommender(data));
+      }
+      dispatch(
+        openSnackbar({
+          message: 'All settings applied!',
+        })
+      );
+      handleClose();
+    },
+    [dispatch]
+  );
 
   const initialValues = useMemo(() => {
     if (modelsStatus !== 'succeeded') {
@@ -61,7 +63,16 @@ function RecEditDialog() {
       };
     }
 
-    return recommenders[dialog.index];
+    const data = recommenders[dialog.index];
+
+    if (!defaultParams[data.model]) {
+      return {
+        ...data,
+        model: '',
+      };
+    }
+
+    return data;
   }, [dialog, modelsStatus]);
 
   return (
@@ -79,6 +90,9 @@ function RecEditDialog() {
             if (!values.itemsLimit) {
               errors.itemsLimit = requiredMessage;
             }
+            if (!values.model) {
+              errors.model = requiredMessage;
+            }
             return errors;
           }}
           onSubmit={(values, { setSubmitting }) => {
@@ -87,7 +101,10 @@ function RecEditDialog() {
           }}
         >
           {({ submitForm, isSubmitting, values }) => {
-            const model = useMemo(() => models.find((m) => m.name === values.model), [values.model]);
+            const model = useMemo(
+              () => models.find((m) => m.name === values.model),
+              [values.model]
+            );
             return (
               <>
                 <DialogContent>
@@ -109,6 +126,7 @@ function RecEditDialog() {
                     label="Recommendation model"
                     component={SelectField}
                     options={[...models.map((m) => ({ label: m.name, value: m.name }))]}
+                    displayEmpty
                   />
                   {model &&
                     model.params &&
@@ -152,14 +170,5 @@ function RecEditDialog() {
     </Dialog>
   );
 }
-
-RecEditDialog.defaultProps = {
-  models: [],
-};
-
-RecEditDialog.propTypes = {
-  // eslint-disable-next-line react/forbid-prop-types
-  models: pt.any,
-};
 
 export default RecEditDialog;

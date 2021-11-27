@@ -19,16 +19,23 @@ export function fetchPredictions(body) {
       },
       body: encodedBody,
     })
-      .then((response) => response.json())
+      .then((response) => {
+        if (!response.ok) {
+          return Promise.reject(response);
+        }
+        return response.json();
+      })
       .then((data) => {
         if (isActive) {
           setItems(data);
           setIsLoading(false);
         }
       })
-      .catch((err) => {
-        setIsLoading(false);
-        setError(err);
+      .catch((response) => {
+        response.json().then((data) => {
+          setIsLoading(false);
+          setError(data.message);
+        })
       });
 
     return () => {

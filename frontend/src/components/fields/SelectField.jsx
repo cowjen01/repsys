@@ -6,6 +6,7 @@ function SelectField({
   field: { name, value, onChange, onBlur },
   form: { errors },
   options,
+  displayEmpty,
   ...props
 }) {
   return (
@@ -25,6 +26,7 @@ function SelectField({
       }}
       {...props}
     >
+      {displayEmpty && <option value="">{null}</option>}
       {options.map((option) => (
         <option key={option.value} value={option.value}>
           {option.label}

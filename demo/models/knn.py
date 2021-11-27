@@ -1,24 +1,26 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
+from sklearn.decomposition import TruncatedSVD
 from repsys import ScikitModel, PredictParam, ParamTypes
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
 
 
+def erase_history(f):
+    def w(self, X, **kwargs):
+        p = f(self, X, **kwargs)
+        p[X.toarray() > 0] = 0
+        return p
+    return w
+
+
 class KNN(ScikitModel):
     def __init__(self, k=5):
-        self.k = k
         self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
 
-    def name(self):
-        return "KNN5"
-
-    def fit(self):
-        self.model.fit(self.dataset.train_data)
-
     def predict(self, X, **kwargs):
-        distances, indexes = self.model.kneighbors(X, n_neighbors=self.k)
+        distances, indexes = self.model.kneighbors(X)
 
         # exclude the nearest neighbor
         n_distances = distances[:, 1:]
@@ -44,9 +46,6 @@ class KNN(ScikitModel):
             ]
         ).squeeze(axis=1)
 
-        # remove items user interacted with
-        predictions[X.toarray() > 0] = 0
-
         if kwargs["movie_genre"]:
             # exclude movies without the genre
             genre_mask = (
@@ -69,9 +68,38 @@ class KNN(ScikitModel):
         ]
 
 
-class KNN5(KNN):
-    def __init__(self):
-        super().__init__(k=10)
+class BaseKNN(KNN):
+    def name(self):
+        return "BaseKNN"
+
+    def fit(self):
+        self.model.fit(self.dataset.train_data)
+
+    @erase_history
+    def predict(self, X, **kwargs):
+        return super().predict(X, **kwargs)
+
+
+class SVDKNN(KNN):
+    def __init__(self, svd_components=20):
+        super().__init__()
+        self.svd = TruncatedSVD(n_components=svd_components, algorithm="arpack")
 
     def name(self):
-        return "KNN10"
+        return "SVDKNN"
+
+    def fit(self):
+        self.train_embed = self.svd.fit_transform(self.dataset.train_data)
+        self.model.fit(self.train_embed)
+
+    @erase_history
+    def predict(self, X, **kwargs):
+        X_embed = self.svd.transform(X)
+        return super().predict(X_embed, **kwargs)
+
+    def serialize(self):
+        return {"knn": self.model, "svd": self.svd}
+
+    def unserialize(self, state):
+        self.model = state.get("knn")
+        self.svd = state.get("svd")
