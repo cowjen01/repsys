@@ -58,7 +58,12 @@ function RecGridView({ recommender }) {
   return (
     <Grid container spacing={1}>
       <Grid item xs={12}>
-        <Grid container alignItems="center" justifyContent="space-between">
+        <Grid
+          container
+          alignItems="center"
+          justifyContent="space-between"
+          sx={{ minHeight: '40px' }}
+        >
           <Grid item>
             <Typography variant="h6" component="div">
               {title}
