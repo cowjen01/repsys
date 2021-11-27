@@ -1,5 +1,8 @@
 import logging
+import os
+import pickle
 from typing import Text, List
+from abc import ABC, abstractmethod
 
 from repsys.website import PredictParam
 from repsys.dataset import Dataset
@@ -7,29 +10,28 @@ from repsys.dataset import Dataset
 logger = logging.getLogger(__name__)
 
 
-class Model:
+class Model(ABC):
+    @abstractmethod
     def name(self) -> Text:
-        raise NotImplementedError("You must implement the `name` method.")
+        pass
 
+    @abstractmethod
     def fit(self) -> None:
-        raise NotImplementedError("You must implement the `fit` method.")
+        pass
 
+    @abstractmethod
     def predict(self, X, **kwargs):
-        raise NotImplementedError("You must implement the `predict` method.")
+        pass
 
-    def save_model(self) -> None:
-        """Save a trained model into the file system before the server shuts down"""
-        raise NotImplementedError("You must implement the `save_model` method.")
+    @abstractmethod
+    def save(self, dir_path) -> None:
+        pass
 
-    def load_model(self) -> None:
-        """Load a trained model from the file system after the server starts up"""
-        raise NotImplementedError("You must implement the `load_model` method.")
-
-    def model_trained(self) -> bool:
-        raise NotImplementedError("You must implement the `model_trained` method.")
+    @abstractmethod
+    def load(self, dir_path) -> None:
+        pass
 
     def predict_params(self) -> List[PredictParam]:
-        """Define custom parameters used during the prediction process"""
         return []
 
     def update_data(self, dataset: Dataset) -> None:
@@ -43,3 +45,15 @@ class Model:
 
     def __str__(self) -> Text:
         return f"Model '{self.name()}'"
+
+
+class ScikitModel(Model):
+    def _checkpoint_path(self, dir_path) -> Text:
+        return os.path.join(dir_path, self.name())
+
+    def save(self, dir_path) -> None:
+        checkpoint = open(self._checkpoint_path(dir_path), "wb")
+        pickle.dump(self.model, checkpoint)
+
+    def load(self, dir_path) -> None:
+        self.model = pickle.load(open(self._checkpoint_path(dir_path), "rb"))

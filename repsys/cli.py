@@ -87,6 +87,15 @@ def train(models_package, dataset_package):
 
 @repsys.command()
 @common_params
+def evaluate(models_package, dataset_package):
+    """Evaluate trained models."""
+    core = init_core(models_package, dataset_package)
+    core.load_models()
+    core.eval_models()
+
+
+@repsys.command()
+@common_params
 @click.option(
     "-p", "--port", "port", default=DEFAULT_SERVER_PORT, show_default=True
 )

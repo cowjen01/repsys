@@ -1,11 +1,17 @@
 from typing import Dict, Text
 import logging
 import sys
+import os
 import numpy as np
 from scipy import sparse
+import time
+import shutil
+import glob
 
 from repsys.models import Model
 from repsys.dataset import Dataset
+from repsys.evaluator import Evaluator
+from repsys.utils import remove_dir, create_dir
 
 
 logger = logging.getLogger(__name__)
@@ -25,25 +31,67 @@ class RepsysCore:
             logger.info(f"Training model called '{model.name()}'.")
             model.fit()
 
+    def _checkpoints_dir_path(self):
+        return os.path.join(os.getcwd(), ".repsys", "checkpoints")
+
+    def _tmp_dir_path(self):
+        return os.path.join(os.getcwd(), ".repsys", "tmp")
+
+    def _checkpoints_zip_files(self):
+        dir_path = self._checkpoints_dir_path()
+        return glob.glob(os.path.join(dir_path, "*.zip"))
+
     def load_models(self) -> None:
+        zip_files = self._checkpoints_zip_files()
+
+        if len(zip_files) == 0:
+            logger.error("There are no checkpoints to unzip.")
+            sys.exit(1)
+
+        zip_files.sort()
+
+        create_dir(self._tmp_dir_path())
+
+        shutil.unpack_archive(zip_files[0], self._tmp_dir_path())
+
         for model in self.models.values():
             logger.info(f"Loading model called '{model.name()}'.")
 
-            if model.model_trained():
-                model.load_model()
-            else:
+            try:
+                model.load(self._tmp_dir_path())
+            except Exception:
                 logger.error(
                     f"Model called '{model.name()}' has not been trained yet."
                 )
+                remove_dir(self._tmp_dir_path())
                 sys.exit(1)
 
-    def eval_models(self) -> None:
-        for model in self.models.values():
-            pass
+        remove_dir(self._tmp_dir_path())
 
     def save_models(self) -> None:
+        create_dir(self._tmp_dir_path())
+
         for model in self.models.values():
-            model.save_model()
+            model.save(self._tmp_dir_path())
+
+        create_dir(self._checkpoints_dir_path())
+
+        zip_file_name = str(int(time.time()))
+        zip_file_path = os.path.join(self._checkpoints_dir_path(), zip_file_name)
+
+        shutil.make_archive(zip_file_path, "zip", self._tmp_dir_path())
+
+        remove_dir(self._tmp_dir_path())
+
+    def eval_models(self) -> None:
+        evaluator = Evaluator()
+
+        for model in self.models.values():
+            evaluator.evaluate_model(
+                model, self.dataset.vad_data_tr, self.dataset.vad_data_te
+            )
+
+        evaluator.print_results()
 
     def get_model(self, model_name):
         return self.models.get(model_name)

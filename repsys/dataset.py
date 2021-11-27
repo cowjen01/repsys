@@ -1,10 +1,13 @@
 import logging
-import zipfile
 import glob
 import os
+import sys
 import pandas as pd
 import numpy as np
+import shutil
 from scipy import sparse
+
+from repsys.utils import remove_dir, create_dir
 
 logger = logging.getLogger(__name__)
 
@@ -13,40 +16,30 @@ class Dataset:
     def name(self):
         raise NotImplementedError("You must implement the `name` method")
 
-    def _processed_data_path(self):
-        return os.path.join(os.getcwd(), "datasets")
+    def _datapoints_dir_path(self):
+        return os.path.join(os.getcwd(), ".repsys", "datapoints")
 
-    def _processed_data_files(self):
-        data_path = self._processed_data_path()
+    def _tmp_dir_path(self):
+        return os.path.join(os.getcwd(), ".repsys", "tmp")
 
+    def _datapoints_zip_files(self):
+        data_path = self._datapoints_dir_path()
         return glob.glob(os.path.join(data_path, "*.zip"))
 
-    def _proccessed_data_exist(self):
-        data_path = self._processed_data_path()
+    def _datapoints_exist(self):
+        zip_files = self._datapoints_zip_files()
+        return len(zip_files) > 0
 
-        if not os.path.exists(data_path):
-            return False
+    def _unzip_latest_datapoint(self):
+        zip_files = self._datapoints_zip_files()
+        zip_files.sort()
 
-        data_files = self._processed_data_files()
+        create_dir(self._tmp_dir_path())
 
-        return len(data_files) > 0
-
-    def _unzipped_data_path(self):
-        return os.path.join(os.getcwd(), "tmp")
-
-    def _unzip_processed_data(self):
-        data_files = self._processed_data_files()
-        data_files.sort()
-
-        tmp_dir_path = self._unzipped_data_path()
-        if not os.path.exists(tmp_dir_path):
-            os.makedirs(tmp_dir_path)
-
-        with zipfile.ZipFile(data_files[0], "r") as zip_ref:
-            zip_ref.extractall(tmp_dir_path)
+        shutil.unpack_archive(zip_files[0], self._tmp_dir_path())
 
     def _load_train_data(self, n_items):
-        train_data_path = os.path.join(self._unzipped_data_path(), "train.csv")
+        train_data_path = os.path.join(self._tmp_dir_path(), "train.csv")
 
         tp = pd.read_csv(train_data_path)
 
@@ -65,11 +58,11 @@ class Dataset:
 
     def _load_tr_te_data(self, data_type, n_items):
         tr_data_path = os.path.join(
-            self._unzipped_data_path(), f"{data_type}_tr.csv"
+            self._tmp_dir_path(), f"{data_type}_tr.csv"
         )
 
         te_data_path = os.path.join(
-            self._unzipped_data_path(), f"{data_type}_te.csv"
+            self._tmp_dir_path(), f"{data_type}_te.csv"
         )
 
         tp_tr = pd.read_csv(tr_data_path)
@@ -96,17 +89,17 @@ class Dataset:
         return data_tr, data_te
 
     def _load_items_data(self):
-        items_data_path = os.path.join(self._unzipped_data_path(), "items.csv")
+        items_data_path = os.path.join(self._tmp_dir_path(), "items.csv")
 
         items = pd.read_csv(items_data_path, index_col="index")
         items["id"] = items.index
-        items["subtitle"] = items["subtitle"].fillna('')
+        items["subtitle"] = items["subtitle"].fillna("")
         items = items.fillna("")
 
         return items
 
     def _load_vad_users_data(self):
-        users_data_path = os.path.join(self._unzipped_data_path(), "users.csv")
+        users_data_path = os.path.join(self._tmp_dir_path(), "users.csv")
 
         users = pd.read_csv(users_data_path, index_col="index")
         users["label"] = users["label"].astype(str)
@@ -118,13 +111,13 @@ class Dataset:
         logger.info(f"Loading '{self.name()}' dataset ...")
 
         logger.debug("Checking processed data presence ...")
-        if os.path.exists(self._unzipped_data_path()):
-            logger.debug("Processed data found, loading ...")
-        elif self._proccessed_data_exist():
+
+        if self._datapoints_exist():
             logger.debug("Compressed data found, unzipping ...")
-            self._unzip_processed_data()
+            self._unzip_latest_datapoint()
         else:
             logger.info("No proccessed data found, processing now ...")
+            sys.exit()
 
         self.items = self._load_items_data()
         self.n_items = self.items.shape[0]
@@ -145,6 +138,8 @@ class Dataset:
         )
 
         logger.debug(f"Dataset '{self.name()}' successfully loaded.")
+
+        remove_dir(self._tmp_dir_path())
 
     def __str__(self):
         return f"Dataset '{self.name()}'"
