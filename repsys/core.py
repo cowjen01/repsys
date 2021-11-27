@@ -1,5 +1,6 @@
 from typing import Dict, Text
 import logging
+import sys
 import numpy as np
 from scipy import sparse
 
@@ -15,11 +16,26 @@ class RepsysCore:
         self.models = models
         self.dataset = dataset
 
-    def init_models(self) -> None:
+    def update_models_dataset(self) -> None:
         for model in self.models.values():
-            logger.info(f"Initiating model called '{model.name()}'.")
             model.update_data(self.dataset)
+
+    def train_models(self) -> None:
+        for model in self.models.values():
+            logger.info(f"Training model called '{model.name()}'.")
             model.fit()
+
+    def load_models(self) -> None:
+        for model in self.models.values():
+            logger.info(f"Loading model called '{model.name()}'.")
+
+            if model.model_trained():
+                model.load_model()
+            else:
+                logger.error(
+                    f"Model called '{model.name()}' has not been trained yet."
+                )
+                sys.exit(1)
 
     def eval_models(self) -> None:
         for model in self.models.values():

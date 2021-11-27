@@ -19,11 +19,14 @@ class Model:
 
     def save_model(self) -> None:
         """Save a trained model into the file system before the server shuts down"""
-        pass
+        raise NotImplementedError("You must implement the `save_model` method.")
 
     def load_model(self) -> None:
         """Load a trained model from the file system after the server starts up"""
-        pass
+        raise NotImplementedError("You must implement the `load_model` method.")
+
+    def model_trained(self) -> bool:
+        raise NotImplementedError("You must implement the `model_trained` method.")
 
     def predict_params(self) -> List[PredictParam]:
         """Define custom parameters used during the prediction process"""

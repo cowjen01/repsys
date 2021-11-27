@@ -4,8 +4,12 @@ from sklearn.neighbors import NearestNeighbors
 from repsys import Model, PredictParam, ParamTypes
 import pickle
 
+import logging
+
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
+
+logger = logging.getLogger(__name__)
 
 
 class KNN(Model):
@@ -17,10 +21,10 @@ class KNN(Model):
         return "KNN5"
 
     def fit(self):
-        if os.path.isfile(self.model_file_path()):
-            self.model = pickle.load(open(self.model_file_path(), "rb"))
-        else:
-            self.model.fit(self.dataset.train_data)
+        self.model.fit(self.dataset.train_data)
+
+    def model_trained(self):
+        return os.path.isfile(self.model_file_path())
 
     def model_file_path(self):
         return f"./checkpoints/{self.name()}"
@@ -29,8 +33,13 @@ class KNN(Model):
         knn_pickle = open(self.model_file_path(), "wb")
         pickle.dump(self.model, knn_pickle)
 
+    def load_model(self) -> None:
+        self.model = pickle.load(open(self.model_file_path(), "rb"))
+
     def predict(self, X, **kwargs):
         distances, indexes = self.model.kneighbors(X, n_neighbors=self.k)
+
+        logger.debug("Distances computed")
 
         # exclude the nearest neighbor
         n_distances = distances[:, 1:]
@@ -42,6 +51,8 @@ class KNN(Model):
         # normalize distances
         sums = n_distances.sum(axis=1)
         n_distances = n_distances / sums[:, np.newaxis]
+
+        logger.debug("Distances normalized")
 
         # 1) get interactions of the nearest neighbors
         # 2) multiply them by a distance from the user
@@ -55,6 +66,8 @@ class KNN(Model):
                 for idx, dist in zip(n_indexes, n_distances)
             ]
         ).squeeze(axis=1)
+
+        logger.debug("Predictions completed")
 
         # remove items user interacted with
         predictions[X.toarray() > 0] = 0

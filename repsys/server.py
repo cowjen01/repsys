@@ -48,7 +48,7 @@ def create_app(core: RepsysCore):
             raise exceptions.NotFound(f"Model '{model_name}' was not found.")
 
         default_params = {
-            p.key: p.default_value for p in model.website_params()
+            p.name: p.default_value for p in model.predict_params()
         }
         cleaned_params = {
             k: v for k, v in params.items() if k in default_params
@@ -102,10 +102,6 @@ def create_app(core: RepsysCore):
 
     @app.listener("after_server_stop")
     def on_shutdown(app, loop):
-        logger.info("Calling models to save their state.")
-
-        core.save_models()
-
         logger.info("Server has been shut down.")
 
     return app
