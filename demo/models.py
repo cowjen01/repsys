@@ -1,7 +1,7 @@
 import numpy as np
 import os
 from sklearn.neighbors import NearestNeighbors
-from repsys import Model, WebsiteParam
+from repsys import Model, PredictParam, ParamTypes
 import pickle
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
@@ -9,43 +9,28 @@ import pickle
 
 
 class KNN(Model):
-    def __init__(self, k=10):
+    def __init__(self, k=5):
+        self.k = k
         self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
 
     def name(self):
-        return "KNN10"
+        return "KNN5"
 
     def fit(self):
-        if os.path.isfile(self._model_file_path()):
-            self.model = pickle.load(open(self._model_file_path(), "rb"))
+        if os.path.isfile(self.model_file_path()):
+            self.model = pickle.load(open(self.model_file_path(), "rb"))
         else:
             self.model.fit(self.dataset.train_data)
 
-    def website_params(self):
-        return [
-            WebsiteParam(
-                key="exclude_history",
-                label="Exclude user's history",
-                type="bool",
-                default_value=True,
-            ),
-            WebsiteParam(
-                key="movie_genre",
-                label="Movie genre",
-                type="select",
-                select_options=self.dataset.get_genres().tolist(),
-            ),
-        ]
-
-    def _model_file_path(self):
+    def model_file_path(self):
         return f"./checkpoints/{self.name()}"
 
     def save_model(self) -> None:
-        knn_pickle = open(self._model_file_path(), "wb")
+        knn_pickle = open(self.model_file_path(), "wb")
         pickle.dump(self.model, knn_pickle)
 
     def predict(self, X, **kwargs):
-        distances, indexes = self.model.kneighbors(X)
+        distances, indexes = self.model.kneighbors(X, n_neighbors=self.k)
 
         # exclude the nearest neighbor
         n_distances = distances[:, 1:]
@@ -71,6 +56,9 @@ class KNN(Model):
             ]
         ).squeeze(axis=1)
 
+        # remove items user interacted with
+        predictions[X.toarray() > 0] = 0
+
         if kwargs["movie_genre"]:
             # exclude movies without the genre
             genre_mask = (
@@ -80,16 +68,22 @@ class KNN(Model):
             )
             predictions[:, genre_mask] = 0
 
-        if kwargs["exclude_history"]:
-            # remove items user interacted with
-            predictions[X.toarray() > 0] = 0
-
         return predictions
+
+    def predict_params(self):
+        return [
+            PredictParam(
+                name="movie_genre",
+                label="Movie genre",
+                type=ParamTypes.select,
+                select_options=self.dataset.get_genres().tolist(),
+            ),
+        ]
 
 
 class KNN5(KNN):
     def __init__(self):
-        super().__init__(k=5)
+        super().__init__(k=10)
 
     def name(self):
-        return "KNN5"
+        return "KNN10"

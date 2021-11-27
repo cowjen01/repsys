@@ -48,7 +48,7 @@ function RecEditDialog() {
     }
 
     const defaultParams = Object.fromEntries(
-      models.map((m) => [m.key, Object.fromEntries(m.params.map((a) => [a.key, a.default]))])
+      models.map((m) => [m.name, Object.fromEntries(m.params.map((a) => [a.name, a.default]))])
     );
 
     if (dialog.index === null) {
@@ -56,7 +56,7 @@ function RecEditDialog() {
         title: 'New bar',
         itemsPerPage: 4,
         itemsLimit: 20,
-        model: models[0].key,
+        model: models[0].name,
         modelParams: defaultParams,
       };
     }
@@ -87,7 +87,7 @@ function RecEditDialog() {
           }}
         >
           {({ submitForm, isSubmitting, values }) => {
-            const model = useMemo(() => models.find((m) => m.key === values.model), [values.model]);
+            const model = useMemo(() => models.find((m) => m.name === values.model), [values.model]);
             return (
               <>
                 <DialogContent>
@@ -108,12 +108,12 @@ function RecEditDialog() {
                     name="model"
                     label="Recommendation model"
                     component={SelectField}
-                    options={[...models.map((m) => ({ label: m.key, value: m.key }))]}
+                    options={[...models.map((m) => ({ label: m.name, value: m.name }))]}
                   />
                   {model &&
                     model.params &&
                     model.params.map((a) => {
-                      const name = `modelParams.${values.model}.${a.key}`;
+                      const name = `modelParams.${values.model}.${a.name}`;
                       const props = {
                         name,
                         label: a.label,
@@ -121,7 +121,7 @@ function RecEditDialog() {
                       if (a.type === 'select') {
                         return (
                           <Field
-                            key={a.key}
+                            key={a.name}
                             component={SelectField}
                             options={a.options.map((b) => ({ label: b, value: b }))}
                             {...props}
@@ -129,9 +129,9 @@ function RecEditDialog() {
                         );
                       }
                       if (a.type === 'bool') {
-                        return <Field key={a.key} component={CheckboxField} {...props} />;
+                        return <Field key={a.name} component={CheckboxField} {...props} />;
                       }
-                      return <Field key={a.key} component={TextField} type={a.type} {...props} />;
+                      return <Field key={a.name} component={TextField} type={a.type} {...props} />;
                     })}
                 </DialogContent>
                 <DialogActions>

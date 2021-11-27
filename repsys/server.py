@@ -4,7 +4,6 @@ from sanic import Sanic
 from sanic.response import json, file
 import numpy as np
 from sanic import exceptions
-from scipy import sparse
 
 from repsys.core import RepsysCore
 
@@ -62,10 +61,9 @@ def create_app(core: RepsysCore):
                 X = core.get_user_history(user_index)
             except Exception:
                 raise exceptions.NotFound(f"User '{user_index}' was not found.")
-
         else:
             interactions = np.array(interactions)
-            X = core.from_interactions(interactions)
+            X = core.input_from_interactions(interactions)
 
         prediction = model.predict(X, **predict_params)
         items = core.prediction_to_items(prediction, limit)

@@ -5,7 +5,6 @@ import sys
 from typing import List
 
 from repsys.core import RepsysCore
-
 from repsys.models import Model
 from repsys.server import run_server
 from repsys.loader import ClassLoader

@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from scipy import sparse
 
-from .models import Model
-from .dataset import Dataset
+from repsys.models import Model
+from repsys.dataset import Dataset
 
 
 logger = logging.getLogger(__name__)
@@ -20,6 +20,10 @@ class RepsysCore:
             logger.info(f"Initiating model called '{model.name()}'.")
             model.update_data(self.dataset)
             model.fit()
+
+    def eval_models(self) -> None:
+        for model in self.models.values():
+            pass
 
     def save_models(self) -> None:
         for model in self.models.values():
@@ -39,7 +43,7 @@ class RepsysCore:
     def get_user_history(self, user_index):
         return self.dataset.vad_data_tr[user_index]
 
-    def from_interactions(self, interactions):
+    def input_from_interactions(self, interactions):
         return sparse.csr_matrix(
             (
                 np.ones_like(interactions),

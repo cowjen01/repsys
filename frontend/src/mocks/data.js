@@ -1,27 +1,27 @@
 export const models = [
   {
-    key: 'KNN10',
+    name: 'KNN10',
     params: [
       {
-        key: 'n',
+        name: 'n',
         label: 'Neighbors',
         type: 'number',
         default: 5,
       },
       {
-        key: 'category',
+        name: 'category',
         label: 'Movie category',
         type: 'select',
         options: ['comedy', 'horror'],
       },
       {
-        key: 'exclude',
+        name: 'exclude',
         label: 'Exclude history',
         type: 'bool',
         default: true,
       },
       {
-        key: 'normalize',
+        name: 'normalize',
         label: 'Normalize distances',
         type: 'bool',
         default: false,
@@ -29,10 +29,10 @@ export const models = [
     ],
   },
   {
-    key: 'VASP',
+    name: 'VASP',
     params: [
       {
-        key: 'h',
+        name: 'h',
         label: 'Some parameter',
         type: 'text',
       },

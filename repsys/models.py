@@ -1,9 +1,8 @@
 import logging
 from typing import Text, List
-from numpy.typing import NDArray
 
-from .website import WebsiteParam
-from .dataset import Dataset
+from repsys.website import PredictParam
+from repsys.dataset import Dataset
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +14,7 @@ class Model:
     def fit(self) -> None:
         raise NotImplementedError("You must implement the `fit` method.")
 
-    def predict(self, X, **kwargs) -> NDArray:
+    def predict(self, X, **kwargs):
         raise NotImplementedError("You must implement the `predict` method.")
 
     def save_model(self) -> None:
@@ -26,17 +25,17 @@ class Model:
         """Load a trained model from the file system after the server starts up"""
         pass
 
-    def website_params(self) -> List[WebsiteParam]:
+    def predict_params(self) -> List[PredictParam]:
         """Define custom parameters used during the prediction process"""
         return []
 
-    def update_data(self, ds: Dataset) -> None:
-        self.dataset = ds
+    def update_data(self, dataset: Dataset) -> None:
+        self.dataset = dataset
 
     def to_dict(self):
         return {
-            "key": self.name(),
-            "params": [p.to_dict() for p in self.website_params()],
+            "name": self.name(),
+            "params": [p.to_dict() for p in self.predict_params()],
         }
 
     def __str__(self) -> Text:

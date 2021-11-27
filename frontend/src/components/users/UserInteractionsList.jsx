@@ -53,7 +53,7 @@ function UserInteractionsList() {
           paddingLeft: '16px',
           paddingRight: '16px',
           lineHeight: '48px',
-          color: 'rgba(0, 0, 0, 0.6)',
+          color: 'text.secondary',
         }}
         variant="subtitle2"
         component="div"

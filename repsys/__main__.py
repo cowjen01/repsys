@@ -2,7 +2,8 @@ import sys
 import os
 import coloredlogs
 import logging
-from .cli import repsys
+
+from repsys.cli import repsys
 
 
 def setup_logging(level):

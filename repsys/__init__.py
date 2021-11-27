@@ -1,5 +1,6 @@
-from .models import Model
-from .dataset import Dataset
-from .website import WebsiteParam
+from repsys.models import Model
+from repsys.dataset import Dataset
+from repsys.website import PredictParam, ParamTypes
+from repsys.evaluator import Evaluator
 
-__all__ = ["Model", "WebsiteParam", "Dataset"]
+__all__ = ["Model", "PredictParam", "ParamTypes", "Dataset", "Evaluator"]
