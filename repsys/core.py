@@ -10,7 +10,7 @@ import glob
 
 from repsys.models import Model
 from repsys.dataset import Dataset
-from repsys.evaluator import Evaluator
+from repsys.evaluator import ModelEvaluator
 from repsys.utils import remove_dir, create_dir
 
 
@@ -77,14 +77,16 @@ class RepsysCore:
         create_dir(self._checkpoints_dir_path())
 
         zip_file_name = str(int(time.time()))
-        zip_file_path = os.path.join(self._checkpoints_dir_path(), zip_file_name)
+        zip_file_path = os.path.join(
+            self._checkpoints_dir_path(), zip_file_name
+        )
 
         shutil.make_archive(zip_file_path, "zip", self._tmp_dir_path())
 
         remove_dir(self._tmp_dir_path())
 
     def eval_models(self) -> None:
-        evaluator = Evaluator()
+        evaluator = ModelEvaluator()
 
         for model in self.models.values():
             evaluator.evaluate_model(

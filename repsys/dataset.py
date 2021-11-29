@@ -57,13 +57,9 @@ class Dataset:
         return data
 
     def _load_tr_te_data(self, data_type, n_items):
-        tr_data_path = os.path.join(
-            self._tmp_dir_path(), f"{data_type}_tr.csv"
-        )
+        tr_data_path = os.path.join(self._tmp_dir_path(), f"{data_type}_tr.csv")
 
-        te_data_path = os.path.join(
-            self._tmp_dir_path(), f"{data_type}_te.csv"
-        )
+        te_data_path = os.path.join(self._tmp_dir_path(), f"{data_type}_te.csv")
 
         tp_tr = pd.read_csv(tr_data_path)
         tp_te = pd.read_csv(te_data_path)

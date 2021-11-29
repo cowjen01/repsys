@@ -46,7 +46,7 @@ class KNN(ScikitModel):
             ]
         ).squeeze(axis=1)
 
-        if kwargs["movie_genre"]:
+        if kwargs.get("movie_genre"):
             # exclude movies without the genre
             genre_mask = (
                 ~self.dataset.items["subtitle"]
@@ -80,26 +80,26 @@ class BaseKNN(KNN):
         return super().predict(X, **kwargs)
 
 
-class SVDKNN(KNN):
-    def __init__(self, svd_components=20):
-        super().__init__()
-        self.svd = TruncatedSVD(n_components=svd_components, algorithm="arpack")
+# class SVDKNN(KNN):
+#     def __init__(self, svd_components=20):
+#         super().__init__()
+#         self.svd = TruncatedSVD(n_components=svd_components, algorithm="arpack")
 
-    def name(self):
-        return "SVDKNN"
+#     def name(self):
+#         return "SVDKNN"
 
-    def fit(self):
-        self.train_embed = self.svd.fit_transform(self.dataset.train_data)
-        self.model.fit(self.train_embed)
+#     def fit(self):
+#         self.train_embed = self.svd.fit_transform(self.dataset.train_data)
+#         self.model.fit(self.train_embed)
 
-    @erase_history
-    def predict(self, X, **kwargs):
-        X_embed = self.svd.transform(X)
-        return super().predict(X_embed, **kwargs)
+#     @erase_history
+#     def predict(self, X, **kwargs):
+#         X_embed = self.svd.transform(X)
+#         return super().predict(X_embed, **kwargs)
 
-    def serialize(self):
-        return {"knn": self.model, "svd": self.svd}
+#     def serialize(self):
+#         return {"knn": self.model, "svd": self.svd}
 
-    def unserialize(self, state):
-        self.model = state.get("knn")
-        self.svd = state.get("svd")
+#     def unserialize(self, state):
+#         self.model = state.get("knn")
+#         self.svd = state.get("svd")
