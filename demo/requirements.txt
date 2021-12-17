@@ -1,2 +1,3 @@
 sklearn
 repsys
+pandas

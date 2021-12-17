@@ -8,9 +8,8 @@ import time
 import shutil
 import glob
 
-from repsys.models import Model
-from repsys.dataset import Dataset
-from repsys.evaluator import ModelEvaluator
+from repsys.dataset import Dataset, DatasetStorage
+from repsys.model import ModelStorage, ModelEvaluator, Model
 from repsys.utils import remove_dir, create_dir
 
 
@@ -21,6 +20,8 @@ class RepsysCore:
     def __init__(self, models: Dict[Text, Model], dataset: Dataset) -> None:
         self.models = models
         self.dataset = dataset
+        self.model_storage = ModelStorage(models)
+        self.dataset_storage = DatasetStorage(dataset)
 
     def update_models_dataset(self) -> None:
         for model in self.models.values():
@@ -31,60 +32,6 @@ class RepsysCore:
             logger.info(f"Training model called '{model.name()}'.")
             model.fit()
 
-    def _checkpoints_dir_path(self):
-        return os.path.join(os.getcwd(), ".repsys", "checkpoints")
-
-    def _tmp_dir_path(self):
-        return os.path.join(os.getcwd(), ".repsys", "tmp")
-
-    def _checkpoints_zip_files(self):
-        dir_path = self._checkpoints_dir_path()
-        return glob.glob(os.path.join(dir_path, "*.zip"))
-
-    def load_models(self) -> None:
-        zip_files = self._checkpoints_zip_files()
-
-        if len(zip_files) == 0:
-            logger.error("There are no checkpoints to unzip.")
-            sys.exit(1)
-
-        zip_files.sort(reverse=True)
-
-        create_dir(self._tmp_dir_path())
-
-        shutil.unpack_archive(zip_files[0], self._tmp_dir_path())
-
-        for model in self.models.values():
-            logger.info(f"Loading model called '{model.name()}'.")
-
-            try:
-                model.load(self._tmp_dir_path())
-            except Exception:
-                logger.error(
-                    f"Model called '{model.name()}' has not been trained yet."
-                )
-                remove_dir(self._tmp_dir_path())
-                sys.exit(1)
-
-        remove_dir(self._tmp_dir_path())
-
-    def save_models(self) -> None:
-        create_dir(self._tmp_dir_path())
-
-        for model in self.models.values():
-            model.save(self._tmp_dir_path())
-
-        create_dir(self._checkpoints_dir_path())
-
-        zip_file_name = str(int(time.time()))
-        zip_file_path = os.path.join(
-            self._checkpoints_dir_path(), zip_file_name
-        )
-
-        shutil.make_archive(zip_file_path, "zip", self._tmp_dir_path())
-
-        remove_dir(self._tmp_dir_path())
-
     def eval_models(self) -> None:
         evaluator = ModelEvaluator()
 
@@ -94,6 +41,15 @@ class RepsysCore:
             )
 
         evaluator.print_results()
+
+    def load_models_checkpoint(self):
+        self.model_storage.load_all()
+
+    def save_models_checkpoint(self):
+        self.model_storage.save_all()
+
+    def load_dataset_checkpoint(self):
+        self.dataset_storage.load()
 
     def get_model(self, model_name):
         return self.models.get(model_name)
@@ -122,3 +78,4 @@ class RepsysCore:
     def prediction_to_items(self, prediction, limit=20):
         idxs = (-prediction[0]).argsort()[:limit]
         return self.dataset.items.loc[idxs]
+

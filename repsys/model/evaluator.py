@@ -1,21 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from jax import jit
-import jax.numpy as jnp
 
-
-@jit
-def recall_jax(X_pred, X_true, argsort_indices, k):
-    X_pred_binary = jnp.zeros_like(X_pred, dtype=bool)
-    X_pred_binary = X_pred_binary.at[
-        jnp.arange(X_pred.shape[0])[:, jnp.newaxis], argsort_indices
-    ].set(True)
-    X_true_binary = X_true > 0
-    tmp = (jnp.logical_and(X_true_binary, X_pred_binary).sum(axis=1)).astype(
-        jnp.float32
-    )
-    recall = tmp / jnp.minimum(k, X_true_binary.sum(axis=1))
-    return recall
+# from repsys.metrics import recall
 
 
 class ModelEvaluator:
@@ -23,14 +9,15 @@ class ModelEvaluator:
         self.metrics = {
             # "Recall@5": {"method": self.recall, "args": {"k": 5}},
             # "Recall@20": {"method": self.recall, "args": {"k": 20}},
-            "Recall@50": {"method": self.recall, "args": {"k": 50}},
+            # "Recall@50": {"method": self.recall, "args": {"k": 50}},
             # "NCDG@100": {"method": self.ndcg, "args": {"k": 100}},
         }
         self.results = {}
 
-    def recall(self, X_pred, X_true, k=100):
-        idx = np.argpartition(-X_pred, k, axis=1)
-        return recall_jax(X_pred, X_true.toarray(), idx[:, :k], k)
+    # def get_recall(self, X_pred, X_true, k=50):
+    #     # TODO use jax variant of argpartition once it will be implemented
+    #     idx = np.argpartition(-X_pred, k, axis=1)[:, :k]
+    #     return recall(X_pred, X_true, idx, k).block_until_ready()
 
     def ndcg(self, X_pred, heldout_batch, k=100):
         batch_users = X_pred.shape[0]
@@ -61,7 +48,7 @@ class ModelEvaluator:
 
         for metric in self.metrics.items():
             self.results[model.name()][metric[0]] = metric[1].get("method")(
-                X_pred, heldout_batch, **metric[1].get("args")
+                X_pred, heldout_batch.toarray(), **metric[1].get("args")
             )
 
     def print_results(self):

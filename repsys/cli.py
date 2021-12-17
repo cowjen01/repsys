@@ -6,7 +6,7 @@ import functools
 from typing import List
 
 from repsys.core import RepsysCore
-from repsys.models import Model
+from repsys.model.blueprint import Model
 from repsys.server import run_server
 from repsys.loader import ClassLoader
 from repsys.dataset import Dataset
@@ -41,12 +41,11 @@ def load_dataset(dataset_package) -> Dataset:
 
 def init_core(models_package, dataset_package):
     dataset = load_dataset(dataset_package)
-    dataset.load_dataset()
-
     models = load_models(models_package)
 
     core = RepsysCore(models=models, dataset=dataset)
 
+    core.load_dataset_checkpoint()
     core.update_models_dataset()
 
     return core
@@ -82,7 +81,7 @@ def train(models_package, dataset_package):
     """Train implemented models."""
     core = init_core(models_package, dataset_package)
     core.train_models()
-    core.save_models()
+    core.save_models_checkpoint()
 
 
 @repsys.command()
@@ -90,7 +89,7 @@ def train(models_package, dataset_package):
 def evaluate(models_package, dataset_package):
     """Evaluate trained models."""
     core = init_core(models_package, dataset_package)
-    core.load_models()
+    core.load_models_checkpoint()
     core.eval_models()
 
 
@@ -103,6 +102,6 @@ def server(port, models_package, dataset_package):
     """Start Repsys server."""
 
     core = init_core(models_package, dataset_package)
-    core.load_models()
+    core.load_models_checkpoint()
 
     run_server(port=port, core=core)

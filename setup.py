@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
-    description="A package for modeling and testing recommendation systems.",
+    description="A package for modeling and testing of recommendation systems.",
     long_description=long_description,
     include_package_data=True,
     long_description_content_type="text/markdown",
@@ -31,7 +31,7 @@ setuptools.setup(
         "jax[cpu]",
     ],
     extras_require={
-        "dev": ["black"],
-        "test": ["flake8", "pytest-cov", "pytest-sanic", "pytest"],
+        "dev": ["black", "tox"],
     },
+    zip_safe=False,
 )

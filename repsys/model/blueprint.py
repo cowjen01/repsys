@@ -24,17 +24,20 @@ class Model(ABC):
         pass
 
     @abstractmethod
-    def save(self, dir_path) -> None:
+    def save(self, dir_path: Text) -> None:
         pass
 
     @abstractmethod
-    def load(self, dir_path) -> None:
+    def load(self, dir_path: Text) -> None:
         pass
 
     def predict_params(self) -> List[PredictParam]:
         return []
 
     def update_data(self, dataset: Dataset) -> None:
+        if not isinstance(dataset, Dataset):
+            raise Exception('Data must be an instance of the Dataset class.')
+
         self.dataset = dataset
 
     def to_dict(self):
@@ -48,11 +51,11 @@ class Model(ABC):
 
 
 class ScikitModel(Model):
-    def save(self, dir_path) -> None:
+    def save(self, dir_path: Text) -> None:
         checkpoint = open(os.path.join(dir_path, self.name()), "wb")
         pickle.dump(self.serialize(), checkpoint)
 
-    def load(self, dir_path) -> None:
+    def load(self, dir_path: Text) -> None:
         checkpoint = pickle.load(
             open(os.path.join(dir_path, self.name()), "rb")
         )
@@ -61,5 +64,5 @@ class ScikitModel(Model):
     def serialize(self):
         return self.model
 
-    def unserialize(self, state):
+    def unserialize(self, state) -> None:
         self.model = state
