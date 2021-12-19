@@ -78,4 +78,3 @@ class RepsysCore:
     def prediction_to_items(self, prediction, limit=20):
         idxs = (-prediction[0]).argsort()[:limit]
         return self.dataset.items.loc[idxs]
-

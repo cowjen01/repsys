@@ -11,15 +11,15 @@ logger = logging.getLogger(__name__)
 class DatasetSplitter:
     def __init__(
         self,
-        user_index,
-        item_index,
+        user_index_col,
+        item_index_col,
         train_users_prop=0.85,
         test_holdout_prop=0.2,
         min_user_interacts=5,
         min_item_interacts=0,
     ) -> None:
-        self.user_index = user_index
-        self.item_index = item_index
+        self.user_index_col = user_index_col
+        self.item_index_col = item_index_col
         self.train_users_prop = train_users_prop
         self.test_holdout_prop = test_holdout_prop
         self.min_user_interacts = min_user_interacts
@@ -37,9 +37,9 @@ class DatasetSplitter:
         # Only keep the triplets for items which
         # were clicked on by at least min_sc users.
         if self.min_item_interacts > 0:
-            itemcount = self.get_count(tp, self.item_index)
+            itemcount = self.get_count(tp, self.item_index_col)
             tp = tp[
-                tp[self.item_index].isin(
+                tp[self.item_index_col].isin(
                     itemcount.index[itemcount >= self.min_item_interacts]
                 )
             ]
@@ -48,21 +48,21 @@ class DatasetSplitter:
         # After doing this, some of the items will have less than min_uc users,
         # but should only be a small proportion
         if self.min_user_interacts > 0:
-            usercount = self.get_count(tp, self.user_index)
+            usercount = self.get_count(tp, self.user_index_col)
             tp = tp[
-                tp[self.user_index].isin(
+                tp[self.user_index_col].isin(
                     usercount.index[usercount >= self.min_user_interacts]
                 )
             ]
 
         # Update both usercount and itemcount after filtering
         usercount, itemcount = self.get_count(
-            tp, self.user_index
-        ), self.get_count(tp, self.item_index)
+            tp, self.user_index_col
+        ), self.get_count(tp, self.item_index_col)
         return tp, usercount, itemcount
 
     def _split_train_test(self, data):
-        grouped_by_user = data.groupby(self.user_index)
+        grouped_by_user = data.groupby(self.user_index_col)
         tr_list, te_list = list(), list()
 
         np.random.seed(98765)
@@ -93,9 +93,11 @@ class DatasetSplitter:
     # so we need to remove all interactions to movies out of the training scope
     def _filter_interacts(self, interact_data, users, item_idxs):
         interacts = interact_data.loc[
-            interact_data[self.user_index].isin(users)
+            interact_data[self.user_index_col].isin(users)
         ]
-        interacts = interacts.loc[interacts[self.item_index].isin(item_idxs)]
+        interacts = interacts.loc[
+            interacts[self.item_index_col].isin(item_idxs)
+        ]
         interacts, activity, _ = self._filter_triplets(interacts)
         return interacts, activity.index
 
@@ -144,12 +146,12 @@ class DatasetSplitter:
 
         # Select only interactions made by users from the training set
         train_plays = interact_data.loc[
-            interact_data[self.user_index].isin(tr_users)
+            interact_data[self.user_index_col].isin(tr_users)
         ]
 
         # Get all movies interacted by the train users
         # we will only be working with movies that has been seen by model
-        unique_sid = pd.unique(train_plays[self.item_index])
+        unique_sid = pd.unique(train_plays[self.item_index_col])
 
         # Select only interactions made by the validation users
         # and also those whose movie is included in the training interactions
@@ -184,8 +186,8 @@ class DatasetSplitter:
         item2id = dict((sid, i) for (i, sid) in enumerate(unique_sid))
 
         def numerize(tp):
-            uid = list(map(lambda x: user2id[x], tp[self.user_index]))
-            sid = list(map(lambda x: item2id[x], tp[self.item_index]))
+            uid = list(map(lambda x: user2id[x], tp[self.user_index_col]))
+            sid = list(map(lambda x: item2id[x], tp[self.item_index_col]))
             return pd.DataFrame(
                 data={"uid": uid, "sid": sid}, columns=["uid", "sid"]
             )
@@ -202,5 +204,5 @@ class DatasetSplitter:
             train_data,
             (vad_data_tr, vad_data_te),
             (test_data_tr, test_data_te),
-            (user2id, item2id)
+            (user2id, item2id),
         )

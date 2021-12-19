@@ -32,30 +32,28 @@ class Rating(ExplicitInteraction):
         min: float = 1.0,
         max: float = 5.0,
         step: float = 1.0,
-        threshold: float = 4.0,
+        bin_threshold: float = 4.0,
     ) -> None:
         self.min = min
         self.max = max
         self.step = step
-        self.threshold = threshold
+        self.bin_threshold = bin_threshold
 
 
-class DTypesParser:
-    @classmethod
-    def find_first(
-        cls, dtypes: Dict[Text, DataType], col_dtype: DataType
-    ) -> Optional[Text]:
-        for [col, dt] in dtypes.items():
-            if type(dt) == col_dtype:
-                return col
-        return None
+def find_column(
+    dtypes: Dict[Text, DataType], col_dtype: DataType
+) -> Optional[Text]:
+    for [col, dt] in dtypes.items():
+        if type(dt) == col_dtype:
+            return col
+    return None
 
-    @classmethod
-    def find_all(
-        cls, dtypes: Dict[Text, DataType], col_dtype: DataType
-    ) -> Optional[Text]:
-        results = []
-        for [col, dt] in dtypes.items():
-            if type(dt) == col_dtype:
-                results.append(col)
-        return results
+
+def filter_columns(
+    dtypes: Dict[Text, DataType], col_dtype: DataType
+) -> Optional[Text]:
+    results = []
+    for [col, dt] in dtypes.items():
+        if type(dt) == col_dtype:
+            results.append(col)
+    return results

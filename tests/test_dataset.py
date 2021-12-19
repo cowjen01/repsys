@@ -2,21 +2,28 @@ import pytest
 
 from tests.helpers import load_items, load_interacts
 
-from repsys.dataset import dtypes, DatasetValidator
+from repsys.dataset import dtypes
+from repsys.dataset.validators import (
+    validate_dataset,
+    validate_item_data,
+    validate_item_dtypes,
+    validate_interact_dtypes,
+    validate_interact_data,
+)
 
 
 def get_valid_setup():
-    items = load_items('valid.csv')
-    interacts = load_interacts('valid.csv')
+    items = load_items("valid.csv")
+    interacts = load_interacts("valid.csv")
     interact_dt = {
         "movieId": dtypes.ItemIndex(),
         "userId": dtypes.UserIndex(),
-        "rating": dtypes.Rating(min=0.5, max=5, step=0.5)
+        "rating": dtypes.Rating(min=0.5, max=5, step=0.5),
     }
     item_dt = {
         "movieId": dtypes.ItemIndex(),
         "title": dtypes.String(),
-        "genres": dtypes.Tags()
+        "genres": dtypes.Tags(),
     }
 
     return interacts, items, interact_dt, item_dt
@@ -40,10 +47,9 @@ def get_valid_setup():
     ],
 )
 def test_invalid_item_dtypes(dt):
-    items = load_items('valid.csv')
+    items = load_items("valid.csv")
     with pytest.raises(Exception):
-        validator = DatasetValidator()
-        validator.validate_item_dtypes(items, dt)
+        validate_item_dtypes(items, dt)
 
 
 @pytest.mark.parametrize(
@@ -61,52 +67,40 @@ def test_invalid_item_dtypes(dt):
         {
             "movieId": dtypes.ItemIndex(),
             "userId": dtypes.UserIndex(),
-            "genres": dtypes.Tags()
+            "genres": dtypes.Tags(),
         },
         {
             "movieIndex": dtypes.ItemIndex(),
             "userId": dtypes.UserIndex(),
-        }
+        },
     ],
 )
 def test_invalid_interact_dtypes(dt):
-    interacts = load_interacts('valid.csv')
+    interacts = load_interacts("valid.csv")
     with pytest.raises(Exception):
-        validator = DatasetValidator()
-        validator.validate_interact_dtypes(interacts, dt)
+        validate_interact_dtypes(interacts, dt)
 
 
-@pytest.mark.parametrize(
-    "items",
-    [
-        load_items('duplicate_index.csv')
-    ]
-)
+@pytest.mark.parametrize("items", [load_items("duplicate_index.csv")])
 def test_invalid_item_data(items):
     dt = {
         "movieId": dtypes.ItemIndex(),
         "title": dtypes.String(),
     }
     with pytest.raises(Exception):
-        validator = DatasetValidator()
-        validator.validate_item_data(items, dt)
+        validate_item_data(items, dt)
 
 
 @pytest.mark.parametrize(
     "interacts",
-    [
-        load_interacts('invalid_rating.csv'),
-        load_interacts('uknown_items.csv')
-    ]
+    [load_interacts("invalid_rating.csv"), load_interacts("uknown_items.csv")],
 )
 def test_invalid_interact_data(interacts):
     _, items, interact_dt, item_dt = get_valid_setup()
     with pytest.raises(Exception):
-        validator = DatasetValidator()
-        validator.validate_interact_data(interacts, items, interact_dt, item_dt)
+        validate_interact_data(interacts, items, interact_dt, item_dt)
 
 
 def test_valid_dataset():
     interacts, items, interact_dt, item_dt = get_valid_setup()
-    validator = DatasetValidator()
-    validator.validate(interacts, items, interact_dt, item_dt)
+    validate_dataset(interacts, items, interact_dt, item_dt)

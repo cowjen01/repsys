@@ -36,7 +36,7 @@ class Model(ABC):
 
     def update_data(self, dataset: Dataset) -> None:
         if not isinstance(dataset, Dataset):
-            raise Exception('Data must be an instance of the Dataset class.')
+            raise Exception("Data must be an instance of the Dataset class.")
 
         self.dataset = dataset
 
