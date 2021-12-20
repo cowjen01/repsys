@@ -117,21 +117,21 @@ class DatasetSplitter:
             interact_data
         )
 
-        sparsity = (
-            1.0
-            * interact_data.shape[0]
-            / (user_activity.shape[0] * item_popularity.shape[0])
-        )
+        # sparsity = (
+        #     1.0
+        #     * interact_data.shape[0]
+        #     / (user_activity.shape[0] * item_popularity.shape[0])
+        # )
 
-        logger.debug(
-            "After filtering, there are %d watching events from %d users and %d movies (sparsity: %.3f%%)"
-            % (
-                interact_data.shape[0],
-                user_activity.shape[0],
-                item_popularity.shape[0],
-                sparsity * 100,
-            )
-        )
+        # logger.debug(
+        #     "After filtering, there are %d watching events from %d users and %d movies (sparsity: %.3f%%)"
+        #     % (
+        #         interact_data.shape[0],
+        #         user_activity.shape[0],
+        #         item_popularity.shape[0],
+        #         sparsity * 100,
+        #     )
+        # )
 
         heldout_users_portion = (1 - self.train_users_prop) / 2
 

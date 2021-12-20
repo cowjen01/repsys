@@ -34,3 +34,9 @@ def zip_dir(zip_path: Text, dir_path: Text):
         zip_path = ".".join(path_split[:-1])
 
     shutil.make_archive(zip_path, "zip", dir_path)
+
+
+def get_subclasses(cls):
+    return cls.__subclasses__() + [
+        g for s in cls.__subclasses__() for g in get_subclasses(s)
+    ]

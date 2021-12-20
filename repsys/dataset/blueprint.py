@@ -3,9 +3,10 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Text, Dict
+from typing import Text, Dict, Union, Callable
 from pandas import DataFrame
 from scipy import sparse
+from pandas import DataFrame, Series
 import numpy as np
 import pandas as pd
 import functools
@@ -47,6 +48,34 @@ class Dataset(ABC):
     @abstractmethod
     def name(self):
         pass
+
+    def _merge_item_mappings(self):
+        default_mappings = self._default_item_mappings()
+        custom_mappings = self.item_mappings()
+
+        return {**default_mappings, **custom_mappings}
+
+    def _identify_column(self, patterns):
+        for col in self.items.columns:
+            if col in patterns:
+                return col
+
+        return None
+
+    def _default_item_mappings(self):
+        title_patterns = ["title", "name", "product_title", "product_name"]
+        subtitle_patterns = ["genres", "languages", "categories"]
+        image_patterns = ["image", "img", "image_url", "img_url"]
+
+        return {
+            "title": self._identify_column(title_patterns),
+            "subtitle": self._identify_column(subtitle_patterns),
+            "image": self._identify_column(image_patterns),
+            "caption": None
+        }
+
+    def item_mappings(self) -> Dict[Text, Union[Text, Callable[[DataFrame], Series]]]:
+        return {}
 
     @abstractmethod
     def item_dtypes(self) -> Dict[Text, DataType]:
@@ -271,27 +300,28 @@ class Dataset(ABC):
     def load(self, path: Text):
         create_tmp_dir()
 
-        unzip_dir(path, tmp_dir_path())
-
-        item_dtypes = self.item_dtypes()
-        item_id_col = find_column(item_dtypes, ItemID)
-
-        train_data_path = os.path.join(tmp_dir_path(), "train.csv")
-        train_data = pd.read_csv(train_data_path)
-
-        items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-        items = pd.read_csv(items_data_path, index_col=item_id_col)
-
-        vad_data = self._load_tr_te_data("vad")
-        test_data = self._load_tr_te_data("test")
-
-        item2ids = self._load_idx_data("item_index.txt")
-        user2idx = self._load_idx_data("user_index.txt")
-
-        splits = train_data, vad_data, test_data
-
         try:
+            unzip_dir(path, tmp_dir_path())
+
+            item_dtypes = self.item_dtypes()
+            item_id_col = find_column(item_dtypes, ItemID)
+
+            train_data_path = os.path.join(tmp_dir_path(), "train.csv")
+            train_data = pd.read_csv(train_data_path)
+
+            items_data_path = os.path.join(tmp_dir_path(), "items.csv")
+            items = pd.read_csv(items_data_path, index_col=item_id_col)
+
+            vad_data = self._load_tr_te_data("vad")
+            test_data = self._load_tr_te_data("test")
+
+            item2ids = self._load_idx_data("item_index.txt")
+            user2idx = self._load_idx_data("user_index.txt")
+
+            splits = train_data, vad_data, test_data
+
             self._update_data(splits, items, user2idx, item2ids)
+
         finally:
             remove_tmp_dir()
 
@@ -299,21 +329,23 @@ class Dataset(ABC):
     def save(self, path: Text):
         create_tmp_dir()
 
-        train_data_path = os.path.join(tmp_dir_path(), "train.csv")
-        self._raw_train_data.to_csv(train_data_path, index=False)
+        try:
+            train_data_path = os.path.join(tmp_dir_path(), "train.csv")
+            self._raw_train_data.to_csv(train_data_path, index=False)
 
-        items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-        self.items.to_csv(items_data_path, index=True)
+            items_data_path = os.path.join(tmp_dir_path(), "items.csv")
+            self.items.to_csv(items_data_path, index=True)
 
-        self._save_tr_te_data(self._raw_vad_data, "vad")
-        self._save_tr_te_data(self._raw_test_data, "test")
+            self._save_tr_te_data(self._raw_vad_data, "vad")
+            self._save_tr_te_data(self._raw_test_data, "test")
 
-        self._save_idx_data(self._item2idx, "item_index.txt")
-        self._save_idx_data(self._user2idx, "user_index.txt")
+            self._save_idx_data(self._item2idx, "item_index.txt")
+            self._save_idx_data(self._user2idx, "user_index.txt")
 
-        zip_dir(path, tmp_dir_path())
+            zip_dir(path, tmp_dir_path())
 
-        remove_tmp_dir()
+        finally:
+            remove_tmp_dir()
 
     def __str__(self):
         return f"Dataset '{self.name()}'"

@@ -3,8 +3,8 @@ import logging
 import numpy as np
 from scipy import sparse
 
-from repsys.dataset import Dataset, DatasetStorage
-from repsys.model import ModelStorage, ModelEvaluator, Model
+from repsys.dataset import Dataset
+from repsys.model import ModelEvaluator, Model
 
 
 logger = logging.getLogger(__name__)
@@ -14,8 +14,6 @@ class RepsysCore:
     def __init__(self, models: Dict[Text, Model], dataset: Dataset) -> None:
         self.models = models
         self.dataset = dataset
-        self.model_storage = ModelStorage(models)
-        self.dataset_storage = DatasetStorage(dataset)
 
     def update_models_dataset(self) -> None:
         for model in self.models.values():
@@ -49,8 +47,8 @@ class RepsysCore:
         return self.models.get(model_name)
 
     def filter_items(self, column, query):
-        filter = self.dataset.items[column].str.contains(query, case=False)
-        return self.dataset.items[filter]
+        items_filter = self.dataset.items[column].str.contains(query, case=False)
+        return self.dataset.items[items_filter]
 
     def get_interacted_items(self, user_index):
         interactions = self.dataset.vad_data_tr[user_index]

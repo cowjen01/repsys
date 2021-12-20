@@ -4,13 +4,9 @@ import pkgutil
 import logging
 import sys
 
+from repsys.utils import get_subclasses
+
 logger = logging.getLogger(__name__)
-
-
-def get_subclasses(cls):
-    return cls.__subclasses__() + [
-        g for s in cls.__subclasses__() for g in get_subclasses(s)
-    ]
 
 
 class ClassLoader:

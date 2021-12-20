@@ -72,7 +72,7 @@ def create_app(core: RepsysCore):
 
     @app.route("/api/users")
     def get_users(request):
-        return json(core.dataset.vad_users.to_dict("records"))
+        return json(core.dataset.vad_users)
 
     @app.route("/api/items")
     def get_items(request):
