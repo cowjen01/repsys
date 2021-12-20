@@ -14,11 +14,11 @@ class String(DataType):
     pass
 
 
-class UserIndex(DataType):
+class UserID(DataType):
     pass
 
 
-class ItemIndex(DataType):
+class ItemID(DataType):
     pass
 
 

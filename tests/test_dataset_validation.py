@@ -1,6 +1,6 @@
 import pytest
 
-from tests.helpers import load_items, load_interacts
+from .helpers import load_items, load_interacts
 
 from repsys.dataset import dtypes
 from repsys.dataset.validation import (
@@ -16,12 +16,12 @@ def get_valid_setup():
     items = load_items("valid.csv")
     interacts = load_interacts("valid.csv")
     interact_dt = {
-        "movieId": dtypes.ItemIndex(),
-        "userId": dtypes.UserIndex(),
+        "movieId": dtypes.ItemID(),
+        "userId": dtypes.UserID(),
         "rating": dtypes.Rating(min=0.5, max=5, step=0.5),
     }
     item_dt = {
-        "movieId": dtypes.ItemIndex(),
+        "movieId": dtypes.ItemID(),
         "title": dtypes.String(),
         "genres": dtypes.Tags(),
     }
@@ -33,7 +33,7 @@ def get_valid_setup():
     "dt",
     [
         {
-            "movieId": dtypes.ItemIndex(),
+            "movieId": dtypes.ItemID(),
             "title2": dtypes.String(),
         },
         {
@@ -41,8 +41,8 @@ def get_valid_setup():
             "title": dtypes.String(),
         },
         {
-            "movieId": dtypes.ItemIndex(),
-            "userId": dtypes.UserIndex(),
+            "movieId": dtypes.ItemID(),
+            "userId": dtypes.UserID(),
         },
     ],
 )
@@ -59,19 +59,19 @@ def test_invalid_item_dtypes(dt):
             "rating": dtypes.Rating(step=0.5),
         },
         {
-            "movieId": dtypes.ItemIndex(),
+            "movieId": dtypes.ItemID(),
         },
         {
-            "userId": dtypes.UserIndex(),
+            "userId": dtypes.UserID(),
         },
         {
-            "movieId": dtypes.ItemIndex(),
-            "userId": dtypes.UserIndex(),
+            "movieId": dtypes.ItemID(),
+            "userId": dtypes.UserID(),
             "genres": dtypes.Tags(),
         },
         {
-            "movieIndex": dtypes.ItemIndex(),
-            "userId": dtypes.UserIndex(),
+            "movieIndex": dtypes.ItemID(),
+            "userId": dtypes.UserID(),
         },
     ],
 )
@@ -84,7 +84,7 @@ def test_invalid_interact_dtypes(dt):
 @pytest.mark.parametrize("items", [load_items("duplicate_index.csv")])
 def test_invalid_item_data(items):
     dt = {
-        "movieId": dtypes.ItemIndex(),
+        "movieId": dtypes.ItemID(),
         "title": dtypes.String(),
     }
     with pytest.raises(Exception):

@@ -7,8 +7,8 @@ from repsys.dataset.dtypes import (
     DataType,
     Rating,
     String,
-    UserIndex,
-    ItemIndex,
+    UserID,
+    ItemID,
     Tags,
     find_column,
 )
@@ -44,8 +44,8 @@ def check_required_dtypes(dtypes: List[DataType], req_dtypes: List[DataType]):
 def validate_item_dtypes(
     items: DataFrame, item_dtypes: Dict[Text, DataType]
 ) -> None:
-    valid_dtypes = [ItemIndex, Tags, String]
-    required_dtypes = [ItemIndex]
+    valid_dtypes = [ItemID, Tags, String]
+    required_dtypes = [ItemID]
 
     try:
         check_columns(item_dtypes.keys(), items.columns)
@@ -66,7 +66,7 @@ def validate_item_dtypes(
 def validate_item_data(
     items: DataFrame, item_dtypes: Dict[Text, DataType]
 ) -> None:
-    item_index = find_column(item_dtypes, ItemIndex)
+    item_index = find_column(item_dtypes, ItemID)
     if items[item_index].unique().shape[0] != items.shape[0]:
         raise Exception("Index '{item_index}' contains non-unique values.")
 
@@ -74,8 +74,8 @@ def validate_item_data(
 def validate_interact_dtypes(
     interacts: DataFrame, interact_dtypes: Dict[Text, DataType]
 ) -> None:
-    valid_dtypes = [ItemIndex, UserIndex, Rating]
-    required_dtypes = [ItemIndex, UserIndex]
+    valid_dtypes = [ItemID, UserID, Rating]
+    required_dtypes = [ItemID, UserID]
 
     try:
         check_columns(interact_dtypes.keys(), interacts.columns)
@@ -105,8 +105,8 @@ def validate_interact_data(
     interact_dtypes: Dict[Text, DataType],
     item_dtypes: Dict[Text, DataType],
 ) -> None:
-    interacts_item_idx = find_column(interact_dtypes, ItemIndex)
-    items_item_idx = find_column(item_dtypes, ItemIndex)
+    interacts_item_idx = find_column(interact_dtypes, ItemID)
+    items_item_idx = find_column(item_dtypes, ItemID)
 
     s1 = set(interacts[interacts_item_idx])
     s2 = set(items[items_item_idx])

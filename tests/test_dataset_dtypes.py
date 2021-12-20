@@ -3,8 +3,8 @@ import pytest
 from repsys.dataset.dtypes import (
     filter_columns,
     find_column,
-    ItemIndex,
-    UserIndex,
+    ItemID,
+    UserID,
     Tags,
     String,
 )
@@ -12,12 +12,12 @@ from repsys.dataset.dtypes import (
 
 @pytest.mark.parametrize(
     "dt,expected",
-    [(UserIndex, "userId"), (Tags, "genres"), (String, None)],
+    [(UserID, "userId"), (Tags, "genres"), (String, None)],
 )
 def test_column_find(dt, expected):
     dts = {
-        "movieId": ItemIndex(),
-        "userId": UserIndex(),
+        "movieId": ItemID(),
+        "userId": UserID(),
         "genres": Tags(),
     }
 
@@ -26,11 +26,11 @@ def test_column_find(dt, expected):
 
 @pytest.mark.parametrize(
     "dt,expected",
-    [(Tags, ["genres", "languages"]), (String, ["title"]), (UserIndex, [])],
+    [(Tags, ["genres", "languages"]), (String, ["title"]), (UserID, [])],
 )
 def test_columns_filter(dt, expected):
     dts = {
-        "movieId": ItemIndex(),
+        "movieId": ItemID(),
         "genres": Tags(),
         "languages": Tags(),
         "title": String(),
