@@ -1,16 +1,10 @@
 from typing import Dict, Text
 import logging
-import sys
-import os
 import numpy as np
 from scipy import sparse
-import time
-import shutil
-import glob
 
 from repsys.dataset import Dataset, DatasetStorage
 from repsys.model import ModelStorage, ModelEvaluator, Model
-from repsys.utils import remove_dir, create_dir
 
 
 logger = logging.getLogger(__name__)

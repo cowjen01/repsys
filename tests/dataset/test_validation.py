@@ -3,7 +3,7 @@ import pytest
 from tests.helpers import load_items, load_interacts
 
 from repsys.dataset import dtypes
-from repsys.dataset.validators import (
+from repsys.dataset.validation import (
     validate_dataset,
     validate_item_data,
     validate_item_dtypes,

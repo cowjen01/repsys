@@ -28,7 +28,7 @@ from repsys.dataset.dtypes import (
     find_column,
     filter_columns,
 )
-from repsys.dataset.validators import validate_dataset
+from repsys.dataset.validation import validate_dataset
 
 logger = logging.getLogger(__name__)
 
@@ -83,9 +83,9 @@ class Dataset(ABC):
     @classmethod
     def _build_train_matrix(cls, tp):
         # internal indexes start from zero
-        n_users = tp["uid"].max() + 1
-        n_items = tp["sid"].max() + 1
-        rows, cols = tp["uid"], tp["sid"]
+        n_users = tp["user_id"].max() + 1
+        n_items = tp["item_id"].max() + 1
+        rows, cols = tp["user_id"], tp["item_id"]
 
         # put one only at places, where uid and sid index meet
         data = sparse.csr_matrix(
@@ -100,11 +100,11 @@ class Dataset(ABC):
     def _build_tr_te_matrix(cls, tp, n_items):
         tp_tr, tp_te = tp
 
-        start_idx = min(tp_tr["uid"].min(), tp_te["uid"].min())
-        end_idx = max(tp_tr["uid"].max(), tp_te["uid"].max())
+        start_idx = min(tp_tr["user_id"].min(), tp_te["user_id"].min())
+        end_idx = max(tp_tr["user_id"].max(), tp_te["user_id"].max())
 
-        rows_tr, cols_tr = tp_tr["uid"] - start_idx, tp_tr["sid"]
-        rows_te, cols_te = tp_te["uid"] - start_idx, tp_te["sid"]
+        rows_tr, cols_tr = tp_tr["user_id"] - start_idx, tp_tr["item_id"]
+        rows_te, cols_te = tp_te["user_id"] - start_idx, tp_te["item_id"]
 
         data_tr = sparse.csr_matrix(
             (np.ones_like(rows_tr), (rows_tr, cols_tr)),
@@ -120,16 +120,20 @@ class Dataset(ABC):
 
         return data_tr, data_te
 
-    def _process_data(self, splits, items: DataFrame):
+    def _update_data(self, splits, items: DataFrame, user2id, item2id):
+        logger.info("Updating data ...")
+
         item_dtypes = self.item_dtypes()
 
         self._raw_train_data = splits[0]
         self._raw_vad_data = splits[1]
         self._raw_test_data = splits[2]
-        self._user2id, self._item2id = splits[3]
 
-        self._id2user = {y: x for x, y in self._user2id.items()}
-        self._id2item = {y: x for x, y in self._item2id.items()}
+        self._user2id = user2id
+        self._item2id = item2id
+
+        self._id2user = {y: x for x, y in user2id.items()}
+        self._id2item = {y: x for x, y in item2id.items()}
 
         logger.info("Building sparse matrices ...")
 
@@ -192,19 +196,48 @@ class Dataset(ABC):
         logger.info("Splitting interactions ...")
 
         splitter = DatasetSplitter(user_index_col, item_index_col)
-        splits = splitter.split(interacts)
+        train_split, vad_split, test_split = splitter.split(interacts)
 
-        item2id = splits[3][1]
+        user_index = train_split.users.append(vad_split.users).append(
+            test_split.users
+        )
 
-        item_index_col = find_column(item_dtypes, ItemIndex)
+        item_index = pd.unique(train_split.train_data[item_index_col])
+
+        user2id = dict((uid, i) for (i, uid) in enumerate(user_index))
+        item2id = dict((sid, i) for (i, sid) in enumerate(item_index))
+
+        def reindex(df):
+            user_id = list(map(lambda x: user2id[x], df[user_index_col]))
+            item_id = list(map(lambda x: item2id[x], df[item_index_col]))
+
+            return pd.DataFrame(
+                data={"user_id": user_id, "item_id": item_id},
+                columns=["user_id", "item_id"],
+            )
+
+        train_data = reindex(train_split.train_data)
+
+        vad_data_tr = reindex(vad_split.train_data)
+        vad_data_te = reindex(vad_split.test_data)
+
+        test_data_tr = reindex(test_split.train_data)
+        test_data_te = reindex(test_split.test_data)
+
+        splits = (
+            train_data,
+            (vad_data_tr, vad_data_te),
+            (test_data_tr, test_data_te),
+        )
+
         # keep only columns defined in the dtypes
         items = items[item_dtypes.keys()]
         # set index column as an index
-        items = items.set_index(item_index_col)
+        items = items.set_index(find_column(item_dtypes, ItemIndex))
         # filter only items included in the training data
-        items = items[items.index.isin(item2id.keys())]
+        items = items[items.index.isin(item_index)]
 
-        self._process_data(splits, items)
+        self._update_data(splits, items, user2id, item2id)
 
     def _load_tr_te_data(self, split):
         data_tr_path = os.path.join(tmp_dir_path(), f"{split}_tr.csv")
@@ -226,7 +259,7 @@ class Dataset(ABC):
         data = dict()
         with open(os.path.join(tmp_dir_path(), file_name), "r") as f:
             for i, line in enumerate(f):
-                data[line.strip()] = i
+                data[int(line.strip())] = i
 
         return data
 
@@ -240,11 +273,14 @@ class Dataset(ABC):
 
         unzip_dir(path, tmp_dir_path())
 
+        item_dtypes = self.item_dtypes()
+        item_index_col = find_column(item_dtypes, ItemIndex)
+
         train_data_path = os.path.join(tmp_dir_path(), "train.csv")
         train_data = pd.read_csv(train_data_path)
 
         items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-        items = pd.read_csv(items_data_path)
+        items = pd.read_csv(items_data_path, index_col=item_index_col)
 
         vad_data = self._load_tr_te_data("vad")
         test_data = self._load_tr_te_data("test")
@@ -252,11 +288,12 @@ class Dataset(ABC):
         item2id = self._load_dict_data("unique_sid.txt")
         user2id = self._load_dict_data("unique_uid.txt")
 
-        splits = (train_data, vad_data, test_data, (user2id, item2id))
+        splits = train_data, vad_data, test_data
 
-        self._process_data(splits, items)
-
-        remove_tmp_dir()
+        try:
+            self._update_data(splits, items, user2id, item2id)
+        finally:
+            remove_tmp_dir()
 
     @enforce_fitted
     def save(self, path: Text):
@@ -266,7 +303,7 @@ class Dataset(ABC):
         self._raw_train_data.to_csv(train_data_path, index=False)
 
         items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-        self.items.to_csv(items_data_path, index=False)
+        self.items.to_csv(items_data_path, index=True)
 
         self._save_tr_te_data(self._raw_vad_data, "vad")
         self._save_tr_te_data(self._raw_test_data, "test")

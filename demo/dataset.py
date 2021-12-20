@@ -1,6 +1,6 @@
 import pandas as pd
 
-from repsys import Dataset
+from repsys.dataset import Dataset
 import repsys.dataset.dtypes as dtypes
 
 
@@ -9,13 +9,7 @@ class MovieLens(Dataset):
         return "movielens"
 
     def get_genres(self):
-        return (
-            self.items["genres"]
-            .dropna()
-            .str.split("|", expand=True)
-            .stack()
-            .unique()
-        )
+        return self.tags['genres']
 
     def item_dtypes(self):
         return {

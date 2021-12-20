@@ -1,25 +1,36 @@
 # credits: https://github.com/dawenl/vae_cf/blob/master/VAE_ML20M_WWW2018.ipynb
 
 import logging
+from typing import Tuple
 import numpy as np
 import pandas as pd
+from pandas import Index, DataFrame
 
 
 logger = logging.getLogger(__name__)
 
 
+class Split:
+    def __init__(
+        self, train_data: DataFrame, test_data: DataFrame, users: Index
+    ) -> None:
+        self.train_data = train_data
+        self.test_data = test_data
+        self.users = users
+
+
 class DatasetSplitter:
     def __init__(
         self,
-        user_index_col,
-        item_index_col,
+        user_col,
+        item_col,
         train_users_prop=0.85,
         test_holdout_prop=0.2,
         min_user_interacts=5,
         min_item_interacts=0,
     ) -> None:
-        self.user_index_col = user_index_col
-        self.item_index_col = item_index_col
+        self.user_col = user_col
+        self.item_col = item_col
         self.train_users_prop = train_users_prop
         self.test_holdout_prop = test_holdout_prop
         self.min_user_interacts = min_user_interacts
@@ -37,9 +48,9 @@ class DatasetSplitter:
         # Only keep the triplets for items which
         # were clicked on by at least min_sc users.
         if self.min_item_interacts > 0:
-            itemcount = self.get_count(tp, self.item_index_col)
+            itemcount = self.get_count(tp, self.item_col)
             tp = tp[
-                tp[self.item_index_col].isin(
+                tp[self.item_col].isin(
                     itemcount.index[itemcount >= self.min_item_interacts]
                 )
             ]
@@ -48,21 +59,21 @@ class DatasetSplitter:
         # After doing this, some of the items will have less than min_uc users,
         # but should only be a small proportion
         if self.min_user_interacts > 0:
-            usercount = self.get_count(tp, self.user_index_col)
+            usercount = self.get_count(tp, self.user_col)
             tp = tp[
-                tp[self.user_index_col].isin(
+                tp[self.user_col].isin(
                     usercount.index[usercount >= self.min_user_interacts]
                 )
             ]
 
         # Update both usercount and itemcount after filtering
         usercount, itemcount = self.get_count(
-            tp, self.user_index_col
-        ), self.get_count(tp, self.item_index_col)
+            tp, self.user_col
+        ), self.get_count(tp, self.item_col)
         return tp, usercount, itemcount
 
     def _split_train_test(self, data):
-        grouped_by_user = data.groupby(self.user_index_col)
+        grouped_by_user = data.groupby(self.user_col)
         tr_list, te_list = list(), list()
 
         np.random.seed(98765)
@@ -91,17 +102,17 @@ class DatasetSplitter:
 
     # we will only be working with movies that has been seen by the model
     # so we need to remove all interactions to movies out of the training scope
-    def _filter_interacts(self, interact_data, users, item_idxs):
-        interacts = interact_data.loc[
-            interact_data[self.user_index_col].isin(users)
-        ]
-        interacts = interacts.loc[
-            interacts[self.item_index_col].isin(item_idxs)
-        ]
+    def _filter_interact_data(self, interact_data, users, item_index):
+        # filter only interactions made by users
+        interacts = interact_data.loc[interact_data[self.user_col].isin(users)]
+        # filter only interactions with items included in the item index
+        interacts = interacts.loc[interacts[self.item_col].isin(item_index)]
+        # filter only interactions meet the main criteria
         interacts, activity, _ = self._filter_triplets(interacts)
+
         return interacts, activity.index
 
-    def split(self, interact_data):
+    def split(self, interact_data) -> Tuple[Split, Split, Split]:
         interact_data, user_activity, item_popularity = self._filter_triplets(
             interact_data
         )
@@ -125,84 +136,52 @@ class DatasetSplitter:
         heldout_users_portion = (1 - self.train_users_prop) / 2
 
         # Shuffle users using permutation
-        unique_uid = user_activity.index
+        user_index = user_activity.index
 
         np.random.seed(98765)
 
-        idx_perm = np.random.permutation(unique_uid.size)
-        # unique_uid is an array of shuffled users ids
-        unique_uid = unique_uid[idx_perm]
+        idx_perm = np.random.permutation(user_index.size)
+        # user_index is an array of shuffled users ids
+        user_index = user_index[idx_perm]
 
-        n_users = unique_uid.size
+        n_users = user_index.size
         n_heldout_users = round(n_users * heldout_users_portion)
 
         # Select 10K users as heldout users, 10K users as validation users
         # and the rest of the users for training
-        tr_users = unique_uid[: (n_users - n_heldout_users * 2)]
-        vad_users = unique_uid[
+        tr_users = user_index[: (n_users - n_heldout_users * 2)]
+        vad_users = user_index[
             (n_users - n_heldout_users * 2) : (n_users - n_heldout_users)
         ]
-        te_users = unique_uid[(n_users - n_heldout_users) :]
+        test_users = user_index[(n_users - n_heldout_users) :]
 
         # Select only interactions made by users from the training set
-        train_plays = interact_data.loc[
-            interact_data[self.user_index_col].isin(tr_users)
+        train_interacts = interact_data.loc[
+            interact_data[self.user_col].isin(tr_users)
         ]
 
         # Get all movies interacted by the train users
         # we will only be working with movies that has been seen by model
-        unique_sid = pd.unique(train_plays[self.item_index_col])
+        item_index = pd.unique(train_interacts[self.item_col])
 
         # Select only interactions made by the validation users
         # and also those whose movie is included in the training interactions
-        vad_interacts, vad_users = self._filter_interacts(
-            interact_data, vad_users, unique_sid
+        vad_interacts, vad_users = self._filter_interact_data(
+            interact_data, vad_users, item_index
         )
         vad_interacts_tr, vad_interacts_te = self._split_train_test(
             vad_interacts
         )
 
-        test_interacts, te_users = self._filter_interacts(
-            interact_data, te_users, unique_sid
+        test_interacts, test_users = self._filter_interact_data(
+            interact_data, test_users, item_index
         )
         test_interacts_tr, test_interacts_te = self._split_train_test(
             test_interacts
         )
 
-        # recreate sid index after some test/valid users were filtered out
-        unique_uid = tr_users.append(vad_users).append(te_users)
+        train_split = Split(train_interacts, None, tr_users)
+        vad_split = Split(vad_interacts_tr, vad_interacts_te, vad_users)
+        test_split = Split(test_interacts_tr, test_interacts_te, test_users)
 
-        # Create two dictionaries translating the movieId and userId to simple index
-        # {1: 0,
-        #  3: 1,
-        #  6: 2,
-        #  47: 3,
-        #  50: 4,
-        #  101: 5,
-        # this contains all unique users from the whole dataset
-        user2id = dict((pid, i) for (i, pid) in enumerate(unique_uid))
-        # this containts only data from training split!!!
-        # we will only be working with movies that has been seen by model
-        item2id = dict((sid, i) for (i, sid) in enumerate(unique_sid))
-
-        def numerize(tp):
-            uid = list(map(lambda x: user2id[x], tp[self.user_index_col]))
-            sid = list(map(lambda x: item2id[x], tp[self.item_index_col]))
-            return pd.DataFrame(
-                data={"uid": uid, "sid": sid}, columns=["uid", "sid"]
-            )
-
-        train_data = numerize(train_plays)
-
-        vad_data_tr = numerize(vad_interacts_tr)
-        vad_data_te = numerize(vad_interacts_te)
-
-        test_data_tr = numerize(test_interacts_tr)
-        test_data_te = numerize(test_interacts_te)
-
-        return (
-            train_data,
-            (vad_data_tr, vad_data_te),
-            (test_data_tr, test_data_te),
-            (user2id, item2id),
-        )
+        return train_split, vad_split, test_split
