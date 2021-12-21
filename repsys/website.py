@@ -1,17 +1,15 @@
-class ParamTypes:
+class WebParamType:
     text = "text"
     number = "number"
     select = "select"
     bool = "bool"
 
 
-class PredictParam:
-    """Optional parameter passed to the prediction method"""
-
+class WebParam:
     def __init__(
         self,
         name,
-        type=ParamTypes.text,
+        type=WebParamType.text,
         default_value="",
         label="",
         select_options=[],

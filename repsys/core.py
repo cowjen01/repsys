@@ -5,6 +5,7 @@ from scipy import sparse
 
 from repsys.dataset import Dataset
 from repsys.model import ModelEvaluator, Model
+from repsys.storage import CheckpointStorage
 
 
 logger = logging.getLogger(__name__)
@@ -14,6 +15,7 @@ class RepsysCore:
     def __init__(self, models: Dict[Text, Model], dataset: Dataset) -> None:
         self.models = models
         self.dataset = dataset
+        self.storage = CheckpointStorage(models, dataset)
 
     def update_models_dataset(self) -> None:
         for model in self.models.values():
@@ -34,14 +36,14 @@ class RepsysCore:
 
         evaluator.print_results()
 
-    def load_models_checkpoint(self):
-        self.model_storage.load_all()
+    # def load_models_checkpoint(self):
+    #     self.model_storage.load_all()
 
-    def save_models_checkpoint(self):
-        self.model_storage.save_all()
+    # def save_models_checkpoint(self):
+    #     self.model_storage.save_all()
 
     def load_dataset_checkpoint(self):
-        self.dataset_storage.load()
+        self.storage.load_dataset()
 
     def get_model(self, model_name):
         return self.models.get(model_name)
@@ -70,3 +72,6 @@ class RepsysCore:
     def prediction_to_items(self, prediction, limit=20):
         idxs = (-prediction[0]).argsort()[:limit]
         return self.dataset.items.loc[idxs]
+
+    def get_item_view_col(self, view_type):
+        return self.dataset._item_view.get(view_type)

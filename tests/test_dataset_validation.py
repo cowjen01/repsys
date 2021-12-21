@@ -9,6 +9,7 @@ from repsys.dataset.validation import (
     validate_item_dtypes,
     validate_interact_dtypes,
     validate_interact_data,
+    validate_item_view,
 )
 
 
@@ -104,3 +105,44 @@ def test_invalid_interact_data(interacts):
 def test_valid_dataset():
     interacts, items, interact_dt, item_dt = get_valid_setup()
     validate_dataset(interacts, items, interact_dt, item_dt)
+
+
+def test_view_missing_title():
+    view = {
+        "title": None,
+        "subtitle": "genres"
+    }
+    item_dt = {
+        "movieId": dtypes.ItemID(),
+        "title": dtypes.String(),
+        "genres": dtypes.Tags(),
+    }
+    with pytest.raises(Exception):
+        validate_item_view(view, item_dt)
+
+
+def test_view_unknown_col():
+    view = {
+        "title": "title",
+        "subtitle": "languages"
+    }
+    item_dt = {
+        "movieId": dtypes.ItemID(),
+        "title": dtypes.String(),
+        "genres": dtypes.Tags(),
+    }
+    with pytest.raises(Exception):
+        validate_item_view(view, item_dt)
+
+
+def test_valid_item_view():
+    view = {
+        "title": "title",
+        "subtitle": "genres"
+    }
+    item_dt = {
+        "movieId": dtypes.ItemID(),
+        "title": dtypes.String(),
+        "genres": dtypes.Tags(),
+    }
+    validate_item_view(view, item_dt)

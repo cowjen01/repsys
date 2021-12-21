@@ -1,4 +1,4 @@
-from typing import Dict, Text, List
+from typing import Dict, Text, List, Optional
 from pandas import DataFrame
 import numpy as np
 import logging
@@ -136,7 +136,29 @@ def validate_interact_data(
             )
 
 
-def validate_dataset(interacts, items, interact_dtypes, item_dtypes):
+def validate_item_view(
+    item_view: Dict[Text, Optional[Text]], item_dtypes: Dict[Text, DataType]
+):
+    if not item_view.get("title"):
+        raise Exception(
+            "Item's title column was not recognized. Please specify "
+            "item view implementing `item_view()` method."
+        )
+
+    for col in item_view.values():
+        if col is not None and col not in item_dtypes.keys():
+            raise Exception(
+                f"Item's view column '{col}' was not found "
+                "in the item's dtypes specification."
+            )
+
+
+def validate_dataset(
+    interacts: DataFrame,
+    items: DataFrame,
+    interact_dtypes: Dict[Text, DataType],
+    item_dtypes: Dict[Text, DataType],
+):
     validate_item_dtypes(items, item_dtypes)
     validate_item_data(items, item_dtypes)
     validate_interact_dtypes(interacts, interact_dtypes)

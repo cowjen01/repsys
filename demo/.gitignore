@@ -1,5 +1,3 @@
 .repsys_checkpoints/
-ml-latest-small/
-ml-25m/
-ml-20m/
+ml-*/
 tmp/

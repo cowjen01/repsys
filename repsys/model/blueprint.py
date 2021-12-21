@@ -1,10 +1,9 @@
 import logging
-import os
 import pickle
 from typing import Text, List
 from abc import ABC, abstractmethod
 
-from repsys.website import PredictParam
+from repsys.website import WebParam
 from repsys.dataset import Dataset
 
 logger = logging.getLogger(__name__)
@@ -31,7 +30,7 @@ class Model(ABC):
     def load(self, dir_path: Text) -> None:
         pass
 
-    def predict_params(self) -> List[PredictParam]:
+    def web_params(self) -> List[WebParam]:
         return []
 
     def update_data(self, dataset: Dataset) -> None:
@@ -43,7 +42,7 @@ class Model(ABC):
     def to_dict(self):
         return {
             "name": self.name(),
-            "params": [p.to_dict() for p in self.predict_params()],
+            "params": [p.to_dict() for p in self.web_params()],
         }
 
     def __str__(self) -> Text:

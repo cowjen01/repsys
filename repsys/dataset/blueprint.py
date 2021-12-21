@@ -3,10 +3,9 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import Text, Dict, Union, Callable
+from typing import List, Text, Dict, Optional
 from pandas import DataFrame
 from scipy import sparse
-from pandas import DataFrame, Series
 import numpy as np
 import pandas as pd
 import functools
@@ -29,7 +28,12 @@ from repsys.dataset.dtypes import (
     find_column,
     filter_columns,
 )
-from repsys.dataset.validation import validate_dataset
+from repsys.dataset.validation import (
+    validate_dataset,
+    validate_item_data,
+    validate_item_dtypes,
+    validate_item_view,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -49,40 +53,12 @@ class Dataset(ABC):
     def name(self):
         pass
 
-    def _merge_item_mappings(self):
-        default_mappings = self._default_item_mappings()
-        custom_mappings = self.item_mappings()
-
-        return {**default_mappings, **custom_mappings}
-
-    def _identify_column(self, patterns):
-        for col in self.items.columns:
-            if col in patterns:
-                return col
-
-        return None
-
-    def _default_item_mappings(self):
-        title_patterns = ["title", "name", "product_title", "product_name"]
-        subtitle_patterns = ["genres", "languages", "categories"]
-        image_patterns = ["image", "img", "image_url", "img_url"]
-
-        return {
-            "title": self._identify_column(title_patterns),
-            "subtitle": self._identify_column(subtitle_patterns),
-            "image": self._identify_column(image_patterns),
-            "caption": None
-        }
-
-    def item_mappings(self) -> Dict[Text, Union[Text, Callable[[DataFrame], Series]]]:
-        return {}
-
     @abstractmethod
-    def item_dtypes(self) -> Dict[Text, DataType]:
+    def get_item_dtypes(self) -> Dict[Text, DataType]:
         pass
 
     @abstractmethod
-    def interact_dtypes(self) -> Dict[Text, DataType]:
+    def get_interact_dtypes(self) -> Dict[Text, DataType]:
         pass
 
     @abstractmethod
@@ -93,21 +69,54 @@ class Dataset(ABC):
     def load_interacts(self) -> DataFrame:
         pass
 
+    def get_item_view(self):
+        return {}
+
     @enforce_fitted
-    def get_user_id(self, user_idx) -> int:
+    def get_user_id(self, user_idx: int) -> int:
         return self._idx2user.get(user_idx)
 
     @enforce_fitted
-    def get_item_id(self, item_idx) -> int:
+    def get_item_id(self, item_idx: int) -> int:
         return self._idx2item.get(item_idx)
 
     @enforce_fitted
-    def get_user_index(self, user_id) -> int:
+    def get_user_index(self, user_id: int) -> int:
         return self._user2idx.get(user_id)
 
     @enforce_fitted
-    def get_item_index(self, item_id) -> int:
+    def get_item_index(self, item_id: int) -> int:
         return self._item2idx.get(item_id)
+
+    def _select_item_column(
+        self, patterns: List[Text], item_cols: List[Text]
+    ) -> Optional[Text]:
+        for col in item_cols:
+            if col in patterns:
+                return col
+
+        return None
+
+    def _default_item_view(
+        self, item_cols: List[Text]
+    ) -> Dict[Text, Optional[Text]]:
+        title_patterns = ["title", "name", "product_title", "product_name"]
+        subtitle_patterns = ["genres", "languages", "categories"]
+        image_patterns = ["image", "img", "image_url", "img_url"]
+
+        return {
+            "title": self._select_item_column(title_patterns, item_cols),
+            "subtitle": self._select_item_column(subtitle_patterns, item_cols),
+            "image": self._select_item_column(image_patterns, item_cols),
+            "caption": None,
+        }
+
+    def _merge_item_views(
+        self, custom_view: Dict[Text, Text], item_cols: List[Text]
+    ) -> Dict[Text, Optional[Text]]:
+        default_view = self._default_item_view(item_cols)
+
+        return {**default_view, **custom_view}
 
     @classmethod
     def _build_train_matrix(cls, tp):
@@ -149,10 +158,17 @@ class Dataset(ABC):
 
         return data_tr, data_te
 
-    def _update_data(self, splits, items: DataFrame, user2idx: Dict[int, int], item2idx: Dict[int, int]):
+    def _update_data(
+        self,
+        splits,
+        items: DataFrame,
+        item_view: Dict[Text, Optional[Text]],
+        user2idx: Dict[int, int],
+        item2idx: Dict[int, int],
+    ):
         logger.info("Updating data ...")
 
-        item_dtypes = self.item_dtypes()
+        item_dtypes = self.get_item_dtypes()
 
         self._raw_train_data = splits[0]
         self._raw_vad_data = splits[1]
@@ -163,6 +179,8 @@ class Dataset(ABC):
 
         self._idx2user = {y: x for x, y in user2idx.items()}
         self._idx2item = {y: x for x, y in item2idx.items()}
+
+        self._item_view = item_view
 
         logger.info("Building sparse matrices ...")
 
@@ -206,13 +224,18 @@ class Dataset(ABC):
         logger.info("Loading dataset ...")
 
         items = self.load_items()
-        item_dtypes = self.item_dtypes()
+        item_dtypes = self.get_item_dtypes()
         interacts = self.load_interacts()
-        interact_dtypes = self.interact_dtypes()
+        interact_dtypes = self.get_interact_dtypes()
 
         logger.info("Validating dataset ...")
 
         validate_dataset(interacts, items, interact_dtypes, item_dtypes)
+
+        custom_item_view = self.get_item_view()
+        item_view = self._merge_item_views(custom_item_view, items.columns)
+
+        validate_item_view(item_view, item_dtypes)
 
         item_id_col = find_column(interact_dtypes, ItemID)
         user_id_col = find_column(interact_dtypes, UserID)
@@ -266,7 +289,7 @@ class Dataset(ABC):
         # filter only items included in the training data
         items = items[items.index.isin(item_ids)]
 
-        self._update_data(splits, items, user2idx, item2idx)
+        self._update_data(splits, items, item_view, user2idx, item2idx)
 
     def _load_tr_te_data(self, split):
         data_tr_path = os.path.join(tmp_dir_path(), f"{split}_tr.csv")
@@ -298,19 +321,35 @@ class Dataset(ABC):
                 f.write("%s\n" % sid)
 
     def load(self, path: Text):
+        logger.info(f"Loading dataset from '{path}' ...")
+
         create_tmp_dir()
 
         try:
             unzip_dir(path, tmp_dir_path())
 
-            item_dtypes = self.item_dtypes()
+            item_dtypes = self.get_item_dtypes()
             item_id_col = find_column(item_dtypes, ItemID)
 
-            train_data_path = os.path.join(tmp_dir_path(), "train.csv")
-            train_data = pd.read_csv(train_data_path)
+            if not item_id_col:
+                raise Exception("Item's ID column was not found.")
 
             items_data_path = os.path.join(tmp_dir_path(), "items.csv")
             items = pd.read_csv(items_data_path, index_col=item_id_col)
+
+            logger.info("Validating dataset ...")
+
+            custom_item_view = self.get_item_view()
+            item_view = self._merge_item_views(custom_item_view, items.columns)
+
+            validate_item_dtypes(items, item_dtypes)
+            validate_item_data(items, item_dtypes)
+            validate_item_view(item_view, item_dtypes)
+
+            logger.info("Loading training data ...")
+
+            train_data_path = os.path.join(tmp_dir_path(), "train.csv")
+            train_data = pd.read_csv(train_data_path)
 
             vad_data = self._load_tr_te_data("vad")
             test_data = self._load_tr_te_data("test")
@@ -320,7 +359,7 @@ class Dataset(ABC):
 
             splits = train_data, vad_data, test_data
 
-            self._update_data(splits, items, user2idx, item2ids)
+            self._update_data(splits, items, item_view, user2idx, item2ids)
 
         finally:
             remove_tmp_dir()

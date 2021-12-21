@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.neighbors import NearestNeighbors
 from sklearn.decomposition import TruncatedSVD
-from repsys import ScikitModel, PredictParam, ParamTypes
+from repsys import ScikitModel, WebParamType, WebParam
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
@@ -57,12 +57,12 @@ class KNN(ScikitModel):
 
         return predictions
 
-    def predict_params(self):
+    def web_params(self):
         return [
-            PredictParam(
+            WebParam(
                 name="movie_genre",
                 label="Movie genre",
-                type=ParamTypes.select,
+                type=WebParamType.select,
                 select_options=self.dataset.get_genres().tolist(),
             ),
         ]

@@ -81,7 +81,8 @@ def create_app(core: RepsysCore):
         if not query_str or len(query_str) == 0:
             return json([])
 
-        items = core.filter_items("title", query_str)
+        title_col = core.get_item_view_col("title")
+        items = core.filter_items(title_col, query_str)
 
         return json(items.to_dict("records"))
 

@@ -8,16 +8,21 @@ from typing import Dict, Text
 
 from repsys.utils import remove_dir, create_dir
 from repsys.model import Model
+from repsys.dataset import Dataset
 
 
 logger = logging.getLogger(__name__)
 
 
-class ModelStorage:
+class CheckpointStorage:
     def __init__(
-        self, models: Dict[Text, Model], dirname: Text = ".repsys_checkpoints"
+        self,
+        models: Dict[Text, Model],
+        dataset: Dataset,
+        dirname: Text = ".repsys_checkpoints",
     ) -> None:
         self.models = models
+        self.dataset = dataset
         self.dir_path = os.path.join(os.getcwd(), dirname)
 
     def _checkpoints_dir_path(self):
@@ -73,3 +78,15 @@ class ModelStorage:
         shutil.make_archive(zip_file_path, "zip", self._tmp_dir_path())
 
         remove_dir(self._tmp_dir_path())
+
+    def _get_dataset_zip_path(self):
+        return os.path.join(self.dir_path, f'{self.dataset.name()}.zip')
+
+    def load_dataset(self):
+        zip_path = self._get_dataset_zip_path()
+
+        if os.path.exists(zip_path):
+            self.dataset.load(zip_path)
+        else:
+            self.dataset.fit()
+            self.dataset.save(zip_path)
