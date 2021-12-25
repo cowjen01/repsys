@@ -3,7 +3,10 @@ import inspect
 import pkgutil
 import logging
 import sys
+from typing import Dict, Text
 
+from repsys.model import Model
+from repsys.dataset import Dataset
 from repsys.utils import get_subclasses
 
 logger = logging.getLogger(__name__)
@@ -47,3 +50,29 @@ class ClassLoader:
         for x in get_subclasses(self.cls):
             if not inspect.isabstract(x):
                 self._create_instance(x)
+
+
+def load_models_pkg(models_pkg) -> Dict[Text, Model]:
+    logger.debug("Loading models package ...")
+    model_loader = ClassLoader(Model)
+    model_loader.register_package(models_pkg)
+
+    if len(model_loader.instances) == 0:
+        raise Exception("At least one model must be defined.")
+
+    models = model_loader.instances
+
+    return models
+
+
+def load_dataset_pkg(dataset_pkg) -> Dataset:
+    logger.debug("Loading dataset package ...")
+    dataset_loader = ClassLoader(Dataset)
+    dataset_loader.register_package(dataset_pkg)
+
+    if len(dataset_loader.instances) != 1:
+        raise Exception("There must be exactly one dataset defined.")
+
+    dataset = list(dataset_loader.instances.values())[0]
+
+    return dataset

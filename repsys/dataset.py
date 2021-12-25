@@ -3,7 +3,7 @@
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import List, Text, Dict, Optional
+from typing import List, Text, Dict, Optional, Tuple
 from pandas import DataFrame
 from scipy import sparse
 import numpy as np
@@ -17,8 +17,7 @@ from repsys.utils import (
     unzip_dir,
     zip_dir,
 )
-from repsys.dataset.splitter import DatasetSplitter
-from repsys.dataset.dtypes import (
+from repsys.dtypes import (
     DataType,
     ItemID,
     String,
@@ -28,7 +27,7 @@ from repsys.dataset.dtypes import (
     find_column,
     filter_columns,
 )
-from repsys.dataset.validation import (
+from repsys.validators import (
     validate_dataset,
     validate_item_data,
     validate_item_dtypes,
@@ -87,6 +86,40 @@ class Dataset(ABC):
     @enforce_fitted
     def get_item_index(self, item_id: int) -> int:
         return self._item2idx.get(item_id)
+
+    def filter_items(self, column, query):
+        items_filter = self.items[column].str.contains(query, case=False)
+        return self.items[items_filter]
+
+    def get_item_view_col(self, view_type):
+        return self._item_view.get(view_type)
+
+    def get_item_ids(self, item_idxs):
+        return np.array([self.get_item_id(idx) for idx in item_idxs])
+
+    def get_user_history(self, user_id):
+        user_idx = self.get_user_index(user_id)
+        return self.vad_data_tr[user_idx]
+
+    def get_interacted_items(self, user_id):
+        interactions = self.get_user_history(user_id)
+        item_idxs = (interactions > 0).indices
+        item_ids = self.get_item_ids(item_idxs)
+        return self.items.loc[item_ids]
+
+    def indices_to_items(self, item_idxs):
+        item_ids = self.get_item_ids(item_idxs)
+        return self.items.loc[item_ids]
+
+    def input_from_interactions(self, interactions):
+        return sparse.csr_matrix(
+            (
+                np.ones_like(interactions),
+                (np.zeros_like(interactions), interactions),
+            ),
+            dtype="float64",
+            shape=(1, self.n_items),
+        )
 
     def _select_item_column(
         self, patterns: List[Text], item_cols: List[Text]
@@ -166,8 +199,6 @@ class Dataset(ABC):
         user2idx: Dict[int, int],
         item2idx: Dict[int, int],
     ):
-        logger.info("Updating data ...")
-
         item_dtypes = self.get_item_dtypes()
 
         self._raw_train_data = splits[0]
@@ -182,8 +213,6 @@ class Dataset(ABC):
 
         self._item_view = item_view
 
-        logger.info("Building sparse matrices ...")
-
         self.train_data, self.n_items = self._build_train_matrix(
             self._raw_train_data
         )
@@ -196,7 +225,7 @@ class Dataset(ABC):
 
         self.vad_users = list(self._user2idx.keys())
 
-        logger.info("Processing items data ...")
+        logger.debug("Processing items data ...")
 
         tags_columns = filter_columns(item_dtypes, Tags)
         string_columns = filter_columns(item_dtypes, String)
@@ -221,14 +250,14 @@ class Dataset(ABC):
         self._is_fitted = True
 
     def fit(self):
-        logger.info("Loading dataset ...")
+        logger.debug("Loading dataset ...")
 
         items = self.load_items()
         item_dtypes = self.get_item_dtypes()
         interacts = self.load_interacts()
         interact_dtypes = self.get_interact_dtypes()
 
-        logger.info("Validating dataset ...")
+        logger.debug("Validating dataset ...")
 
         validate_dataset(interacts, items, interact_dtypes, item_dtypes)
 
@@ -245,7 +274,7 @@ class Dataset(ABC):
             rating: Rating = interact_dtypes[rating_col]
             interacts = interacts[interacts[rating_col] >= rating.bin_threshold]
 
-        logger.info("Splitting interactions ...")
+        logger.debug("Splitting interactions ...")
 
         splitter = DatasetSplitter(user_id_col, item_id_col)
         train_split, vad_split, test_split = splitter.split(interacts)
@@ -321,32 +350,28 @@ class Dataset(ABC):
                 f.write("%s\n" % sid)
 
     def load(self, path: Text):
-        logger.info(f"Loading dataset from '{path}' ...")
+        logger.debug(f"Loading dataset from '{path}'")
 
         create_tmp_dir()
 
         try:
             unzip_dir(path, tmp_dir_path())
 
-            item_dtypes = self.get_item_dtypes()
-            item_id_col = find_column(item_dtypes, ItemID)
-
-            if not item_id_col:
-                raise Exception("Item's ID column was not found.")
-
+            logger.debug("Loading items data ...")
             items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-            items = pd.read_csv(items_data_path, index_col=item_id_col)
+            items = pd.read_csv(items_data_path)
 
-            logger.info("Validating dataset ...")
+            logger.debug("Validating items ...")
 
             custom_item_view = self.get_item_view()
             item_view = self._merge_item_views(custom_item_view, items.columns)
+            item_dtypes = self.get_item_dtypes()
 
             validate_item_dtypes(items, item_dtypes)
             validate_item_data(items, item_dtypes)
             validate_item_view(item_view, item_dtypes)
 
-            logger.info("Loading training data ...")
+            logger.debug("Loading interaction data ...")
 
             train_data_path = os.path.join(tmp_dir_path(), "train.csv")
             train_data = pd.read_csv(train_data_path)
@@ -358,6 +383,8 @@ class Dataset(ABC):
             user2idx = self._load_idx_data("user_index.txt")
 
             splits = train_data, vad_data, test_data
+
+            items = items.set_index(find_column(item_dtypes, ItemID))
 
             self._update_data(splits, items, item_view, user2idx, item2ids)
 
@@ -388,3 +415,180 @@ class Dataset(ABC):
 
     def __str__(self):
         return f"Dataset '{self.name()}'"
+
+
+class Split:
+    def __init__(
+        self, train_data: DataFrame, test_data: DataFrame, users
+    ) -> None:
+        self.train_data = train_data
+        self.test_data = test_data
+        self.users = users
+
+
+class DatasetSplitter:
+    def __init__(
+        self,
+        user_col,
+        item_col,
+        train_users_prop=0.85,
+        test_holdout_prop=0.2,
+        min_user_interacts=5,
+        min_item_interacts=0,
+    ) -> None:
+        self.user_col = user_col
+        self.item_col = item_col
+        self.train_users_prop = train_users_prop
+        self.test_holdout_prop = test_holdout_prop
+        self.min_user_interacts = min_user_interacts
+        self.min_item_interacts = min_item_interacts
+
+    @classmethod
+    def get_count(cls, df, col):
+        grouped_df = df[[col]].groupby(col, as_index=True)
+        count = grouped_df.size()
+        return count
+
+    # filter interactions by two conditions (minimal interactions
+    # for movie, minimal interactions by user)
+    def _filter_triplets(self, tp):
+        # Only keep the triplets for items which
+        # were clicked on by at least min_sc users.
+        if self.min_item_interacts > 0:
+            itemcount = self.get_count(tp, self.item_col)
+            tp = tp[
+                tp[self.item_col].isin(
+                    itemcount.index[itemcount >= self.min_item_interacts]
+                )
+            ]
+
+        # Only keep the triplets for users who clicked on at least min_uc items
+        # After doing this, some of the items will have less than min_uc users,
+        # but should only be a small proportion
+        if self.min_user_interacts > 0:
+            usercount = self.get_count(tp, self.user_col)
+            tp = tp[
+                tp[self.user_col].isin(
+                    usercount.index[usercount >= self.min_user_interacts]
+                )
+            ]
+
+        # Update both usercount and itemcount after filtering
+        usercount, itemcount = self.get_count(
+            tp, self.user_col
+        ), self.get_count(tp, self.item_col)
+        return tp, usercount, itemcount
+
+    def _split_train_test(self, data):
+        grouped_by_user = data.groupby(self.user_col)
+        tr_list, te_list = list(), list()
+
+        np.random.seed(98765)
+
+        for i, (_, group) in enumerate(grouped_by_user):
+            n_items_u = len(group)
+
+            # randomly choose 20% of all items user interacted with
+            # these interactions goes to test list, other goes to training list
+            idx = np.zeros(n_items_u, dtype="bool")
+            idx[
+                np.random.choice(
+                    n_items_u,
+                    size=int(self.test_holdout_prop * n_items_u),
+                    replace=False,
+                ).astype("int64")
+            ] = True
+
+            tr_list.append(group[np.logical_not(idx)])
+            te_list.append(group[idx])
+
+        data_tr = pd.concat(tr_list)
+        data_te = pd.concat(te_list)
+
+        return data_tr, data_te
+
+    # we will only be working with movies that has been seen by the model
+    # so we need to remove all interactions to movies out of the training scope
+    def _filter_interact_data(self, interact_data, users, item_index):
+        # filter only interactions made by users
+        interacts = interact_data.loc[interact_data[self.user_col].isin(users)]
+        # filter only interactions with items included in the item index
+        interacts = interacts.loc[interacts[self.item_col].isin(item_index)]
+        # filter only interactions meet the main criteria
+        interacts, activity, _ = self._filter_triplets(interacts)
+
+        return interacts, activity.index
+
+    def split(self, interact_data) -> Tuple[Split, Split, Split]:
+        interact_data, user_activity, item_popularity = self._filter_triplets(
+            interact_data
+        )
+
+        # sparsity = (
+        #     1.0
+        #     * interact_data.shape[0]
+        #     / (user_activity.shape[0] * item_popularity.shape[0])
+        # )
+
+        # logger.debug(
+        #     "After filtering, there are %d watching events from %d users and %d movies (sparsity: %.3f%%)"
+        #     % (
+        #         interact_data.shape[0],
+        #         user_activity.shape[0],
+        #         item_popularity.shape[0],
+        #         sparsity * 100,
+        #     )
+        # )
+
+        heldout_users_portion = (1 - self.train_users_prop) / 2
+
+        # Shuffle users using permutation
+        user_index = user_activity.index
+
+        np.random.seed(98765)
+
+        idx_perm = np.random.permutation(user_index.size)
+        # user_index is an array of shuffled users ids
+        user_index = user_index[idx_perm]
+
+        n_users = user_index.size
+        n_heldout_users = round(n_users * heldout_users_portion)
+
+        # Select 10K users as heldout users, 10K users as validation users
+        # and the rest of the users for training
+        tr_users = user_index[: (n_users - n_heldout_users * 2)]
+        vad_users = user_index[
+            (n_users - n_heldout_users * 2) : (n_users - n_heldout_users)
+        ]
+        test_users = user_index[(n_users - n_heldout_users) :]
+
+        # Select only interactions made by users from the training set
+        train_interacts = interact_data.loc[
+            interact_data[self.user_col].isin(tr_users)
+        ]
+
+        # Get all movies interacted by the train users
+        # we will only be working with movies that has been seen by model
+        item_index = pd.unique(train_interacts[self.item_col])
+
+        # Select only interactions made by the validation users
+        # and also those whose movie is included in the training interactions
+        vad_interacts, vad_users = self._filter_interact_data(
+            interact_data, vad_users, item_index
+        )
+        vad_interacts_tr, vad_interacts_te = self._split_train_test(
+            vad_interacts
+        )
+
+        test_interacts, test_users = self._filter_interact_data(
+            interact_data, test_users, item_index
+        )
+        test_interacts_tr, test_interacts_te = self._split_train_test(
+            test_interacts
+        )
+
+        train_split = Split(train_interacts, None, tr_users)
+        vad_split = Split(vad_interacts_tr, vad_interacts_te, vad_users)
+        test_split = Split(test_interacts_tr, test_interacts_te, test_users)
+
+        return train_split, vad_split, test_split

@@ -1,65 +1,57 @@
+from typing import Dict, Text
 import click
 import logging
 import functools
-
-from typing import List
-
-from repsys.core import RepsysCore
-from repsys.model.blueprint import Model
-from repsys.server import run_server
-from repsys.loader import ClassLoader
 from repsys.dataset import Dataset
+
+from repsys.server import run_server
+from repsys.model import Model
+from repsys.loaders import load_dataset_pkg, load_models_pkg
 from repsys.constants import DEFAULT_SERVER_PORT
+from repsys.checkpoints import (
+    latest_split_checkpoint,
+    new_split_checkpoint,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def load_models_pkg(models_package) -> List[Model]:
-    model_loader = ClassLoader(Model)
-    model_loader.register_package(models_package)
+def split_input_callback(ctx, param, value):
+    if not value:
+        path = latest_split_checkpoint()
 
-    if len(model_loader.instances) == 0:
-        raise Exception(
-            "At least one instance of Model class must be defined."
-        )
+        if not path:
+            raise click.ClickException(
+                "No split was found in the default directory '.repsys_checkpoints'. "
+                "Please provide a path to the split or run 'repsys split' command."
+            )
 
-    models = model_loader.instances
+        return path
 
-    return models
-
-
-def load_dataset_pkg(dataset_package) -> Dataset:
-    dataset_loader = ClassLoader(Dataset)
-    dataset_loader.register_package(dataset_package)
-
-    if len(dataset_loader.instances) != 1:
-        raise Exception("One instance of Dataset class must be defined.")
-
-    dataset = list(dataset_loader.instances.values())[0]
-
-    return dataset
+    return value
 
 
-def init_core(models_package, dataset_package):
-    dataset = load_dataset_pkg(dataset_package)
-    models = load_models_pkg(models_package)
+def split_output_callback(ctx, param, value):
+    if not value:
+        return new_split_checkpoint()
 
-    core = RepsysCore(models=models, dataset=dataset)
-
-    core.load_dataset_checkpoint()
-    core.update_models_dataset()
-
-    return core
+    return value
 
 
-def common_params(func):
-    @click.option(
-        "-m", "--models", "models_package", default="models", show_default=True
-    )
+def models_callback(ctx, param, value):
+    return load_models_pkg(value)
+
+
+def dataset_callback(ctx, param, value):
+    return load_dataset_pkg(value)
+
+
+def datasetoption(func):
     @click.option(
         "-d",
-        "--dataset",
-        "dataset_package",
+        "--dataset-pkg",
+        "dataset",
+        callback=dataset_callback,
         default="dataset",
         show_default=True,
     )
@@ -70,39 +62,95 @@ def common_params(func):
     return wrapper
 
 
+def modelsoption(func):
+    @click.option(
+        "-m",
+        "--models-pkg",
+        "models",
+        callback=models_callback,
+        default="models",
+        show_default=True,
+    )
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def splitoption(func):
+    @click.option(
+        "-s",
+        "--split-path",
+        callback=split_input_callback,
+        type=click.Path(exists=True),
+    )
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        return func(*args, **kwargs)
+
+    return wrapper
+
+
+def fit_models(models: Dict[Text, Model], dataset: Dataset):
+    logger.info("Getting models ready ...")
+    for model in models.values():
+        logger.info(f"Fitting model '{model.name()}' ...")
+
+        model.update_dataset(dataset)
+        model.fit(training=True)
+
+
 @click.group()
 def repsys():
-    """Repsys client for managing of recommender models."""
+    """Repsys client for recommendation systems development."""
     pass
 
 
-@repsys.command()
-@common_params
-def train(models_package, dataset_package):
-    """Train implemented models."""
-    core = init_core(models_package, dataset_package)
-    core.train_models()
-    core.save_models_checkpoint()
+# @repsys.command()
+# @packageoptions
+# def evaluate(models_package, dataset_package):
+#     """Evaluate trained models."""
+#     core = init_core(models_package, dataset_package)
+#     core.load_models_checkpoint()
+#     core.eval_models()
 
 
 @repsys.command()
-@common_params
-def evaluate(models_package, dataset_package):
-    """Evaluate trained models."""
-    core = init_core(models_package, dataset_package)
-    core.load_models_checkpoint()
-    core.eval_models()
-
-
-@repsys.command()
-@common_params
+@modelsoption
+@datasetoption
+@splitoption
 @click.option(
-    "-p", "--port", "port", default=DEFAULT_SERVER_PORT, show_default=True
+    "-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True
 )
-def server(port, models_package, dataset_package):
+def server(
+    models: Dict[Text, Model], dataset: Dataset, split_path: Text, port: int
+):
     """Start Repsys server."""
+    dataset.load(split_path)
+    fit_models(models, dataset)
 
-    core = init_core(models_package, dataset_package)
-    core.load_models_checkpoint()
+    run_server(port, models, dataset)
 
-    run_server(port=port, core=core)
+
+@repsys.command()
+@datasetoption
+@modelsoption
+@splitoption
+def train(models: Dict[Text, Model], dataset: Dataset, split_path: Text):
+    """Train models by providing dataset split."""
+    dataset.load(split_path)
+
+    fit_models(models, dataset)
+
+
+@repsys.command()
+@datasetoption
+@click.option("-o", "--output-path", callback=split_output_callback)
+def split(dataset: Dataset, output_path: Text):
+    """Create a train/validation/test split."""
+    logger.info("Creating splits of the input data ...")
+    dataset.fit()
+
+    logger.info(f"Saving the split into '{output_path}'")
+    dataset.save(output_path)

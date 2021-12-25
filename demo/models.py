@@ -1,23 +1,48 @@
+import os
 import numpy as np
+import pickle
 from sklearn.neighbors import NearestNeighbors
-from sklearn.decomposition import TruncatedSVD
-from repsys import ScikitModel, WebParamType, WebParam
+
+# from sklearn.decomposition import TruncatedSVD
+from repsys import Model
+from repsys.web import Select
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
 
 
-def erase_history(f):
-    def w(self, X, **kwargs):
-        p = f(self, X, **kwargs)
-        p[X.toarray() > 0] = 0
-        return p
-    return w
+# def erase_history(f):
+#     def w(self, X, **kwargs):
+#         p = f(self, X, **kwargs)
+#         p[X.toarray() > 0] = 0
+#         return p
+
+#     return w
 
 
-class KNN(ScikitModel):
+class KNN(Model):
     def __init__(self, k=5):
         self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
+
+    def name(self):
+        return "KNN"
+
+    def _checkpoint_path(self):
+        return os.path.join("./checkpoints", self.name())
+
+    def _load_model(self):
+        self.model = pickle.load(open(self._checkpoint_path(), "rb"))
+
+    def _save_model(self):
+        checkpoint = open(self._checkpoint_path(), "wb")
+        pickle.dump(self.model, checkpoint)
+
+    def fit(self, training):
+        if training:
+            self.model.fit(self.dataset.train_data)
+            self._save_model()
+        else:
+            self._load_model()
 
     def predict(self, X, **kwargs):
         distances, indexes = self.model.kneighbors(X)
@@ -46,10 +71,12 @@ class KNN(ScikitModel):
             ]
         ).squeeze(axis=1)
 
+        predictions[X.toarray() > 0] = 0
+
         if kwargs.get("movie_genre"):
             # exclude movies without the genre
             genre_mask = (
-                ~self.dataset.items["subtitle"]
+                ~self.dataset.items["genres"]
                 .str.contains(kwargs["movie_genre"])
                 .sort_index()
             )
@@ -59,25 +86,24 @@ class KNN(ScikitModel):
 
     def web_params(self):
         return [
-            WebParam(
-                name="movie_genre",
+            Select(
+                "movie_genre",
+                options=self.dataset.get_genres(),
                 label="Movie genre",
-                type=WebParamType.select,
-                select_options=self.dataset.get_genres().tolist(),
-            ),
+            )
         ]
 
 
-class BaseKNN(KNN):
-    def name(self):
-        return "BaseKNN"
+# class BaseKNN(KNN):
+#     def name(self):
+#         return "BaseKNN"
 
-    def fit(self):
-        self.model.fit(self.dataset.train_data)
+#     def fit(self):
+#         self.model.fit(self.dataset.train_data)
 
-    @erase_history
-    def predict(self, X, **kwargs):
-        return super().predict(X, **kwargs)
+#     @erase_history
+#     def predict(self, X, **kwargs):
+#         return super().predict(X, **kwargs)
 
 
 # class SVDKNN(KNN):

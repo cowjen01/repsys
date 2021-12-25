@@ -1,7 +1,7 @@
 import pandas as pd
 
 from repsys.dataset import Dataset
-import repsys.dataset.dtypes as dtypes
+import repsys.dtypes as dtypes
 
 
 class MovieLens(Dataset):
@@ -26,7 +26,7 @@ class MovieLens(Dataset):
         }
 
     def load_items(self):
-        return pd.read_csv("./ml-20m/movies.csv")
+        return pd.read_csv("./ml-sm/movies.csv")
 
     def load_interacts(self):
-        return pd.read_csv("./ml-20m/ratings.csv")
+        return pd.read_csv("./ml-sm/ratings.csv")

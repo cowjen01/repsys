@@ -29,9 +29,9 @@ def unzip_dir(zip_path: Text, dir_path: Text):
 
 
 def zip_dir(zip_path: Text, dir_path: Text):
-    path_split = zip_path.split(".")
-    if path_split[-1] == "zip":
-        zip_path = ".".join(path_split[:-1])
+    path_chunks = zip_path.split(".")
+    if path_chunks[-1] == "zip":
+        zip_path = ".".join(path_chunks[:-1])
 
     shutil.make_archive(zip_path, "zip", dir_path)
 

@@ -3,7 +3,7 @@ from pandas import DataFrame
 import numpy as np
 import logging
 
-from repsys.dataset.dtypes import (
+from repsys.dtypes import (
     DataType,
     Rating,
     String,
@@ -22,6 +22,7 @@ class ValidationError(Exception):
         dtype_name = dtype_name
 
 
+# FIXME TypeError: __init__() got multiple values for argument 'col_name
 def check_columns(columns: List[Text], df_columns: List[Text]):
     for col in columns:
         if col not in df_columns:

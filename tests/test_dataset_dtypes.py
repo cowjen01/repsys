@@ -1,6 +1,6 @@
 import pytest
 
-from repsys.dataset.dtypes import (
+from repsys.dtypes import (
     filter_columns,
     find_column,
     ItemID,

@@ -1,8 +1,10 @@
 import pytest
 
+from repsys import dtypes
+
 from .helpers import load_items, load_interacts
 
-from repsys.dataset import dtypes, Dataset
+from repsys.dataset import Dataset
 
 
 class TestDataset(Dataset):

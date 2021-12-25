@@ -1,3 +1,4 @@
-.repsys_checkpoints/
 ml-*/
-tmp/
+.repsys_checkpoints/
+checkpoints/
+
