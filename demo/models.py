@@ -4,7 +4,7 @@ import pickle
 from sklearn.neighbors import NearestNeighbors
 
 # from sklearn.decomposition import TruncatedSVD
-from repsys import Model
+from repsys import Model, dataset
 from repsys.web import Select
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
@@ -74,13 +74,14 @@ class KNN(Model):
         predictions[X.toarray() > 0] = 0
 
         if kwargs.get("movie_genre"):
+            genre = kwargs.get("movie_genre")
+
             # exclude movies without the genre
-            genre_mask = (
-                ~self.dataset.items["genres"]
-                .str.contains(kwargs["movie_genre"])
-                .sort_index()
-            )
-            predictions[:, genre_mask] = 0
+            not_genre_ids = self.dataset.items.loc[
+                ~self.dataset.items["genres"].str.contains(genre)
+            ].index
+            not_genre_idxs = not_genre_ids.map(self.dataset.get_item_index)
+            predictions[:, not_genre_idxs] = 0
 
         return predictions
 

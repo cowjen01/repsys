@@ -96,9 +96,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
             interactions = np.array(interactions)
             X = dataset.input_from_interactions(interactions)
 
-        # prediction = model.predict(X, **predict_params)
-        item_idxs = model.recommend_top_items(X, limit, **predict_params)
-        items = dataset.indices_to_items(item_idxs)
+        items = model.recommend_top_items(X, limit, **predict_params)
 
         return json(items.to_dict("records"))
 

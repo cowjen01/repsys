@@ -60,7 +60,7 @@ class Model(ABC):
         """Make a prediction, but return directly a list of items."""
         prediction = self.predict(X, **kwargs)
         idxs = (-prediction[0]).argsort()[:limit]
-        return idxs
+        return self.dataset.indices_to_items(idxs)
 
     def to_dict(self):
         """Serialize details about the model to the dictionary."""
