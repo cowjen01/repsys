@@ -80,9 +80,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         if not model:
             raise exceptions.NotFound(f"Model '{model_name}' was not found.")
 
-        default_params = {
-            p.name: p.default for p in model.web_params()
-        }
+        default_params = {p.name: p.default for p in model.web_params()}
         cleaned_params = {
             k: v for k, v in params.items() if k in default_params
         }

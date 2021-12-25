@@ -8,7 +8,7 @@ from repsys.server import run_server
 from repsys.model import Model
 from repsys.loaders import load_dataset_pkg, load_models_pkg
 from repsys.constants import DEFAULT_SERVER_PORT
-from repsys.checkpoints import (
+from repsys.utils import (
     latest_split_checkpoint,
     new_split_checkpoint,
 )
