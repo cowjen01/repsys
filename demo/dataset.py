@@ -29,7 +29,6 @@ class MovieLens(Dataset):
     def load_items(self):
         df = pd.read_csv("./ml-sm/movies.csv")
         df["year"] = df["title"].str.extract(r"\((\d+)\)")
-        df["year"] = df["year"].astype(str)
         return df
 
     def load_interacts(self):

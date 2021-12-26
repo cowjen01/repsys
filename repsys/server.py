@@ -30,6 +30,15 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
     def get_users(request):
         return json(dataset.vad_users)
 
+    @app.route("/api/dataset")
+    def get_dataset(request):
+        return json(
+            {
+                "items": int(dataset.n_items),
+                "columns": dataset.items.columns.tolist(),
+            }
+        )
+
     @app.route("/api/items")
     def get_items(request):
         query_str = request.args.get("query")

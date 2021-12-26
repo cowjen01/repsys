@@ -237,7 +237,6 @@ class Dataset(ABC):
         logger.debug("Processing items data ...")
 
         tags_columns = filter_columns(item_dtypes, Tags)
-        string_columns = filter_columns(item_dtypes, String)
 
         self.tags = {}
         for tags_col in tags_columns:
@@ -251,10 +250,6 @@ class Dataset(ABC):
                 .tolist()
             )
             items[tags_col] = items[tags_col].fillna("")
-
-        for string_col in string_columns:
-            items[string_col] = items[string_col].astype(str)
-            items[string_col] = items[string_col].fillna("")
 
         self.items = items
         self._is_fitted = True
