@@ -4,7 +4,7 @@ from typing import Dict, Text
 from sanic import Sanic
 from sanic.response import json, file
 import numpy as np
-from sanic import exceptions
+from sanic.exceptions import InvalidUsage, NotFound
 
 from repsys.dataset import Dataset
 from repsys.model import Model
@@ -35,27 +35,30 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         query_str = request.args.get("query")
 
         if not query_str or len(query_str) == 0:
-            return json([])
+            raise InvalidUsage("The query string must be specified.")
 
-        title_col = dataset.get_item_view_col("title")
+        title_col = dataset.item_title_col()
         items = dataset.filter_items(title_col, query_str)
+        data = json(dataset.serialize_items(items))
 
-        return json(items.to_dict("records"))
+        return data
 
     @app.route("/api/interactions")
     def get_interactions(request):
-        user_id = request.args.get("user")
+        user_id: str = request.args.get("user")
 
-        if user_id is None:
-            raise exceptions.InvalidUsage("User must be specified.")
+        if user_id is None or not user_id.isdigit():
+            raise InvalidUsage("A valid user ID must be specified.")
 
-        try:
-            user_id = int(user_id)
-            items = dataset.get_interacted_items(user_id)
-        except Exception:
-            raise exceptions.NotFound(f"User '{user_id}' was not found.")
+        user_id = int(user_id)
 
-        return json(items.to_dict("records"))
+        if user_id not in dataset.vad_users:
+            raise NotFound(f"User '{user_id}' was not found.")
+
+        items = dataset.get_interacted_items(user_id)
+        data = json(dataset.serialize_items(items))
+
+        return data
 
     @app.route("/api/predict", methods=["POST"])
     def post_prediction(request):
@@ -68,17 +71,17 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         if (user_id is None and interactions is None) or (
             user_id is not None and interactions is not None
         ):
-            raise exceptions.InvalidUsage(
+            raise InvalidUsage(
                 "Either the user or his interactions must be specified."
             )
 
         if not model_name:
-            raise exceptions.InvalidUsage("Model name must be specified.")
+            raise InvalidUsage("Model name must be specified.")
 
         model = models.get(model_name)
 
         if not model:
-            raise exceptions.NotFound(f"Model '{model_name}' was not found.")
+            raise NotFound(f"Model '{model_name}' was not found.")
 
         default_params = {p.name: p.default for p in model.web_params()}
         cleaned_params = {
@@ -91,14 +94,15 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
                 user_id = int(user_id)
                 X = dataset.get_user_history(user_id)
             except Exception:
-                raise exceptions.NotFound(f"User '{user_id}' was not found.")
+                raise NotFound(f"User '{user_id}' was not found.")
         else:
             interactions = np.array(interactions)
             X = dataset.input_from_interactions(interactions)
 
         items = model.recommend_top_items(X, limit, **predict_params)
+        data = json(dataset.serialize_items(items))
 
-        return json(items.to_dict("records"))
+        return data
 
     @app.listener("after_server_stop")
     def on_shutdown(app, loop):

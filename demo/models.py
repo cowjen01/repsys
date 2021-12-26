@@ -3,21 +3,11 @@ import numpy as np
 import pickle
 from sklearn.neighbors import NearestNeighbors
 
-# from sklearn.decomposition import TruncatedSVD
-from repsys import Model, dataset
+from repsys import Model
 from repsys.web import Select
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
-
-
-# def erase_history(f):
-#     def w(self, X, **kwargs):
-#         p = f(self, X, **kwargs)
-#         p[X.toarray() > 0] = 0
-#         return p
-
-#     return w
 
 
 class KNN(Model):
@@ -77,11 +67,11 @@ class KNN(Model):
             genre = kwargs.get("movie_genre")
 
             # exclude movies without the genre
-            not_genre_ids = self.dataset.items.loc[
+            excluded_ids = self.dataset.items.loc[
                 ~self.dataset.items["genres"].str.contains(genre)
             ].index
-            not_genre_idxs = not_genre_ids.map(self.dataset.get_item_index)
-            predictions[:, not_genre_idxs] = 0
+            excluded_idxs = excluded_ids.map(self.dataset.get_item_index)
+            predictions[:, excluded_idxs] = 0
 
         return predictions
 
@@ -93,18 +83,6 @@ class KNN(Model):
                 label="Movie genre",
             )
         ]
-
-
-# class BaseKNN(KNN):
-#     def name(self):
-#         return "BaseKNN"
-
-#     def fit(self):
-#         self.model.fit(self.dataset.train_data)
-
-#     @erase_history
-#     def predict(self, X, **kwargs):
-#         return super().predict(X, **kwargs)
 
 
 # class SVDKNN(KNN):

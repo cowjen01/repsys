@@ -94,9 +94,9 @@ def splitoption(func):
 
 def fit_models(models: Dict[Text, Model], dataset: Dataset):
     logger.info("Getting models ready ...")
+
     for model in models.values():
         logger.info(f"Fitting model '{model.name()}' ...")
-
         model.update_dataset(dataset)
         model.fit(training=True)
 
@@ -129,7 +129,6 @@ def server(
     """Start Repsys server."""
     dataset.load(split_path)
     fit_models(models, dataset)
-
     run_server(port, models, dataset)
 
 
@@ -140,7 +139,6 @@ def server(
 def train(models: Dict[Text, Model], dataset: Dataset, split_path: Text):
     """Train models by providing dataset split."""
     dataset.load(split_path)
-
     fit_models(models, dataset)
 
 

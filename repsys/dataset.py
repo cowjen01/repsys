@@ -20,8 +20,10 @@ from repsys.utils import (
 from repsys.dtypes import (
     DataType,
     ItemID,
+    Number,
     String,
     Tags,
+    Title,
     UserID,
     Rating,
     find_column,
@@ -91,8 +93,10 @@ class Dataset(ABC):
         items_filter = self.items[column].str.contains(query, case=False)
         return self.items[items_filter]
 
-    def get_item_view_col(self, view_type):
-        return self._item_view.get(view_type)
+    def item_title_col(self):
+        dtypes = self.get_item_dtypes()
+        title_col = find_column(dtypes, Title)
+        return title_col
 
     def get_item_ids(self, item_idxs):
         return np.array([self.get_item_id(idx) for idx in item_idxs])
@@ -110,6 +114,11 @@ class Dataset(ABC):
     def indices_to_items(self, item_idxs):
         item_ids = self.get_item_ids(item_idxs)
         return self.items.loc[item_ids]
+
+    def serialize_items(self, items: DataFrame):
+        serialized_items = items.copy()
+        serialized_items["id"] = serialized_items.index
+        return serialized_items.to_dict("records")
 
     def input_from_interactions(self, interactions):
         return sparse.csr_matrix(
@@ -244,6 +253,7 @@ class Dataset(ABC):
             items[tags_col] = items[tags_col].fillna("")
 
         for string_col in string_columns:
+            items[string_col] = items[string_col].astype(str)
             items[string_col] = items[string_col].fillna("")
 
         self.items = items
@@ -357,17 +367,24 @@ class Dataset(ABC):
         try:
             unzip_dir(path, tmp_dir_path())
 
+            item_dtypes = self.get_item_dtypes()
+            validate_item_dtypes(item_dtypes)
+
+            str_dtypes = {
+                col: str
+                for col, dt in item_dtypes.items()
+                if type(dt) != ItemID and type(dt) != Number
+            }
+
             logger.debug("Loading items data ...")
             items_data_path = os.path.join(tmp_dir_path(), "items.csv")
-            items = pd.read_csv(items_data_path)
+            items = pd.read_csv(items_data_path, dtype=str_dtypes)
 
             logger.debug("Validating items ...")
 
             custom_item_view = self.get_item_view()
             item_view = self._merge_item_views(custom_item_view, items.columns)
-            item_dtypes = self.get_item_dtypes()
 
-            validate_item_dtypes(items, item_dtypes)
             validate_item_data(items, item_dtypes)
             validate_item_view(item_view, item_dtypes)
 

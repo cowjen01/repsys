@@ -14,6 +14,14 @@ class String(DataType):
     pass
 
 
+class Title(DataType):
+    pass
+
+
+class Number(DataType):
+    pass
+
+
 class UserID(DataType):
     pass
 

@@ -5,11 +5,13 @@ import logging
 
 from repsys.dtypes import (
     DataType,
+    Number,
     Rating,
     String,
     UserID,
     ItemID,
     Tags,
+    Title,
     find_column,
 )
 
@@ -17,12 +19,11 @@ logger = logging.getLogger(__name__)
 
 
 class ValidationError(Exception):
-    def __init__(col_name=None, dtype_name=None):
-        col_name = col_name
-        dtype_name = dtype_name
+    def __init__(self, col_name=None, dtype_name=None):
+        self.col_name = col_name
+        self.dtype_name = dtype_name
 
 
-# FIXME TypeError: __init__() got multiple values for argument 'col_name
 def check_columns(columns: List[Text], df_columns: List[Text]):
     for col in columns:
         if col not in df_columns:
@@ -42,16 +43,9 @@ def check_required_dtypes(dtypes: List[DataType], req_dtypes: List[DataType]):
             raise ValidationError(dtype_name=dt.__name__)
 
 
-def validate_item_dtypes(
-    items: DataFrame, item_dtypes: Dict[Text, DataType]
-) -> None:
-    valid_dtypes = [ItemID, Tags, String]
-    required_dtypes = [ItemID]
-
-    try:
-        check_columns(item_dtypes.keys(), items.columns)
-    except ValidationError as e:
-        raise Exception(f"Column '{e.col_name}' not found in the items data.")
+def validate_item_dtypes(item_dtypes: Dict[Text, DataType]) -> None:
+    valid_dtypes = [ItemID, Tags, String, Title, Number]
+    required_dtypes = [ItemID, Title]
 
     try:
         check_valid_dtypes(item_dtypes.values(), valid_dtypes)
@@ -67,6 +61,15 @@ def validate_item_dtypes(
 def validate_item_data(
     items: DataFrame, item_dtypes: Dict[Text, DataType]
 ) -> None:
+    try:
+        check_columns(item_dtypes.keys(), items.columns)
+    except ValidationError as e:
+        raise Exception(
+            f"A column '{e.col_name}' not found in the items data. "
+            "If you are loading an existing split and the data-types "
+            "haved changed, please create a new split."
+        )
+
     item_index = find_column(item_dtypes, ItemID)
     if items[item_index].unique().shape[0] != items.shape[0]:
         raise Exception("Index '{item_index}' contains non-unique values.")
@@ -160,7 +163,7 @@ def validate_dataset(
     interact_dtypes: Dict[Text, DataType],
     item_dtypes: Dict[Text, DataType],
 ):
-    validate_item_dtypes(items, item_dtypes)
+    validate_item_dtypes(item_dtypes)
     validate_item_data(items, item_dtypes)
     validate_interact_dtypes(interacts, interact_dtypes)
     validate_interact_data(interacts, items, interact_dtypes, item_dtypes)
