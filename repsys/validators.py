@@ -140,23 +140,6 @@ def validate_interact_data(
             )
 
 
-def validate_item_view(
-    item_view: Dict[Text, Optional[Text]], item_dtypes: Dict[Text, DataType]
-):
-    if not item_view.get("title"):
-        raise Exception(
-            "Item's title column was not recognized. Please specify "
-            "item view implementing `item_view()` method."
-        )
-
-    for col in item_view.values():
-        if col is not None and col not in item_dtypes.keys():
-            raise Exception(
-                f"Item's view column '{col}' was not found "
-                "in the item's dtypes specification."
-            )
-
-
 def validate_dataset(
     interacts: DataFrame,
     items: DataFrame,

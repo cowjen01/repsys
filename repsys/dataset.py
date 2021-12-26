@@ -21,7 +21,6 @@ from repsys.dtypes import (
     DataType,
     ItemID,
     Number,
-    String,
     Tags,
     Title,
     UserID,
@@ -33,7 +32,6 @@ from repsys.validators import (
     validate_dataset,
     validate_item_data,
     validate_item_dtypes,
-    validate_item_view,
 )
 
 logger = logging.getLogger(__name__)
@@ -55,11 +53,11 @@ class Dataset(ABC):
         pass
 
     @abstractmethod
-    def get_item_dtypes(self) -> Dict[Text, DataType]:
+    def item_dtypes(self) -> Dict[Text, DataType]:
         pass
 
     @abstractmethod
-    def get_interact_dtypes(self) -> Dict[Text, DataType]:
+    def interact_dtypes(self) -> Dict[Text, DataType]:
         pass
 
     @abstractmethod
@@ -70,22 +68,15 @@ class Dataset(ABC):
     def load_interacts(self) -> DataFrame:
         pass
 
-    def get_item_view(self):
-        return {}
-
-    @enforce_fitted
     def get_user_id(self, user_idx: int) -> int:
         return self._idx2user.get(user_idx)
 
-    @enforce_fitted
     def get_item_id(self, item_idx: int) -> int:
         return self._idx2item.get(item_idx)
 
-    @enforce_fitted
     def get_user_index(self, user_id: int) -> int:
         return self._user2idx.get(user_id)
 
-    @enforce_fitted
     def get_item_index(self, item_id: int) -> int:
         return self._item2idx.get(item_id)
 
@@ -94,7 +85,7 @@ class Dataset(ABC):
         return self.items[items_filter]
 
     def item_title_col(self):
-        dtypes = self.get_item_dtypes()
+        dtypes = self.item_dtypes()
         title_col = find_column(dtypes, Title)
         return title_col
 
@@ -129,36 +120,6 @@ class Dataset(ABC):
             dtype="float64",
             shape=(1, self.n_items),
         )
-
-    def _select_item_column(
-        self, patterns: List[Text], item_cols: List[Text]
-    ) -> Optional[Text]:
-        for col in item_cols:
-            if col in patterns:
-                return col
-
-        return None
-
-    def _default_item_view(
-        self, item_cols: List[Text]
-    ) -> Dict[Text, Optional[Text]]:
-        title_patterns = ["title", "name", "product_title", "product_name"]
-        subtitle_patterns = ["genres", "languages", "categories"]
-        image_patterns = ["image", "img", "image_url", "img_url"]
-
-        return {
-            "title": self._select_item_column(title_patterns, item_cols),
-            "subtitle": self._select_item_column(subtitle_patterns, item_cols),
-            "image": self._select_item_column(image_patterns, item_cols),
-            "caption": None,
-        }
-
-    def _merge_item_views(
-        self, custom_view: Dict[Text, Text], item_cols: List[Text]
-    ) -> Dict[Text, Optional[Text]]:
-        default_view = self._default_item_view(item_cols)
-
-        return {**default_view, **custom_view}
 
     @classmethod
     def _build_train_matrix(cls, tp):
@@ -204,11 +165,10 @@ class Dataset(ABC):
         self,
         splits,
         items: DataFrame,
-        item_view: Dict[Text, Optional[Text]],
         user2idx: Dict[int, int],
         item2idx: Dict[int, int],
     ):
-        item_dtypes = self.get_item_dtypes()
+        item_dtypes = self.item_dtypes()
 
         self._raw_train_data = splits[0]
         self._raw_vad_data = splits[1]
@@ -219,8 +179,6 @@ class Dataset(ABC):
 
         self._idx2user = {y: x for x, y in user2idx.items()}
         self._idx2item = {y: x for x, y in item2idx.items()}
-
-        self._item_view = item_view
 
         self.train_data, self.n_items = self._build_train_matrix(
             self._raw_train_data
@@ -258,18 +216,13 @@ class Dataset(ABC):
         logger.debug("Loading dataset ...")
 
         items = self.load_items()
-        item_dtypes = self.get_item_dtypes()
+        item_dtypes = self.item_dtypes()
         interacts = self.load_interacts()
-        interact_dtypes = self.get_interact_dtypes()
+        interact_dtypes = self.interact_dtypes()
 
         logger.debug("Validating dataset ...")
 
         validate_dataset(interacts, items, interact_dtypes, item_dtypes)
-
-        custom_item_view = self.get_item_view()
-        item_view = self._merge_item_views(custom_item_view, items.columns)
-
-        validate_item_view(item_view, item_dtypes)
 
         item_id_col = find_column(interact_dtypes, ItemID)
         user_id_col = find_column(interact_dtypes, UserID)
@@ -323,7 +276,7 @@ class Dataset(ABC):
         # filter only items included in the training data
         items = items[items.index.isin(item_ids)]
 
-        self._update_data(splits, items, item_view, user2idx, item2idx)
+        self._update_data(splits, items, user2idx, item2idx)
 
     def _load_tr_te_data(self, split):
         data_tr_path = os.path.join(tmp_dir_path(), f"{split}_tr.csv")
@@ -362,7 +315,7 @@ class Dataset(ABC):
         try:
             unzip_dir(path, tmp_dir_path())
 
-            item_dtypes = self.get_item_dtypes()
+            item_dtypes = self.item_dtypes()
             validate_item_dtypes(item_dtypes)
 
             str_dtypes = {
@@ -377,11 +330,7 @@ class Dataset(ABC):
 
             logger.debug("Validating items ...")
 
-            custom_item_view = self.get_item_view()
-            item_view = self._merge_item_views(custom_item_view, items.columns)
-
             validate_item_data(items, item_dtypes)
-            validate_item_view(item_view, item_dtypes)
 
             logger.debug("Loading interaction data ...")
 
@@ -398,7 +347,7 @@ class Dataset(ABC):
 
             items = items.set_index(find_column(item_dtypes, ItemID))
 
-            self._update_data(splits, items, item_view, user2idx, item2ids)
+            self._update_data(splits, items, user2idx, item2ids)
 
         finally:
             remove_tmp_dir()

@@ -11,7 +11,7 @@ class MovieLens(Dataset):
     def get_genres(self):
         return self.tags["genres"]
 
-    def get_item_dtypes(self):
+    def item_dtypes(self):
         return {
             "movieId": dtypes.ItemID(),
             "title": dtypes.Title(),
@@ -19,7 +19,7 @@ class MovieLens(Dataset):
             "year": dtypes.String(),
         }
 
-    def get_interact_dtypes(self):
+    def interact_dtypes(self):
         return {
             "movieId": dtypes.ItemID(),
             "userId": dtypes.UserID(),
