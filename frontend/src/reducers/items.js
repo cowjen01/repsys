@@ -3,17 +3,14 @@ import axios from 'axios';
 
 import { requestStateHandler } from './utils';
 
-export const fetchItems = createAsyncThunk(
-  'items/fetchItems',
-  async (queryString) => {
-    const response = await axios.get('/api/items', {
-      params: {
-        query: queryString,
-      },
-    });
-    return response.data;
-  }
-);
+export const fetchItems = createAsyncThunk('items/fetchItems', async (queryString) => {
+  const response = await axios.get('/api/items', {
+    params: {
+      query: queryString,
+    },
+  });
+  return response.data;
+});
 
 export const slice = createSlice({
   name: 'items',

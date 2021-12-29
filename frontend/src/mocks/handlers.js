@@ -1,7 +1,7 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { rest } from 'msw';
 
-import { models, movies, users } from './data';
+import { config, movies, users } from './data';
 
 function shuffle(array) {
   return array.sort(() => Math.random() - 0.5);
@@ -16,8 +16,8 @@ export const handlers = [
   //   const model = req.url.searchParams.get('model');
   //   return res(ctx.status(200), ctx.json(metrics[model]));
   // }),
+  rest.get('/api/config', (req, res, ctx) => res(ctx.status(200), ctx.json(config))),
   rest.get('/api/items', (req, res, ctx) => res(ctx.status(200), ctx.json(movies))),
-  rest.get('/api/models', (req, res, ctx) => res(ctx.status(200), ctx.json(models))),
   rest.get('/api/users', (req, res, ctx) => res(ctx.status(200), ctx.json(users))),
   rest.post('/api/predict', (req, res, ctx) => {
     const { limit } = req.body;

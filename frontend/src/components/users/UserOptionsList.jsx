@@ -49,7 +49,7 @@ function UserOptionsList() {
       <List>
         {selectedUser && (
           <ListItem disablePadding>
-            {favouriteUsers.find((user) => user.id === selectedUser.id) !== undefined ? (
+            {favouriteUsers.includes(selectedUser) ? (
               <ListItemButton onClick={() => dispatch(removeUserFromFavourites())}>
                 <ListItemIcon>
                   <FavoriteIcon color="secondary" />

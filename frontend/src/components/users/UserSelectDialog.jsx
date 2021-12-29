@@ -15,7 +15,6 @@ import CheckIcon from '@mui/icons-material/Check';
 import { useSelector, useDispatch } from 'react-redux';
 
 import {
-  customInteractionsSelector,
   favouriteUsersSelector,
   setCustomInteractions,
   setSelectedUser,
@@ -41,14 +40,13 @@ let timerID;
 
 function UserSelectDialog() {
   const dispatch = useDispatch();
-  const customInteractions = useSelector(customInteractionsSelector);
   const dialogOpen = useSelector(userSelectDialogSelector);
   const itemsData = useSelector(itemsSelector);
   const itemsStatus = useSelector(itemsStatusSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
 
-  const [user, setUser] = useState();
-  const [interactions, setInteractions] = useState(customInteractions);
+  const [currentUser, setCurrentUser] = useState(null);
+  const [interactions, setInteractions] = useState([]);
   const [activeTab, setActiveTab] = useState(0);
   const [queryString, setQueryString] = useState('');
 
@@ -58,10 +56,13 @@ function UserSelectDialog() {
 
   const handleDialogClose = () => {
     dispatch(closeUserSelectDialog());
+    setCurrentUser(null);
+    setActiveTab(0);
+    setInteractions([]);
   };
 
   const handleUserSelect = () => {
-    dispatch(setSelectedUser(user));
+    dispatch(setSelectedUser(currentUser));
     dispatch(setCustomInteractions([]));
     handleDialogClose();
   };
@@ -102,7 +103,7 @@ function UserSelectDialog() {
         </Box>
         <TabPanel value={activeTab} index={0}>
           <Typography variant="h6" component="div">
-            Test User Simulator
+            Interactions Simulator
           </Typography>
           <Typography variant="body2" component="div">
             Create a test user based on his interactions.
@@ -110,9 +111,7 @@ function UserSelectDialog() {
           <Autocomplete
             multiple
             value={interactions}
-            onChange={(event, newValue) => {
-              setInteractions(newValue);
-            }}
+            onChange={(event, newValue) => setInteractions(newValue)}
             filterOptions={(x) => x}
             loading={itemsStatus === 'loading'}
             openOnFocus
@@ -158,21 +157,17 @@ function UserSelectDialog() {
             Select a user from the list of favourites.
           </Typography>
           <Autocomplete
-            disablePortal
-            value={user}
-            onChange={(event, newValue) => {
-              setUser(newValue);
-            }}
-            isOptionEqualToValue={(option, value) => option.id === value.id}
+            value={currentUser}
+            onChange={(event, newValue) => setCurrentUser(newValue)}
             options={favouriteUsers}
-            getOptionLabel={(u) => `User ${u.label}`}
+            getOptionLabel={(user) => `User ${user}`}
             sx={{ width: '100%', marginBottom: 2, marginTop: 2 }}
             renderInput={(params) => (
               <TextField {...params} variant="filled" label="Selected user" />
             )}
           />
           <Button
-            disabled={!user}
+            disabled={!currentUser}
             color="secondary"
             startIcon={<CheckIcon />}
             variant="contained"

@@ -3,7 +3,7 @@ import inspect
 import pkgutil
 import logging
 import sys
-from typing import Dict, Text
+from typing import Dict, List, Text
 
 from repsys.model import Model
 from repsys.dataset import Dataset
@@ -52,7 +52,7 @@ class ClassLoader:
                 self._create_instance(x)
 
 
-def load_models_pkg(models_pkg) -> Dict[Text, Model]:
+def load_models_pkg(models_pkg) -> List[Model]:
     logger.debug("Loading models package ...")
     model_loader = ClassLoader(Model)
     model_loader.register_package(models_pkg)
@@ -60,7 +60,7 @@ def load_models_pkg(models_pkg) -> Dict[Text, Model]:
     if len(model_loader.instances) == 0:
         raise Exception("At least one model must be defined.")
 
-    models = model_loader.instances
+    models = model_loader.instances.values()
 
     return models
 

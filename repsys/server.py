@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Text
+from typing import List
 from sanic import Sanic
 from sanic.response import json, file
 import numpy as np
@@ -12,7 +12,7 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[Text, Model], dataset: Dataset):
+def create_app(models: List[Model], dataset: Dataset):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -22,22 +22,19 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
     async def index(request):
         return await file(f"{static_folder}/index.html")
 
-    @app.route("/api/models")
-    def get_models(request):
-        return json([m.to_dict() for m in models.values()])
+    @app.route("/api/config")
+    def get_config(request):
+        return json({
+            "models": [m.to_dict() for m in models],
+            "dataset": {
+                "items": int(dataset.n_items),
+                "columns": dataset.items.columns.tolist(),
+            }
+        })
 
     @app.route("/api/users")
     def get_users(request):
         return json(dataset.vad_users)
-
-    @app.route("/api/dataset")
-    def get_dataset(request):
-        return json(
-            {
-                "items": int(dataset.n_items),
-                "columns": dataset.items.columns.tolist(),
-            }
-        )
 
     @app.route("/api/items")
     def get_items(request):
@@ -87,7 +84,7 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
         if not model_name:
             raise InvalidUsage("Model name must be specified.")
 
-        model = models.get(model_name)
+        model = [m for m in models if m.name() == model_name][0]
 
         if not model:
             raise NotFound(f"Model '{model_name}' was not found.")
@@ -120,6 +117,6 @@ def create_app(models: Dict[Text, Model], dataset: Dataset):
     return app
 
 
-def run_server(port: int, models: Dict[Text, Model], dataset: Dataset) -> None:
+def run_server(port: int, models: List[Model], dataset: Dataset) -> None:
     app = create_app(models, dataset)
     app.run(host="localhost", port=port, debug=False, access_log=False)

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import pickle
 from sklearn.neighbors import NearestNeighbors
+from sklearn.decomposition import TruncatedSVD
 
 from repsys import Model
 from repsys.web import Select
@@ -10,22 +11,26 @@ from repsys.web import Select
 # https://keras.io/examples/structured_data/collaborative_filtering_movielens/
 
 
-class KNN(Model):
-    def __init__(self, k=5):
+class BaseKNN(Model):
+    def __init__(self, k=15):
         self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
-
-    def name(self):
-        return "KNN"
 
     def _checkpoint_path(self):
         return os.path.join("./checkpoints", self.name())
 
+    def _serialize(self):
+        return self.model
+
+    def _unserialize(self, checkpoint):
+        self.model = checkpoint
+
     def _load_model(self):
-        self.model = pickle.load(open(self._checkpoint_path(), "rb"))
+        checkpoint = pickle.load(open(self._checkpoint_path(), "rb"))
+        self._unserialize(checkpoint)
 
     def _save_model(self):
         checkpoint = open(self._checkpoint_path(), "wb")
-        pickle.dump(self.model, checkpoint)
+        pickle.dump(self._serialize(), checkpoint)
 
     def fit(self, training):
         if training:
@@ -61,8 +66,6 @@ class KNN(Model):
             ]
         ).squeeze(axis=1)
 
-        predictions[X.toarray() > 0] = 0
-
         if kwargs.get("movie_genre"):
             genre = kwargs.get("movie_genre")
 
@@ -85,26 +88,41 @@ class KNN(Model):
         ]
 
 
-# class SVDKNN(KNN):
-#     def __init__(self, svd_components=20):
-#         super().__init__()
-#         self.svd = TruncatedSVD(n_components=svd_components, algorithm="arpack")
+class KNN(BaseKNN):
+    def name(self):
+        return "KNN"
 
-#     def name(self):
-#         return "SVDKNN"
+    def predict(self, X, **kwargs):
+        predictions = super().predict(X, **kwargs)
+        predictions[X.toarray() > 0] = 0
+        return predictions
 
-#     def fit(self):
-#         self.train_embed = self.svd.fit_transform(self.dataset.train_data)
-#         self.model.fit(self.train_embed)
 
-#     @erase_history
-#     def predict(self, X, **kwargs):
-#         X_embed = self.svd.transform(X)
-#         return super().predict(X_embed, **kwargs)
+class SVDKNN(BaseKNN):
+    def __init__(self, svd_components=50):
+        super().__init__()
+        self.svd = TruncatedSVD(n_components=svd_components, algorithm="arpack")
 
-#     def serialize(self):
-#         return {"knn": self.model, "svd": self.svd}
+    def name(self):
+        return "SVDKNN"
 
-#     def unserialize(self, state):
-#         self.model = state.get("knn")
-#         self.svd = state.get("svd")
+    def fit(self, training):
+        if training:
+            train_embed = self.svd.fit_transform(self.dataset.train_data)
+            self.model.fit(train_embed)
+            self._save_model()
+        else:
+            self._load_model()
+
+    def predict(self, X, **kwargs):
+        X_embed = self.svd.transform(X)
+        predictions = super().predict(X_embed, **kwargs)
+        predictions[X.toarray() > 0] = 0
+        return predictions
+
+    def _serialize(self):
+        return {"knn": self.model, "svd": self.svd}
+
+    def _unserialize(self, checkpoint):
+        self.model = checkpoint.get("knn")
+        self.svd = checkpoint.get("svd")

@@ -28,9 +28,7 @@ export const slice = createSlice({
       state.favouriteUsers.push(state.selectedUser);
     },
     removeUserFromFavourites: (state) => {
-      state.favouriteUsers = state.favouriteUsers.filter(
-        (user) => user.id !== state.selectedUser.id
-      );
+      state.favouriteUsers = state.favouriteUsers.filter((user) => user !== state.selectedUser);
     },
     setCustomInteractions: (state, { payload }) => {
       state.customInteractions = payload;

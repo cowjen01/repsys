@@ -16,7 +16,7 @@ def setup_logging(level):
 
 def main():
     sys.path.insert(1, os.getcwd())
-    setup_logging(logging.DEBUG)
+    setup_logging(logging.INFO)
 
     repsys(prog_name="repsys")
 

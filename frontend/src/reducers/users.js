@@ -3,13 +3,10 @@ import axios from 'axios';
 
 import { requestStateHandler } from './utils';
 
-export const fetchUsers = createAsyncThunk(
-  'users/fetchUsers',
-  async () => {
-    const response = await axios.get('/api/users');
-    return response.data;
-  }
-);
+export const fetchUsers = createAsyncThunk('users/fetchUsers', async () => {
+  const response = await axios.get('/api/users');
+  return response.data;
+});
 
 export const slice = createSlice({
   name: 'users',

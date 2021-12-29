@@ -120,6 +120,7 @@ function Layout({ children }) {
                     onChange={() => dispatch(toggleBuildMode())}
                   />
                 }
+                // label={buildMode ? 'Build Mode' : 'Preview Mode'}
                 label="Build Mode"
               />
             </Grid>

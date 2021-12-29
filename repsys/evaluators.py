@@ -1,97 +1,188 @@
+from typing import Text
 import numpy as np
-import matplotlib.pyplot as plt
-from jax import jit
+import os
+import glob
+from jax import jit, vmap, default_backend
 import jax.numpy as jnp
+import pandas as pd
+import functools
+from pandas import DataFrame
 
-# from repsys.metrics import recall
+from repsys.dataset import Dataset
+from repsys.model import Model
 
 
-@jit
-def recall_jax(X_pred_idx, X_true_binary, row_idx):
-    X_pred_binary = jnp.zeros_like(X_true_binary, dtype=bool)
-    X_pred_binary = X_pred_binary.at[row_idx, X_pred_idx].set(True)
-    tmp = (jnp.logical_and(X_true_binary, X_pred_binary).sum(axis=1)).astype(
-        jnp.float32
-    )
-    recall = tmp / jnp.minimum(X_pred_idx.shape[1], X_true_binary.sum(axis=1))
-    return recall
+def enforcedataset(func):
+    @functools.wraps(func)
+    def wrapper(self, *args, **kwargs):
+        if not hasattr(self, "dataset") or self.dataset is None:
+            raise Exception("The evaluator must be updated with a dataset.")
+        return func(self, *args, **kwargs)
+
+    return wrapper
 
 
 class ModelEvaluator:
-    def __init__(self) -> None:
-        self.metrics = {
-            # "Recall@5": {"method": self.recall, "args": {"k": 5}},
-            # "Recall@20": {"method": self.recall, "args": {"k": 20}},
-            # "Recall@50": {"method": self.recall, "args": {"k": 50}},
-            # "NCDG@100": {"method": self.ndcg, "args": {"k": 100}},
-        }
-        self.results = {}
+    def __init__(self, recall_steps=[5, 20, 50], ndcg_k=100) -> None:
+        self.recall_steps = recall_steps
+        self.ndcg_k = ndcg_k
+        self.results: DataFrame = None
+        self.dataset: Dataset = None
 
-    # def get_recall(self, X_pred, X_true, k=50):
-    #     # TODO use jax variant of argpartition once it will be implemented
-    #     idx = np.argpartition(-X_pred, k, axis=1)[:, :k]
-    #     return recall(X_pred, X_true, idx, k).block_until_ready()
+    def update_dataset(self, dataset: Dataset) -> None:
+        if not isinstance(dataset, Dataset):
+            raise Exception(
+                "The data must be an instance of the dataset class."
+            )
 
-    def ndcg(self, X_pred, heldout_batch, k=100):
-        batch_users = X_pred.shape[0]
-        idx_topk_part = np.argpartition(-X_pred, k, axis=1)
-        topk_part = X_pred[
-            np.arange(batch_users)[:, np.newaxis], idx_topk_part[:, :k]
-        ]
-        idx_part = np.argsort(-topk_part, axis=1)
-        idx_topk = idx_topk_part[
-            np.arange(batch_users)[:, np.newaxis], idx_part
-        ]
-        tp = 1.0 / np.log2(np.arange(2, k + 2))
+        self.dataset = dataset
 
-        DCG = (
-            heldout_batch[
-                np.arange(batch_users)[:, np.newaxis], idx_topk
-            ].toarray()
-            * tp
-        ).sum(axis=1)
-        IDCG = np.array(
-            [(tp[: min(n, k)]).sum() for n in heldout_batch.getnnz(axis=1)]
-        )
+    @classmethod
+    def _recall(cls, argsort_mask, argsort_idx, X_true_binary):
+        K = argsort_mask.sum()
+        # an array of row number indices
+        rows_idx = jnp.arange(X_true_binary.shape[0])[:, jnp.newaxis]
+        # increase col indices by 1 to make zero index available as a null value
+        argsort_idx = argsort_idx + 1
+        # keep only first K cols for each row, the rest set to zero
+        cols_idx = jnp.where(argsort_mask, argsort_idx, 0)
+        # create a binary matrix from indices
+        # the matrix has an increased dimension by 1 to hold the increased indices
+        X_pred_shape = (X_true_binary.shape[0], X_true_binary.shape[1] + 1)
+        X_pred_binary = jnp.zeros(X_pred_shape, dtype=bool)
+        X_pred_binary = X_pred_binary.at[rows_idx, cols_idx].set(True)
+        # remove the first column that holds unused indices
+        X_pred_binary = X_pred_binary[:, 1:]
+        tmp = (
+            jnp.logical_and(X_true_binary, X_pred_binary).sum(axis=1)
+        ).astype(jnp.float32)
+        # divide a sum of the agreed indices by a sum of the true indices
+        # to avoid dividing by zero, use the K value as a minimum
+        recall = tmp / jnp.minimum(K, X_true_binary.sum(axis=1))
+        return recall
+
+    @classmethod
+    def _ndcg(cls, ndcg_mask, argsort_idx, X_true):
+        K = argsort_idx.shape[1]
+        rows_idx = jnp.arange(X_true.shape[0])[:, jnp.newaxis]
+        tp = 1.0 / jnp.log2(jnp.arange(2, K + 2))
+        # the slowest part ...
+        DCG = (X_true[rows_idx, argsort_idx] * tp).sum(axis=1)
+        IDCG = jnp.where(ndcg_mask, tp, 0).sum(axis=1)
         return DCG / IDCG
 
-    def evaluate_model(self, model, X, heldout_batch):
+    @classmethod
+    def _partial_sort(cls, X_pred, k):
+        rows_idx = np.arange(X_pred.shape[0])[:, np.newaxis]
+        # put indices lower than K on the left side of array
+        idx_topk_part = np.argpartition(-X_pred, k, axis=1)
+        # select unordered top-K predictions
+        topk_part = X_pred[rows_idx, idx_topk_part[:, :k]]
+        # sort selected predictions by their value
+        idx_part = np.argsort(-topk_part, axis=1)
+        # select ordered indices of predictions
+        idx_topk = idx_topk_part[rows_idx, idx_part]
+        return idx_topk
+
+    def get_prediction_eval(self, X_pred, X_true):
+        recall_k = max(self.recall_steps)
+        max_k = max(recall_k, self.ndcg_k)
+
+        X_true_binary = X_true > 0
+        X_true_non_zero = X_true_binary.sum(axis=1)
+
+        # the slowest part ...
+        if default_backend() == "cpu":
+            # apply numpy argpartition and sort the rest
+            # at this momement, there is no JAX variant of argpartition
+            argsort_idx = self._partial_sort(X_pred, max_k)
+        else:
+            # sort predictions from the highest and keep top-K only
+            argsort_idx = jnp.argsort(-X_pred, axis=1)
+
+        # create a bin mask for each K starting with K true values
+        # [[T, T, F, F, ...], [T, T, T, T, F, ...]]
+        recall_mask = (
+            jnp.arange(recall_k)[:, jnp.newaxis] < jnp.array(self.recall_steps)
+        ).T
+        ndcg_mask = (
+            jnp.arange(self.ndcg_k)[:, jnp.newaxis]
+            < jnp.minimum(self.ndcg_k, X_true_non_zero)
+        ).T
+
+        # iter over the bin mask and push argsort indices as a static value
+        vmap_recall = vmap(self._recall, in_axes=(0, None, None), out_axes=0)
+        jitted_batch_recall = jit(vmap_recall)
+        recall_results = jitted_batch_recall(
+            recall_mask, argsort_idx[:, :recall_k], X_true_binary
+        )
+
+        jitted_ndcg = jit(self._ndcg)
+        ndcg_results = jitted_ndcg(
+            ndcg_mask, argsort_idx[:, : self.ndcg_k], X_true
+        )
+
+        # converting a device array to a numpy array we enfroce to wait for the results
+        # or it is possible to call block_until_ready()
+        data = {}
+        for i, k in enumerate(self.recall_steps):
+            data[f"recall@{k}"] = np.asarray(recall_results[i])
+
+        data[f"ndcg@{self.ndcg_k}"] = np.asarray(ndcg_results)
+
+        df = pd.DataFrame(data=data)
+
+        return df
+
+    def get_model_eval(self, model: Model, X, X_true):
         X_pred = model.predict(X)
-        self.results[model.name()] = {}
+        self.results = self.get_prediction_eval(X_pred, X_true)
 
-        for metric in self.metrics.items():
-            self.results[model.name()][metric[0]] = metric[1].get("method")(
-                X_pred, heldout_batch.toarray(), **metric[1].get("args")
+    @enforcedataset
+    def test_model_eval(self, model: Model):
+        self.get_model_eval(
+            model,
+            self.dataset.test_data_tr,
+            self.dataset.test_data_te.toarray(),
+        )
+
+    @enforcedataset
+    def vad_model_eval(self, model: Model):
+        self.get_model_eval(
+            model, self.dataset.vad_data_tr, self.dataset.vad_data_te.toarray()
+        )
+
+    @classmethod
+    def _print_metric(cls, metric, data):
+        print(
+            f"{metric}=%.5f (%.5f)"
+            % (
+                np.mean(data),
+                np.std(data) / np.sqrt(len(data)),
             )
+        )
 
-    def print_results(self):
-        for i, model in enumerate(self.results.keys()):
-            print(f"Model: {model}")
-            for result in self.results[model].items():
-                print(
-                    f"{result[0]}=%.5f (%.5f)"
-                    % (
-                        np.mean(result[1]),
-                        np.std(result[1]) / np.sqrt(len(result[1])),
-                    )
-                )
+    def print(self):
+        for metric, result in self.results.items():
+            for k, data in result.items():
+                self._print_metric(f"{metric}@{k}", data)
 
-            if i < len(self.results.keys()) - 1:
-                print("-------------")
+    def save(self, dir_path: Text):
+        for metric, results in self.results.items():
+            for k, data in results.items():
+                file_name = f"{metric}-{k}.npy"
+                file_path = os.path.join(dir_path, file_name)
+                with open(file_path, "wb") as f:
+                    np.save(f, data)
 
-    def plot_distributions(self):
-        for model in self.results.keys():
+    def load(self, dir_path: Text):
+        file_paths = glob.glob(os.path.join(dir_path, "*.npy"))
+        for file_path in file_paths:
+            file_name = os.path.basename(file_path)
+            metric, k = file_name.split(".")[0].split("-")
 
-            fig, axs = plt.subplots(
-                1, len(self.metrics.keys()), figsize=(15, 4)
-            )
+            if not self.results.get(metric):
+                self.results[metric] = {}
 
-            fig.suptitle(f"Model {model}", fontsize=16)
-
-            for i, result in enumerate(self.results[model].items()):
-                ax = axs[i]
-                ax.hist(result[1])
-                ax.set_title(result[0])
-
-            fig.tight_layout()
-            plt.show()
+            with open(file_path, "rb") as f:
+                self.results[metric][k] = np.load(f)

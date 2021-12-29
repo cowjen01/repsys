@@ -36,7 +36,7 @@ function UserInteractionsList() {
 
   useEffect(() => {
     if (selectedUser) {
-      dispatch(fetchInteractions(selectedUser.id));
+      dispatch(fetchInteractions(selectedUser));
     }
   }, [selectedUser, dispatch]);
 

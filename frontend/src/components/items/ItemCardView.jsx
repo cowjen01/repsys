@@ -13,21 +13,19 @@ function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick })
       >
         {image && (
           <CardMedia
-            sx={{ height: imageHeight, objectPosition: 'top', display: !imageLoaded ? 'none' : 'block' }}
+            sx={{
+              height: imageHeight,
+              objectPosition: 'top',
+              display: !imageLoaded ? 'none' : 'block',
+            }}
             component="img"
             image={image}
             onLoad={() => setImageLoaded(true)}
           />
         )}
-        {
-          !imageLoaded && (
-            <Skeleton
-              variant="rectangular"
-              height={imageHeight}
-              width="100%"
-            />
-          )
-        }
+        {image && !imageLoaded && (
+          <Skeleton variant="rectangular" height={imageHeight} width="100%" />
+        )}
         <CardContent>
           {caption && (
             <Typography noWrap sx={{ fontSize: 13 }} color="text.secondary" gutterBottom>

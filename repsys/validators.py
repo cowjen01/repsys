@@ -1,4 +1,4 @@
-from typing import Dict, Text, List, Optional
+from typing import Dict, Text, List
 from pandas import DataFrame
 import numpy as np
 import logging

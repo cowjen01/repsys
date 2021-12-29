@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Typography, Grid, Fab, Container } from '@mui/material';
+import { Grid, Fab, Container, Alert, AlertTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
 import { recommendersSelector, deleteRecommender } from '../reducers/recommenders';
@@ -13,16 +13,18 @@ import Layout from './Layout';
 import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
 import ConfirmDialog from './ConfirmDialog';
-import { fetchModels } from '../reducers/models';
+import { fetchConfig } from '../reducers/config';
 import { fetchUsers } from '../reducers/users';
+import { itemFieldsSelector } from '../reducers/settings';
 
 function App() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
+  const itemFields = useSelector(itemFieldsSelector);
 
   useEffect(() => {
-    dispatch(fetchModels());
+    dispatch(fetchConfig());
     dispatch(fetchUsers());
   }, []);
 
@@ -36,17 +38,28 @@ function App() {
 
   return (
     <Layout>
-      <Container maxWidth={!buildMode ? 'xl' : 'lg'}>
+      <Container maxWidth={buildMode && recommenders.length !== 0 ? 'lg' : 'xl'}>
         <Grid container spacing={!buildMode ? 4 : 3}>
-          {recommenders.length === 0 ? (
+          {!buildMode && !itemFields.title && recommenders.length > 0 && (
             <Grid item xs={12}>
-              <Typography sx={{ marginTop: 2 }} align="center" variant="h5">
-                {!buildMode
-                  ? 'There are no recommenders, switch to the Build Mode to create one.'
-                  : 'There are no recommenders, press the add button to create one.'}
-              </Typography>
+              <Alert severity="warning">
+                <AlertTitle>Views not configured</AlertTitle>
+                It is not configured how the data should be mapped to the view fields. Please open
+                the settings in the top-left menu and finish setup.
+              </Alert>
             </Grid>
-          ) : (
+          )}
+          {recommenders.length === 0 && (
+            <Grid item xs={12}>
+              <Alert severity="info">
+                <AlertTitle>Recommenders not configured</AlertTitle>
+                {!buildMode
+                  ? 'There are no recommenders, switch to the build mode to create one.'
+                  : 'There are no recommenders, press the add button to create one.'}
+              </Alert>
+            </Grid>
+          )}
+          {recommenders.length !== 0 && (itemFields.title || buildMode) && (
             <>
               <Grid item xs={12} lg={!buildMode ? 9 : 12}>
                 <Grid container spacing={3}>

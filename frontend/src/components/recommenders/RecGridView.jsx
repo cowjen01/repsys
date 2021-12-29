@@ -3,7 +3,7 @@ import pt from 'prop-types';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import { useSelector, useDispatch } from 'react-redux';
-import { Typography, Grid, Skeleton, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
+import { Typography, Grid, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
 
 import { ItemCardView } from '../items';
 import { fetchPredictions } from './api';
@@ -14,12 +14,14 @@ import {
   sessionRecordingSelector,
   addCustomInteraction,
 } from '../../reducers/root';
+import { itemFieldsSelector } from '../../reducers/settings';
 
 function RecGridView({ recommender }) {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const sessionRecording = useSelector(sessionRecordingSelector);
+  const itemFields = useSelector(itemFieldsSelector);
 
   const [page, setPage] = useState(0);
 
@@ -29,7 +31,7 @@ function RecGridView({ recommender }) {
     model,
     ...(selectedUser
       ? {
-          user: selectedUser.id,
+          user: selectedUser,
         }
       : {
           interactions: customInteractions.map((x) => x.id),
@@ -44,8 +46,8 @@ function RecGridView({ recommender }) {
     } else {
       dispatch(
         openItemDetailDialog({
-          title: item.title,
-          content: item.description,
+          title: item[itemFields.title],
+          content: item[itemFields.content],
         })
       );
     }
@@ -93,30 +95,30 @@ function RecGridView({ recommender }) {
             items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
               <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
                 <ItemCardView
-                  title={item.title}
-                  subtitle={item.subtitle}
-                  caption={item.caption}
-                  image={item.image}
+                  title={item[itemFields.title]}
+                  subtitle={item[itemFields.subtitle]}
+                  caption={item[itemFields.caption]}
+                  image={item[itemFields.image]}
                   imageHeight={Math.ceil(600 / itemsPerPage)}
                   onClick={() => handleItemClick(item)}
                 />
               </Grid>
             ))}
-          {isLoading &&
+          {/* {isLoading &&
             [...Array(itemsPerPage).keys()].map((i) => (
               <Grid key={i} item display="flex" md={12 / itemsPerPage}>
                 <Skeleton
                   variant="rectangular"
-                  height={Math.ceil(600 / itemsPerPage) + 100}
+                  height={Math.ceil(600 / itemsPerPage) + 50}
                   width="100%"
                 />
               </Grid>
-            ))}
+            ))} */}
           {!isLoading && !error && items.length === 0 && (
             <Grid item xs={12}>
               <Alert severity="warning">
                 <AlertTitle>No recommended items</AlertTitle>
-                The model has not returned any recommendations.
+                The model did not return any recommendations.
               </Alert>
             </Grid>
           )}

@@ -76,10 +76,17 @@ def latest_split_checkpoint() -> Optional[Text]:
     return latest_checkpoint("split-*.zip")
 
 
+def latest_eval_checkpoint() -> Optional[Text]:
+    return latest_checkpoint("eval-*.zip")
+
+
 def new_split_checkpoint():
     create_checkpoints_dir()
+    return os.path.join(
+        checkpoints_dir_path(), fill_timestamp("split-{ts}.zip")
+    )
 
-    path = fill_timestamp("split-{ts}.zip")
-    path = os.path.join(checkpoints_dir_path(), path)
 
-    return path
+def new_eval_checkpoint():
+    create_checkpoints_dir()
+    return os.path.join(checkpoints_dir_path(), fill_timestamp("eval-{ts}.zip"))

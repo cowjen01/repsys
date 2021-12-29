@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TextField, Autocomplete, Box, Chip } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -10,10 +10,7 @@ import {
   selectedUserSelector,
   setCustomInteractions,
 } from '../../reducers/root';
-import {
-  usersSelector,
-  usersStatusSelector
-} from '../../reducers/users';
+import { usersSelector, usersStatusSelector } from '../../reducers/users';
 import UserOptionsList from './UserOptionsList';
 import UserInteractionsList from './UserInteractionsList';
 
@@ -22,7 +19,7 @@ function UserPanel() {
   const sessionRecord = useSelector(sessionRecordingSelector);
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
-  const users = useSelector(usersSelector);
+  const usersData = useSelector(usersSelector);
   const usersStatus = useSelector(usersStatusSelector);
 
   const handleUserSelect = (event, user) => {
@@ -42,9 +39,8 @@ function UserPanel() {
         value={selectedUser}
         loading={usersStatus === 'loading'}
         onChange={handleUserSelect}
-        isOptionEqualToValue={(option, value) => option.id === value.id}
-        options={users}
-        getOptionLabel={(user) => `User ${user.label}`}
+        options={usersData}
+        getOptionLabel={(user) => `User ${user}`}
         sx={{ width: '100%', marginBottom: 2 }}
         renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
       />

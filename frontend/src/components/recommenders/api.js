@@ -35,7 +35,7 @@ export function fetchPredictions(body) {
         response.json().then((data) => {
           setIsLoading(false);
           setError(data.message);
-        })
+        });
       });
 
     return () => {
