@@ -7,6 +7,7 @@ import { createTheme, ThemeProvider } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import * as colors from '@mui/material/colors';
 import { PersistGate } from 'redux-persist/integration/react';
+import { BrowserRouter } from 'react-router-dom';
 
 import { store, persistor } from './store';
 import { darkModeSelector } from './reducers/settings';
@@ -21,12 +22,8 @@ function ThemeWrapper({ children }) {
         palette: {
           ...(!darkMode
             ? {
-                primary: {
-                  main: '#212121',
-                  light: '#484848',
-                  dark: '#000000',
-                },
-                secondary: colors.red,
+                primary: colors.amber,
+                secondary: colors.indigo,
                 background: {
                   default: '#fafafa',
                 },
@@ -49,16 +46,18 @@ ThemeWrapper.propTypes = {
 
 function Root() {
   return (
-    <Provider store={store}>
-      <PersistGate loading={null} persistor={persistor}>
-        <DndProvider backend={HTML5Backend}>
-          <ThemeWrapper>
-            <CssBaseline />
-            <App />
-          </ThemeWrapper>
-        </DndProvider>
-      </PersistGate>
-    </Provider>
+    <BrowserRouter>
+      <Provider store={store}>
+        <PersistGate loading={null} persistor={persistor}>
+          <DndProvider backend={HTML5Backend}>
+            <ThemeWrapper>
+              <CssBaseline />
+              <App />
+            </ThemeWrapper>
+          </DndProvider>
+        </PersistGate>
+      </Provider>
+    </BrowserRouter>
   );
 }
 

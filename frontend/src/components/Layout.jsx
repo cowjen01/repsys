@@ -6,6 +6,7 @@ import {
   AppBar,
   Typography,
   Switch,
+  Stack,
   FormControlLabel,
   Button,
   MenuItem,
@@ -19,11 +20,13 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useHotkeys } from 'react-hotkeys-hook';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import DashboardIcon from '@mui/icons-material/Dashboard';
-// import DonutSmallIcon from '@mui/icons-material/DonutSmall';
+import DonutSmallIcon from '@mui/icons-material/DonutSmall';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import SettingsIcon from '@mui/icons-material/Settings';
+import { Link as RouterLink } from 'react-router-dom';
+// import TableRowsIcon from '@mui/icons-material/TableRows';
 
-import { openSettingsDialog } from '../reducers/dialogs';
+import { openModelsEvalDialog, openSettingsDialog } from '../reducers/dialogs';
 import { buildModeSelector, toggleBuildMode } from '../reducers/root';
 
 function Layout({ children }) {
@@ -48,7 +51,61 @@ function Layout({ children }) {
     <>
       <AppBar position="fixed" elevation={2}>
         <Toolbar>
-          <Grid justifyContent="space-between" alignItems="center" container>
+          <Grid container direction="row" alignItems="center">
+            <BubbleChartIcon sx={{ marginRight: 1 }} />
+            <Typography variant="h6" component="div">
+              REPSYS
+            </Typography>
+          </Grid>
+          <Stack spacing={2} direction="row">
+            <Button
+              to="/"
+              component={RouterLink}
+              startIcon={<TableRowsIcon />}
+              color="inherit"
+              variant="text"
+            >
+              Previews
+            </Button>
+            <Button
+              to="/models"
+              component={RouterLink}
+              startIcon={<DonutSmallIcon />}
+              color="inherit"
+              variant="text"
+            >
+              Models
+            </Button>
+            <Button
+              startIcon={<SettingsIcon />}
+              color="inherit"
+              variant="text"
+              onClick={() => {
+                dispatch(openSettingsDialog());
+              }}
+            >
+              Settings
+            </Button>
+            {/* {buildSwitchVisible && (
+              <FormControlLabel
+                control={
+                  <Switch
+                    color="secondary"
+                    checked={buildMode}
+                    sx={{
+                      '& .MuiSwitch-track': {
+                        backgroundColor: '#fff',
+                      },
+                    }}
+                    onChange={() => dispatch(toggleBuildMode())}
+                  />
+                }
+                // label={buildMode ? 'Build Mode' : 'Preview Mode'}
+                label="Build Mode"
+              />
+            )} */}
+          </Stack>
+          {/* <Grid justifyContent="space-between" alignItems="center" container>
             <Grid item>
               <Button
                 startIcon={<DashboardIcon />}
@@ -76,14 +133,19 @@ function Layout({ children }) {
                   <ListItemIcon>
                     <TableRowsIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Recommenders</ListItemText>
+                  <ListItemText>Recommendations</ListItemText>
                 </MenuItem>
-                {/* <MenuItem onClick={handleMenuClose}>
+                <MenuItem
+                  onClick={() => {
+                    dispatch(openModelsEvalDialog());
+                    handleMenuClose();
+                  }}
+                >
                   <ListItemIcon>
                     <DonutSmallIcon fontSize="small" />
                   </ListItemIcon>
-                  <ListItemText>Dataset Analysis</ListItemText>
-                </MenuItem> */}
+                  <ListItemText>Models evaluation</ListItemText>
+                </MenuItem>
                 <Divider />
                 <MenuItem
                   onClick={() => {
@@ -106,25 +168,8 @@ function Layout({ children }) {
                 </Typography>
               </Grid>
             </Grid>
-            <Grid item>
-              <FormControlLabel
-                control={
-                  <Switch
-                    color="secondary"
-                    checked={buildMode}
-                    sx={{
-                      '& .MuiSwitch-track': {
-                        backgroundColor: '#fff',
-                      },
-                    }}
-                    onChange={() => dispatch(toggleBuildMode())}
-                  />
-                }
-                // label={buildMode ? 'Build Mode' : 'Preview Mode'}
-                label="Build Mode"
-              />
-            </Grid>
-          </Grid>
+
+          </Grid> */}
         </Toolbar>
       </AppBar>
       <Box

@@ -10,29 +10,32 @@ import {
   interactionsSelector,
   interactionsStatusSelector,
 } from '../../reducers/interactions';
+import { itemFieldsSelector } from '../../reducers/settings';
 
-const INTERACTIONS_HEIGHT = 330;
+const INTERACTIONS_HEIGHT = 300;
 
 function renderRow({ index, style, data }) {
-  const item = data[index];
+  const { interactions, itemFields } = data;
+  const item = interactions[index];
   return (
     <ItemListView
       style={style}
-      image={item.image}
       key={item.id}
       id={item.id}
-      title={item.title}
-      subtitle={item.subtitle}
+      title={item[itemFields.title]}
+      subtitle={item[itemFields.subtitle]}
+      image={item[itemFields.image]}
     />
   );
 }
 
-function UserInteractionsList() {
+function InteractionsList() {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const userInteractions = useSelector(interactionsSelector);
   const status = useSelector(interactionsStatusSelector);
+  const itemFields = useSelector(itemFieldsSelector);
 
   useEffect(() => {
     if (selectedUser) {
@@ -62,8 +65,11 @@ function UserInteractionsList() {
       </Typography>
       <FixedSizeList
         height={INTERACTIONS_HEIGHT}
-        itemData={interactions}
-        itemSize={70}
+        itemData={{
+          interactions,
+          itemFields,
+        }}
+        itemSize={60}
         itemCount={interactions.length}
       >
         {renderRow}
@@ -72,4 +78,4 @@ function UserInteractionsList() {
   );
 }
 
-export default UserInteractionsList;
+export default InteractionsList;

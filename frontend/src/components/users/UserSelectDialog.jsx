@@ -103,7 +103,7 @@ function UserSelectDialog() {
         </Box>
         <TabPanel value={activeTab} index={0}>
           <Typography variant="h6" component="div">
-            Interactions Simulator
+            User Simulator
           </Typography>
           <Typography variant="body2" component="div">
             Create a test user based on his interactions.
