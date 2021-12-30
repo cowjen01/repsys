@@ -32,10 +32,8 @@ function ConfirmDialog({ onConfirm }) {
         <DialogContentText>{dialog.content}</DialogContentText>
       </DialogContent>
       <DialogActions>
-        <Button color="secondary" onClick={handleClose}>
-          Cancel
-        </Button>
-        <Button color="secondary" onClick={handleConfirm} autoFocus>
+        <Button onClick={handleClose}>Cancel</Button>
+        <Button onClick={handleConfirm} autoFocus>
           Confirm
         </Button>
       </DialogActions>

@@ -1,7 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import pt from 'prop-types';
-import { Container, Grid } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
 import Plot from 'react-plotly.js';
 
 function IndicatorPlot({ title, value, min, max, width, height }) {
@@ -16,7 +14,7 @@ function IndicatorPlot({ title, value, min, max, width, height }) {
           gauge: { axis: { range: [min, max] } },
         },
       ]}
-      layout={{ width, height, paper_bgcolor: '#fafafa' }}
+      layout={{ width, height, margin: { b: 10, t: 50, l: 40, r: 40 } }}
     />
   );
 }
@@ -33,8 +31,8 @@ IndicatorPlot.propTypes = {
 IndicatorPlot.defaultProps = {
   min: 0,
   max: 100,
-  width: 350,
-  height: 300,
+  width: 200,
+  height: 150,
 };
 
 export default IndicatorPlot;

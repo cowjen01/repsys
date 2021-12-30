@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import pt from 'prop-types';
-import { Container, Grid } from '@mui/material';
+import { Container, Grid, Paper, Typography } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import Plot from 'react-plotly.js';
 
@@ -50,8 +50,11 @@ for (var i = 0; i < 500; i++) {
 function ModelsEvaluation() {
   return (
     <Container maxWidth="xl">
-      <Grid container direction="column">
-        <Grid item>
+      <Grid container direction="column" spacing={4}>
+        <Grid item xs={12}>
+          <Typography component="div" gutterBottom variant="h6">
+            Models summary
+          </Typography>
           <Plot
             data={summaryData.map((model) => ({
               x: Object.keys(model.metrics),
@@ -59,33 +62,27 @@ function ModelsEvaluation() {
               name: model.name,
               type: 'bar',
             }))}
-            layout={{ width: 800, height: 350, title: 'Models Evaluation Summary' }}
+            layout={{ width: 800, height: 350 }}
           />
         </Grid>
-        <Grid item xs={12}>
-          <Plot
-            data={Object.entries(summaryData[0].metrics).map(([metric, value], index) => ({
-              value: value * 100,
-              title: { text: metric },
-              type: 'indicator',
-              mode: 'gauge+number',
-              gauge: { axis: { range: [0, 100] } },
-              domain: { row: 0, column: index },
-            }))}
-            layout={{
-              // width: 1400,
-              // height: 300,
-              autosize: true,
-              // paper_bgcolor: '#fafafa',
-              margin: { t: 25, b: 25, l: 25, r: 25 },
-              grid: {
-                rows: 1,
-                columns: Object.keys(summaryData[0].metrics).length,
-                pattern: 'independent',
-              },
-            }}
-          />
-        </Grid>
+        {summaryData.map((model) => (
+          <Grid item xs={12} key={model.name}>
+            <Typography component="div" gutterBottom variant="h6">
+              Model {model.name}
+            </Typography>
+            <Paper sx={{ p: 2 }}>
+              {Object.entries(model.metrics).map(([metric, value]) => (
+                <IndicatorPlot
+                  width={200}
+                  height={150}
+                  key={metric}
+                  title={metric}
+                  value={value * 100}
+                />
+              ))}
+            </Paper>
+          </Grid>
+        ))}
       </Grid>
     </Container>
   );
