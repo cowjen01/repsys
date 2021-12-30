@@ -12,7 +12,7 @@ import {
 } from '../../reducers/interactions';
 import { itemFieldsSelector } from '../../reducers/settings';
 
-const INTERACTIONS_HEIGHT = 350;
+const INTERACTIONS_HEIGHT = 360;
 
 function renderRow({ index, style, data }) {
   const { interactions, itemFields } = data;

@@ -10,7 +10,8 @@ import {
   buildModeSelector,
   favouriteUsersSelector,
   selectedUserSelector,
-  toggleFavouriteUser,
+  addUserToFavourites,
+  removeUserFromFavourites,
 } from '../../reducers/root';
 import { openRecEditDialog } from '../../reducers/dialogs';
 import { RecEditView, RecGridView, RecEditDialog } from '../recommenders';
@@ -44,7 +45,11 @@ function App() {
   };
 
   const handleFavouriteToggle = () => {
-    dispatch(toggleFavouriteUser());
+    if (favouriteUsers.includes(selectedUser)) {
+      dispatch(removeUserFromFavourites(selectedUser));
+    } else {
+      dispatch(addUserToFavourites(selectedUser));
+    }
   };
 
   return (
@@ -101,25 +106,33 @@ function App() {
           sx={{
             position: 'absolute',
             bottom: 32,
-            right: 32,
+            left: 32,
           }}
+          variant="extended"
           onClick={handleRecommenderAdd}
           color="secondary"
         >
-          <AddIcon />
+          <AddIcon sx={{ mr: 1 }} />
+          Add recommender
         </Fab>
       )}
       {selectedUser && !buildMode && (
         <Fab
           onClick={handleFavouriteToggle}
+          variant="extended"
           color="secondary"
           sx={{
             position: 'absolute',
             bottom: 32,
-            right: 32,
+            left: 32,
           }}
         >
-          {!favouriteUsers.includes(selectedUser) ? <FavoriteBorderIcon /> : <FavoriteIcon />}
+          {!favouriteUsers.includes(selectedUser) ? (
+            <FavoriteBorderIcon sx={{ mr: 1 }} />
+          ) : (
+            <FavoriteIcon sx={{ mr: 1 }} />
+          )}
+          Favourite user
         </Fab>
       )}
     </Container>

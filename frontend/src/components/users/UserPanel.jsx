@@ -72,7 +72,12 @@ function UserPanel() {
               <BuildIcon />
             </ListItemIcon>
             <ListItemText primary="Build mode" />
-            <Switch edge="end" onChange={() => dispatch(toggleBuildMode())} checked={buildMode} />
+            <Switch
+              color="secondary"
+              edge="end"
+              onChange={() => dispatch(toggleBuildMode())}
+              checked={buildMode}
+            />
           </ListItem>
           <ListItem disablePadding>
             <ListItemButton disabled={sessionRecord || buildMode} onClick={handleSelectBtnClick}>

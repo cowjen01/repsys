@@ -24,12 +24,11 @@ export const slice = createSlice({
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
     },
-    toggleFavouriteUser: (state) => {
-      if (state.favouriteUsers.includes(state.selectedUser)) {
-        state.favouriteUsers = state.favouriteUsers.filter((user) => user !== state.selectedUser);
-      } else {
-        state.favouriteUsers.push(state.selectedUser);
-      }
+    addUserToFavourites: (state, { payload }) => {
+      state.favouriteUsers.push(payload);
+    },
+    removeUserFromFavourites: (state, { payload }) => {
+      state.favouriteUsers = state.favouriteUsers.filter((user) => user !== payload);
     },
     setCustomInteractions: (state, { payload }) => {
       state.customInteractions = payload;
@@ -43,10 +42,11 @@ export const slice = createSlice({
 export const {
   toggleBuildMode,
   setSelectedUser,
+  addUserToFavourites,
+  removeUserFromFavourites,
   toggleSessionRecording,
   addCustomInteraction,
   setCustomInteractions,
-  toggleFavouriteUser,
 } = slice.actions;
 
 export const buildModeSelector = (state) => state.root.buildMode;
