@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Grid, Fab, Container, Alert, AlertTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -19,8 +19,6 @@ import { UserPanel, UserSelectDialog } from '../users';
 import { ItemDetailDialog } from '../items';
 
 import ConfirmDialog from '../ConfirmDialog';
-import { fetchConfig } from '../../reducers/config';
-import { fetchUsers } from '../../reducers/users';
 import { itemFieldsSelector } from '../../reducers/settings';
 
 function App() {
@@ -30,11 +28,6 @@ function App() {
   const itemFields = useSelector(itemFieldsSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
   const selectedUser = useSelector(selectedUserSelector);
-
-  useEffect(() => {
-    dispatch(fetchConfig());
-    dispatch(fetchUsers());
-  }, []);
 
   const handleRecDeleteConfirm = ({ index }) => {
     dispatch(deleteRecommender(index));

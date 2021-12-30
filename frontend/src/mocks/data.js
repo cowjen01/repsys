@@ -1,7 +1,7 @@
 export const config = {
   models: [
     {
-      name: 'KNNFoo',
+      name: 'KNN',
       params: [
         {
           name: 'n',

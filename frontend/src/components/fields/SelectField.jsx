@@ -28,7 +28,7 @@ function SelectField({
     >
       {displayEmpty && <option value="">{null}</option>}
       {options.map((option) => (
-        <option key={option.value} value={option.value}>
+        <option key={option.value || 'empty'} value={option.value}>
           {option.label}
         </option>
       ))}

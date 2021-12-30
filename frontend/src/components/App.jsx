@@ -1,13 +1,22 @@
-import React from 'react';
-
+import React, { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
-import Layout from './Layout';
 
+import Layout from './Layout';
 import { ModelsEvaluation, RecPreviews } from './screens';
 import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
+import { fetchConfig } from '../reducers/config';
+import { fetchUsers } from '../reducers/users';
 
 function App() {
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    dispatch(fetchConfig());
+    dispatch(fetchUsers());
+  }, []);
+
   return (
     <Layout>
       <Routes>

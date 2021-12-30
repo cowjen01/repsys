@@ -17,6 +17,14 @@ const summaryData = [
       'Coverage@50': 0.8,
       'Coverage@100': 0.2,
     },
+    metricsPrev: {
+      'Recall@20': 0.2,
+      'Recall@50': 0.5,
+      'NDCG@100': 0.3,
+      'Coverage@20': 0.1,
+      'Coverage@50': 0.7,
+      'Coverage@100': 0.15,
+    },
   },
   {
     name: 'SVD',
@@ -55,31 +63,50 @@ function ModelsEvaluation() {
           <Typography component="div" gutterBottom variant="h6">
             Models summary
           </Typography>
-          <Plot
-            data={summaryData.map((model) => ({
-              x: Object.keys(model.metrics),
-              y: Object.values(model.metrics),
-              name: model.name,
-              type: 'bar',
-            }))}
-            layout={{ width: 800, height: 350 }}
-          />
+          <Grid container>
+            <Grid item xs={6}>
+              <Paper>
+                <Plot
+                  data={summaryData.map((model) => ({
+                    x: Object.keys(model.metrics),
+                    y: Object.values(model.metrics),
+                    name: model.name,
+                    type: 'bar',
+                  }))}
+                  layout={{
+                    width: 700,
+                    height: 300,
+                    font: { color: '#fff' },
+                    margin: { t: 40, l: 60 },
+                    paper_bgcolor: 'rgba(0,0,0,0)',
+                    plot_bgcolor: 'rgba(0,0,0,0)',
+                  }}
+                />
+              </Paper>
+            </Grid>
+          </Grid>
         </Grid>
         {summaryData.map((model) => (
           <Grid item xs={12} key={model.name}>
             <Typography component="div" gutterBottom variant="h6">
               Model {model.name}
             </Typography>
-            <Paper sx={{ p: 2 }}>
-              {Object.entries(model.metrics).map(([metric, value]) => (
-                <IndicatorPlot
-                  width={200}
-                  height={150}
-                  key={metric}
-                  title={metric}
-                  value={value * 100}
-                />
-              ))}
+            <Paper>
+              <Grid container>
+                {Object.entries(model.metrics).map(([metric, value]) => (
+                  <Grid item xs={2} key={metric}>
+                    <IndicatorPlot
+                      title={metric}
+                      value={value * 100}
+                      delta={
+                        model.metricsPrev && model.metricsPrev[metric]
+                          ? model.metricsPrev[metric] * 100
+                          : 0
+                      }
+                    />
+                  </Grid>
+                ))}
+              </Grid>
             </Paper>
           </Grid>
         ))}
