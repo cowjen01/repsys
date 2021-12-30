@@ -2,9 +2,16 @@ import React, { useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Grid, Fab, Container, Alert, AlertTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
 import { recommendersSelector, deleteRecommender } from '../../reducers/recommenders';
-import { buildModeSelector } from '../../reducers/root';
+import {
+  buildModeSelector,
+  favouriteUsersSelector,
+  selectedUserSelector,
+  toggleFavouriteUser,
+} from '../../reducers/root';
 import { openRecEditDialog } from '../../reducers/dialogs';
 import { RecEditView, RecGridView, RecEditDialog } from '../recommenders';
 import { UserPanel, UserSelectDialog } from '../users';
@@ -20,6 +27,8 @@ function App() {
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
   const itemFields = useSelector(itemFieldsSelector);
+  const favouriteUsers = useSelector(favouriteUsersSelector);
+  const selectedUser = useSelector(selectedUserSelector);
 
   useEffect(() => {
     dispatch(fetchConfig());
@@ -34,15 +43,19 @@ function App() {
     dispatch(openRecEditDialog(null));
   };
 
+  const handleFavouriteToggle = () => {
+    dispatch(toggleFavouriteUser());
+  };
+
   return (
-    <Container maxWidth={buildMode && recommenders.length !== 0 ? 'xl' : 'xl'}>
-      <Grid container spacing={!buildMode ? 4 : 4}>
+    <Container maxWidth="xl">
+      <Grid container spacing={4}>
         {!buildMode && !itemFields.title && recommenders.length > 0 && (
           <Grid item xs={12}>
             <Alert severity="warning">
               <AlertTitle>Views not configured</AlertTitle>
               It is not configured how the data should be mapped to the view fields. Please open the
-              settings in the top-left menu and finish setup.
+              settings in the top-right menu and finish setup.
             </Alert>
           </Grid>
         )}
@@ -58,7 +71,7 @@ function App() {
         )}
         {recommenders.length !== 0 && (itemFields.title || buildMode) && (
           <>
-            <Grid item xs={12} lg={!buildMode ? 9 : 9}>
+            <Grid item xs={12} lg={9}>
               <Grid container spacing={3}>
                 {recommenders.map((recommender, index) =>
                   !buildMode ? (
@@ -94,6 +107,19 @@ function App() {
           color="secondary"
         >
           <AddIcon />
+        </Fab>
+      )}
+      {selectedUser && !buildMode && (
+        <Fab
+          onClick={handleFavouriteToggle}
+          color='secondary'
+          sx={{
+            position: 'absolute',
+            bottom: 32,
+            right: 32,
+          }}
+        >
+          {!favouriteUsers.includes(selectedUser) ? <FavoriteBorderIcon /> : <FavoriteIcon />}
         </Fab>
       )}
     </Container>

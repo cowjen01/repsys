@@ -1,10 +1,7 @@
 import React from 'react';
 import {
-  TextField,
-  Autocomplete,
   Box,
   Chip,
-  FormControlLabel,
   Switch,
   List,
   ListItem,
@@ -15,27 +12,20 @@ import {
 } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import FavoriteIcon from '@mui/icons-material/Favorite';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import WifiIcon from '@mui/icons-material/Wifi';
 import BuildIcon from '@mui/icons-material/Build';
 
 import {
   sessionRecordingSelector,
-  setSelectedUser,
   customInteractionsSelector,
   selectedUserSelector,
   setCustomInteractions,
   toggleSessionRecording,
   buildModeSelector,
-  favouriteUsersSelector,
   toggleBuildMode,
-  removeUserFromFavourites,
-  addUserToFavourites,
+  setSelectedUser
 } from '../../reducers/root';
-import { usersSelector, usersStatusSelector } from '../../reducers/users';
 import InteractionsList from './InteractionsList';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
 import { interactionsSelector } from '../../reducers/interactions';
@@ -45,19 +35,12 @@ function UserPanel() {
   const sessionRecord = useSelector(sessionRecordingSelector);
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
-  const usersData = useSelector(usersSelector);
-  const usersStatus = useSelector(usersStatusSelector);
   const buildMode = useSelector(buildModeSelector);
-  const favouriteUsers = useSelector(favouriteUsersSelector);
   const userInteractions = useSelector(interactionsSelector);
-
-  const handleUserSelect = (event, user) => {
-    dispatch(setSelectedUser(user));
-    dispatch(setCustomInteractions([]));
-  };
 
   const handleDelete = () => {
     dispatch(setCustomInteractions([]));
+    dispatch(setSelectedUser(null))
   };
 
   const handleRecordBtnClick = () => {
@@ -82,55 +65,21 @@ function UserPanel() {
 
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
-      <Autocomplete
-        disablePortal
-        disabled={sessionRecord}
-        value={selectedUser}
-        loading={usersStatus === 'loading'}
-        onChange={handleUserSelect}
-        options={usersData}
-        getOptionLabel={(user) => `User ${user}`}
-        sx={{ width: '100%', marginBottom: 2 }}
-        renderInput={(params) => <TextField {...params} variant="filled" label="Selected user" />}
-      />
       <Paper>
-        {/* <FormControlLabel
-        sx={{ marginBottom: 1 }}
-        control={
-          <Switch
-            color="secondary"
-            checked={buildMode}
-            onChange={() => dispatch(toggleBuildMode())}
-          />
-        }
-        label={buildMode ? 'Build Mode' : 'Preview Mode'}
-      /> */}
-        <List dense>
-          {selectedUser && (
-            <ListItem disablePadding>
-              {favouriteUsers.includes(selectedUser) ? (
-                <ListItemButton onClick={() => dispatch(removeUserFromFavourites())}>
-                  <ListItemIcon>
-                    <FavoriteIcon color="secondary" />
-                  </ListItemIcon>
-                  <ListItemText primary="Remove from favourites" />
-                </ListItemButton>
-              ) : (
-                <ListItemButton onClick={() => dispatch(addUserToFavourites())}>
-                  <ListItemIcon>
-                    <FavoriteBorderIcon />
-                  </ListItemIcon>
-                  <ListItemText primary="Add to favourites" />
-                </ListItemButton>
-              )}
-            </ListItem>
-          )}
+        <List>
+          <ListItem disabled={sessionRecord}>
+            <ListItemIcon>
+              <BuildIcon />
+            </ListItemIcon>
+            <ListItemText primary="Build mode" />
+            <Switch edge="end" onChange={() => dispatch(toggleBuildMode())} checked={buildMode} />
+          </ListItem>
           <ListItem disablePadding>
             <ListItemButton disabled={sessionRecord} onClick={handleSelectBtnClick}>
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
-              <ListItemText primary="Search options" />
+              <ListItemText primary="User selection" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
@@ -138,26 +87,26 @@ function UserPanel() {
               <ListItemIcon>
                 <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
               </ListItemIcon>
-              <ListItemText primary={sessionRecord ? 'Stop recording' : 'Record session'} />
+              <ListItemText primary={sessionRecord ? 'Stop recording' : 'Session record'} />
             </ListItemButton>
-          </ListItem>
-          <ListItem>
-            <ListItemIcon>
-              <BuildIcon />
-            </ListItemIcon>
-            <ListItemText primary="Build mode" />
-            <Switch edge="end" onChange={() => dispatch(toggleBuildMode())} checked={buildMode} />
           </ListItem>
         </List>
       </Paper>
       {(selectedUser || customInteractions.length > 0) && (
         <Box sx={{ marginTop: 2 }}>
-          {customInteractions.length > 0 && (
+          {customInteractions.length > 0 ? (
             <Chip
               sx={{ marginBottom: 2 }}
               onDelete={handleDelete}
               icon={<FilterListIcon />}
               label="Custom interactions"
+            />
+          ) : (
+            <Chip
+              sx={{ marginBottom: 2 }}
+              onDelete={handleDelete}
+              icon={<FilterListIcon />}
+              label={`User ${selectedUser}`}
             />
           )}
           <InteractionsList />

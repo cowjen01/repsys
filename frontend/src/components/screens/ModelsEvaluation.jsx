@@ -4,6 +4,8 @@ import { Container, Grid } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import Plot from 'react-plotly.js';
 
+import { IndicatorPlot } from '../plots';
+
 const summaryData = [
   {
     name: 'KNN',
@@ -57,30 +59,32 @@ function ModelsEvaluation() {
               name: model.name,
               type: 'bar',
             }))}
-            layout={{ width: 500, height: 350, title: 'Models Evaluation Summary' }}
+            layout={{ width: 800, height: 350, title: 'Models Evaluation Summary' }}
           />
         </Grid>
-        <Grid item>
-          <Grid container>
-            {Object.entries(summaryData[0].metrics).map((metric, value) => (
-              <Grid item key={metric}>
-                <Plot
-                  data={[
-                    {
-                      domain: { x: [0, 100], y: [0, 100] },
-                      value: value * 100,
-                      title: { text: metric },
-                      type: 'indicator',
-                      mode: 'gauge+number',
-                      delta: { reference: 400 },
-                      gauge: { axis: { range: [0, 100] } },
-                    },
-                  ]}
-                  // layout={{ width: 500, height: 350, title: 'Models Evaluation Summary' }}
-                />
-              </Grid>
-            ))}
-          </Grid>
+        <Grid item xs={12}>
+          <Plot
+            data={Object.entries(summaryData[0].metrics).map(([metric, value], index) => ({
+              value: value * 100,
+              title: { text: metric },
+              type: 'indicator',
+              mode: 'gauge+number',
+              gauge: { axis: { range: [0, 100] } },
+              domain: { row: 0, column: index },
+            }))}
+            layout={{
+              // width: 1400,
+              // height: 300,
+              autosize: true,
+              // paper_bgcolor: '#fafafa',
+              margin: { t: 25, b: 25, l: 25, r: 25 },
+              grid: {
+                rows: 1,
+                columns: Object.keys(summaryData[0].metrics).length,
+                pattern: 'independent',
+              },
+            }}
+          />
         </Grid>
       </Grid>
     </Container>

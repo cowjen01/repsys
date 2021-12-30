@@ -21,6 +21,7 @@ import {
 } from '../../reducers/root';
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
 import { fetchItems, itemsSelector, itemsStatusSelector } from '../../reducers/items';
+import { usersSelector, usersStatusSelector } from '../../reducers/users';
 
 function TabPanel({ children, value, index, ...other }) {
   return (
@@ -44,6 +45,8 @@ function UserSelectDialog() {
   const itemsData = useSelector(itemsSelector);
   const itemsStatus = useSelector(itemsStatusSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
+  const usersData = useSelector(usersSelector);
+  const usersStatus = useSelector(usersStatusSelector);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [interactions, setInteractions] = useState([]);
@@ -52,6 +55,7 @@ function UserSelectDialog() {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    setCurrentUser(null);
   };
 
   const handleDialogClose = () => {
@@ -92,16 +96,45 @@ function UserSelectDialog() {
     <Drawer anchor="right" open={dialogOpen} onClose={handleDialogClose}>
       <Box
         sx={{
-          minWidth: 450,
+          width: 450,
         }}
       >
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange} centered>
+            <Tab label="Users" />
             <Tab label="Simulator" />
             <Tab label="Favourites" />
           </Tabs>
         </Box>
         <TabPanel value={activeTab} index={0}>
+          <Typography variant="h6" component="div">
+            User Selector
+          </Typography>
+          <Typography variant="body2" component="div">
+            Select a user from the list of validation users.
+          </Typography>
+          <Autocomplete
+            value={currentUser}
+            loading={usersStatus === 'loading'}
+            onChange={(event, newValue) => setCurrentUser(newValue)}
+            options={usersData}
+            getOptionLabel={(user) => `User ${user}`}
+            sx={{ marginBottom: 2, marginTop: 2 }}
+            renderInput={(params) => (
+              <TextField {...params} variant="filled" label="Selected user" />
+            )}
+          />
+          <Button
+            disabled={!currentUser}
+            color="secondary"
+            startIcon={<CheckIcon />}
+            variant="contained"
+            onClick={handleUserSelect}
+          >
+            Select user
+          </Button>
+        </TabPanel>
+        <TabPanel value={activeTab} index={1}>
           <Typography variant="h6" component="div">
             User Simulator
           </Typography>
@@ -118,7 +151,7 @@ function UserSelectDialog() {
             isOptionEqualToValue={(option, value) => option.id === value.id}
             options={itemsData}
             getOptionLabel={(item) => item.title}
-            sx={{ width: 400, marginBottom: 2, marginTop: 2 }}
+            sx={{ marginBottom: 2, marginTop: 2 }}
             onInputChange={handleQueryStringChange}
             renderInput={(params) => (
               <TextField
@@ -149,7 +182,7 @@ function UserSelectDialog() {
             Select Interactions
           </Button>
         </TabPanel>
-        <TabPanel value={activeTab} index={1}>
+        <TabPanel value={activeTab} index={2}>
           <Typography variant="h6" component="div">
             Favourite Users
           </Typography>
