@@ -46,7 +46,7 @@ export const {
   toggleSessionRecording,
   addCustomInteraction,
   setCustomInteractions,
-  toggleFavouriteUser
+  toggleFavouriteUser,
 } = slice.actions;
 
 export const buildModeSelector = (state) => state.root.buildMode;

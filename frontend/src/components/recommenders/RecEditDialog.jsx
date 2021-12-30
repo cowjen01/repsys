@@ -1,6 +1,14 @@
 import React, { useMemo, useCallback } from 'react';
 import { Formik, Field } from 'formik';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Grid,
+  Typography,
+} from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 
 import {
@@ -77,7 +85,7 @@ function RecEditDialog() {
 
   return (
     <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle>Recommender Configuration</DialogTitle>
+      <DialogTitle>Recommender settings</DialogTitle>
       {configStatus === 'succeeded' ? (
         <Formik
           initialValues={initialValues}
@@ -108,55 +116,73 @@ function RecEditDialog() {
             return (
               <>
                 <DialogContent>
-                  <Field name="title" label="Title" fullWidth component={TextField} />
-                  <Field
-                    name="itemsPerPage"
-                    label="Items per page"
-                    component={SelectField}
-                    options={[1, 3, 4].map((i) => ({ label: i, value: i }))}
-                  />
-                  <Field
-                    name="itemsLimit"
-                    label="Max number of items"
-                    component={TextField}
-                    type="number"
-                  />
-                  <Field
-                    name="model"
-                    label="Recommendation model"
-                    component={SelectField}
-                    options={[...models.map((m) => ({ label: m.name, value: m.name }))]}
-                    displayEmpty
-                  />
-                  {model &&
-                    model.params &&
-                    model.params.map((a) => {
-                      const name = `modelParams.${values.model}.${a.name}`;
-                      const props = {
-                        name,
-                        label: a.label,
-                      };
-                      if (a.type === 'select') {
-                        return (
+                  <Grid container direction="column" spacing={2}>
+                    <Grid item>
+                      <Typography variant="subtitle2" component="div">
+                        Appearance
+                      </Typography>
+                      <Field name="title" label="Title" fullWidth component={TextField} />
+                      <Grid container spacing={2}>
+                        <Grid item xs={6}>
                           <Field
-                            key={a.name}
+                            name="itemsPerPage"
+                            label="Items per page"
                             component={SelectField}
-                            options={a.options.map((b) => ({ label: b, value: b }))}
-                            {...props}
+                            options={[1, 3, 4].map((i) => ({ label: i, value: i }))}
                           />
-                        );
-                      }
-                      if (a.type === 'bool') {
-                        return <Field key={a.name} component={CheckboxField} {...props} />;
-                      }
-                      return <Field key={a.name} component={TextField} type={a.type} {...props} />;
-                    })}
+                        </Grid>
+                        <Grid item xs={6}>
+                          <Field
+                            name="itemsLimit"
+                            label="Max number of items"
+                            component={TextField}
+                            type="number"
+                          />
+                        </Grid>
+                      </Grid>
+                    </Grid>
+                    <Grid item>
+                      <Typography variant="subtitle2" component="div">
+                        Model configuration
+                      </Typography>
+                      <Field
+                        name="model"
+                        label="Model"
+                        component={SelectField}
+                        options={[...models.map((m) => ({ label: m.name, value: m.name }))]}
+                        displayEmpty
+                      />
+                      {model &&
+                        model.params &&
+                        model.params.map((a) => {
+                          const name = `modelParams.${values.model}.${a.name}`;
+                          const props = {
+                            name,
+                            label: a.label,
+                          };
+                          if (a.type === 'select') {
+                            return (
+                              <Field
+                                key={a.name}
+                                component={SelectField}
+                                options={a.options.map((b) => ({ label: b, value: b }))}
+                                {...props}
+                              />
+                            );
+                          }
+                          if (a.type === 'bool') {
+                            return <Field key={a.name} component={CheckboxField} {...props} />;
+                          }
+                          return (
+                            <Field key={a.name} component={TextField} type={a.type} {...props} />
+                          );
+                        })}
+                    </Grid>
+                  </Grid>
                 </DialogContent>
                 <DialogActions>
-                  <Button onClick={handleClose} color="secondary">
-                    Close
-                  </Button>
-                  <Button onClick={submitForm} color="secondary" disabled={isSubmitting} autoFocus>
+                  <Button onClick={handleClose}>Close</Button>
+                  <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
                     Save
                   </Button>
                 </DialogActions>

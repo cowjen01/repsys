@@ -112,7 +112,7 @@ function App() {
       {selectedUser && !buildMode && (
         <Fab
           onClick={handleFavouriteToggle}
-          color='secondary'
+          color="secondary"
           sx={{
             position: 'absolute',
             bottom: 32,

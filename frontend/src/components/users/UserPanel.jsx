@@ -24,7 +24,7 @@ import {
   toggleSessionRecording,
   buildModeSelector,
   toggleBuildMode,
-  setSelectedUser
+  setSelectedUser,
 } from '../../reducers/root';
 import InteractionsList from './InteractionsList';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
@@ -40,7 +40,7 @@ function UserPanel() {
 
   const handleDelete = () => {
     dispatch(setCustomInteractions([]));
-    dispatch(setSelectedUser(null))
+    dispatch(setSelectedUser(null));
   };
 
   const handleRecordBtnClick = () => {
@@ -75,7 +75,7 @@ function UserPanel() {
             <Switch edge="end" onChange={() => dispatch(toggleBuildMode())} checked={buildMode} />
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton disabled={sessionRecord} onClick={handleSelectBtnClick}>
+            <ListItemButton disabled={sessionRecord || buildMode} onClick={handleSelectBtnClick}>
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
@@ -83,7 +83,7 @@ function UserPanel() {
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
-            <ListItemButton onClick={handleRecordBtnClick}>
+            <ListItemButton disabled={buildMode} onClick={handleRecordBtnClick}>
               <ListItemIcon>
                 <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
               </ListItemIcon>

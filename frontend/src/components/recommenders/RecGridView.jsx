@@ -3,7 +3,7 @@ import pt from 'prop-types';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
 import { useSelector, useDispatch } from 'react-redux';
-import { Typography, Grid, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
+import { Skeleton, Typography, Grid, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
 
 import { ItemCardView } from '../items';
 import { fetchPredictions } from './api';
@@ -104,7 +104,7 @@ function RecGridView({ recommender }) {
                 />
               </Grid>
             ))}
-          {/* {isLoading &&
+          {isLoading &&
             [...Array(itemsPerPage).keys()].map((i) => (
               <Grid key={i} item display="flex" md={12 / itemsPerPage}>
                 <Skeleton
@@ -113,7 +113,7 @@ function RecGridView({ recommender }) {
                   width="100%"
                 />
               </Grid>
-            ))} */}
+            ))}
           {!isLoading && !error && items.length === 0 && (
             <Grid item xs={12}>
               <Alert severity="warning">

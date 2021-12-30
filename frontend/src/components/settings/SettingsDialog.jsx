@@ -63,7 +63,7 @@ function SettingsDialog() {
 
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle>Repsys Settings</DialogTitle>
+      <DialogTitle>Application settings</DialogTitle>
       {configStatus === 'succeeded' ? (
         <Formik
           initialValues={{
@@ -89,7 +89,7 @@ function SettingsDialog() {
                 <Grid container direction="column" spacing={2}>
                   <Grid item>
                     <Typography variant="subtitle2" component="div">
-                      Recommendations
+                      Recommenders
                     </Typography>
                     {['title', 'subtitle', 'caption', 'image', 'content'].map((field) => (
                       <Field
@@ -111,10 +111,8 @@ function SettingsDialog() {
                 </Grid>
               </DialogContent>
               <DialogActions>
-                <Button onClick={handleClose} color="secondary">
-                  Close
-                </Button>
-                <Button onClick={submitForm} color="secondary" disabled={isSubmitting} autoFocus>
+                <Button onClick={handleClose}>Close</Button>
+                <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
                   Save
                 </Button>
               </DialogActions>

@@ -34,7 +34,7 @@ IndicatorPlot.defaultProps = {
   min: 0,
   max: 100,
   width: 350,
-  height: 300
+  height: 300,
 };
 
 export default IndicatorPlot;

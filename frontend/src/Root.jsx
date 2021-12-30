@@ -22,8 +22,10 @@ function ThemeWrapper({ children }) {
         palette: {
           ...(!darkMode
             ? {
-                primary: colors.amber,
-                secondary: colors.indigo,
+                primary: {
+                  main: '#121212',
+                },
+                secondary: colors.amber,
                 background: {
                   default: '#fafafa',
                 },
