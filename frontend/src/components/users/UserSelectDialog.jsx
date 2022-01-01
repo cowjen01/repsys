@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import pt from 'prop-types';
 import {
   Box,
   Typography,
@@ -22,20 +21,7 @@ import {
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
 import { fetchItems, itemsSelector, itemsStatusSelector } from '../../reducers/items';
 import { usersSelector, usersStatusSelector } from '../../reducers/users';
-
-function TabPanel({ children, value, index, ...other }) {
-  return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
-      {value === index && <Box sx={{ p: 3 }}>{children}</Box>}
-    </div>
-  );
-}
-
-TabPanel.propTypes = {
-  children: pt.arrayOf(pt.element).isRequired,
-  value: pt.number.isRequired,
-  index: pt.number.isRequired,
-};
+import TabPanel from '../TabPanel';
 
 let timerID;
 
@@ -107,107 +93,113 @@ function UserSelectDialog() {
           </Tabs>
         </Box>
         <TabPanel value={activeTab} index={0}>
-          <Typography variant="h6" component="div">
-            User Selector
-          </Typography>
-          <Typography variant="body2" component="div">
-            Select a user from the list of validation users.
-          </Typography>
-          <Autocomplete
-            value={currentUser}
-            loading={usersStatus === 'loading'}
-            onChange={(event, newValue) => setCurrentUser(newValue)}
-            options={usersData}
-            getOptionLabel={(user) => `User ${user}`}
-            sx={{ marginBottom: 2, marginTop: 2 }}
-            renderInput={(params) => (
-              <TextField {...params} variant="filled" label="Selected user" />
-            )}
-          />
-          <Button
-            disabled={!currentUser}
-            color="secondary"
-            startIcon={<CheckIcon />}
-            variant="contained"
-            onClick={handleUserSelect}
-          >
-            Select user
-          </Button>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" component="div">
+              User Selector
+            </Typography>
+            <Typography variant="body2" component="div">
+              Select a user from the list of validation users.
+            </Typography>
+            <Autocomplete
+              value={currentUser}
+              loading={usersStatus === 'loading'}
+              onChange={(event, newValue) => setCurrentUser(newValue)}
+              options={usersData}
+              getOptionLabel={(user) => `User ${user}`}
+              sx={{ marginBottom: 2, marginTop: 2 }}
+              renderInput={(params) => (
+                <TextField {...params} variant="filled" label="Selected user" />
+              )}
+            />
+            <Button
+              disabled={!currentUser}
+              color="secondary"
+              startIcon={<CheckIcon />}
+              variant="contained"
+              onClick={handleUserSelect}
+            >
+              Select user
+            </Button>
+          </Box>
         </TabPanel>
         <TabPanel value={activeTab} index={1}>
-          <Typography variant="h6" component="div">
-            User Simulator
-          </Typography>
-          <Typography variant="body2" component="div">
-            Create a test user based on his interactions.
-          </Typography>
-          <Autocomplete
-            multiple
-            value={interactions}
-            onChange={(event, newValue) => setInteractions(newValue)}
-            filterOptions={(x) => x}
-            loading={itemsStatus === 'loading'}
-            openOnFocus
-            isOptionEqualToValue={(option, value) => option.id === value.id}
-            options={itemsData}
-            getOptionLabel={(item) => item.title}
-            sx={{ marginBottom: 2, marginTop: 2 }}
-            onInputChange={handleQueryStringChange}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                variant="filled"
-                label="User interactions"
-                InputProps={{
-                  ...params.InputProps,
-                  endAdornment: (
-                    <>
-                      {itemsStatus === 'loading' ? (
-                        <CircularProgress color="inherit" size={20} />
-                      ) : null}
-                      {params.InputProps.endAdornment}
-                    </>
-                  ),
-                }}
-              />
-            )}
-          />
-          <Button
-            disabled={interactions.length === 0}
-            color="secondary"
-            startIcon={<CheckIcon />}
-            variant="contained"
-            onClick={handleInteractionsSelect}
-          >
-            Select Interactions
-          </Button>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" component="div">
+              User Simulator
+            </Typography>
+            <Typography variant="body2" component="div">
+              Create a test user based on his interactions.
+            </Typography>
+            <Autocomplete
+              multiple
+              value={interactions}
+              onChange={(event, newValue) => setInteractions(newValue)}
+              filterOptions={(x) => x}
+              loading={itemsStatus === 'loading'}
+              openOnFocus
+              isOptionEqualToValue={(option, value) => option.id === value.id}
+              options={itemsData}
+              getOptionLabel={(item) => item.title}
+              sx={{ marginBottom: 2, marginTop: 2 }}
+              onInputChange={handleQueryStringChange}
+              renderInput={(params) => (
+                <TextField
+                  {...params}
+                  variant="filled"
+                  label="User interactions"
+                  InputProps={{
+                    ...params.InputProps,
+                    endAdornment: (
+                      <>
+                        {itemsStatus === 'loading' ? (
+                          <CircularProgress color="inherit" size={20} />
+                        ) : null}
+                        {params.InputProps.endAdornment}
+                      </>
+                    ),
+                  }}
+                />
+              )}
+            />
+            <Button
+              disabled={interactions.length === 0}
+              color="secondary"
+              startIcon={<CheckIcon />}
+              variant="contained"
+              onClick={handleInteractionsSelect}
+            >
+              Select Interactions
+            </Button>
+          </Box>
         </TabPanel>
         <TabPanel value={activeTab} index={2}>
-          <Typography variant="h6" component="div">
-            Favourite Users
-          </Typography>
-          <Typography variant="body2" component="div">
-            Select a user from the list of favourites.
-          </Typography>
-          <Autocomplete
-            value={currentUser}
-            onChange={(event, newValue) => setCurrentUser(newValue)}
-            options={favouriteUsers}
-            getOptionLabel={(user) => `User ${user}`}
-            sx={{ width: '100%', marginBottom: 2, marginTop: 2 }}
-            renderInput={(params) => (
-              <TextField {...params} variant="filled" label="Selected user" />
-            )}
-          />
-          <Button
-            disabled={!currentUser}
-            color="secondary"
-            startIcon={<CheckIcon />}
-            variant="contained"
-            onClick={handleUserSelect}
-          >
-            Select user
-          </Button>
+          <Box sx={{ p: 3 }}>
+            <Typography variant="h6" component="div">
+              Favourite Users
+            </Typography>
+            <Typography variant="body2" component="div">
+              Select a user from the list of favourites.
+            </Typography>
+            <Autocomplete
+              value={currentUser}
+              onChange={(event, newValue) => setCurrentUser(newValue)}
+              options={favouriteUsers}
+              getOptionLabel={(user) => `User ${user}`}
+              sx={{ width: '100%', marginBottom: 2, marginTop: 2 }}
+              renderInput={(params) => (
+                <TextField {...params} variant="filled" label="Selected user" />
+              )}
+            />
+            <Button
+              disabled={!currentUser}
+              color="secondary"
+              startIcon={<CheckIcon />}
+              variant="contained"
+              onClick={handleUserSelect}
+            >
+              Select user
+            </Button>
+          </Box>
         </TabPanel>
       </Box>
     </Drawer>

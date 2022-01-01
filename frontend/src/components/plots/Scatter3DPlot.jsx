@@ -32,7 +32,8 @@ function Scatter3DPlot({ x, y, z, color, height, ...props }) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { color: text.primary },
-        margin: { t: 30, b: 30, l: 30, r: 30 },
+        // uirevision: true,
+        margin: { t: 0, b: 0, l: 0, r: 0 },
       }}
       {...props}
     />
@@ -43,7 +44,7 @@ Scatter3DPlot.propTypes = {
   x: pt.arrayOf(pt.number).isRequired,
   y: pt.arrayOf(pt.number).isRequired,
   z: pt.arrayOf(pt.number).isRequired,
-  color: pt.arrayOf(pt.number),
+  color: pt.arrayOf(pt.oneOfType([pt.number, pt.string])),
   height: pt.oneOfType([pt.number, pt.string]),
 };
 

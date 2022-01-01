@@ -50,11 +50,9 @@ function InteractionsList() {
   }
 
   return (
-    <Paper>
+    <Paper sx={{ pl: 2, pr: 2 }}>
       <Typography
         sx={{
-          paddingLeft: '16px',
-          paddingRight: '16px',
           lineHeight: '48px',
           color: 'text.secondary',
         }}

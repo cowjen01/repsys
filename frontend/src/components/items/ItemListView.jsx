@@ -13,7 +13,7 @@ const typographyProps = {
 
 function ItemListView({ title, subtitle, image, style }) {
   return (
-    <ListItem style={style}>
+    <ListItem disableGutters style={style}>
       <ListItemAvatar>
         {image ? (
           <Avatar src={image} />
@@ -36,6 +36,7 @@ function ItemListView({ title, subtitle, image, style }) {
 ItemListView.defaultProps = {
   subtitle: '',
   image: null,
+  style: {},
 };
 
 ItemListView.propTypes = {
@@ -43,7 +44,7 @@ ItemListView.propTypes = {
   image: pt.string,
   title: pt.string.isRequired,
   // eslint-disable-next-line react/forbid-prop-types
-  style: pt.any.isRequired,
+  style: pt.any,
 };
 
 export default ItemListView;

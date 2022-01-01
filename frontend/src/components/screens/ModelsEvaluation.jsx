@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import pt from 'prop-types';
+import React, { useState, useMemo, useRef } from 'react';
 import {
   Container,
   Grid,
@@ -10,115 +9,123 @@ import {
   FormControl,
   InputLabel,
   Stack,
+  List,
+  Box,
+  Tabs,
+  Tab,
+  ListItem,
+  Chip,
+  Alert,
+  ListItemText,
 } from '@mui/material';
-import Plot from 'react-plotly.js';
 import Plotly from 'plotly.js';
-
-// Note: To make a plot responsive, i.e. to fill its containing element and resize when the window is resized, use style or className to set the dimensions of the element (i.e. using width: 100%; height: 100% or some similar values) and set useResizeHandler to true while setting layout.autosize to true and leaving layout.height and layout.width undefined. This can be seen in action in this CodePen and will implement the behaviour documented here: https://plot.ly/javascript/responsive-fluid-layout/
+import GroupIcon from '@mui/icons-material/Group';
 
 import { IndicatorPlot, HistogramPlot, Scatter3DPlot, BarPlot } from '../plots';
+import { ItemListView } from '../items';
+import TabPanel from '../TabPanel';
 
 const scatterData = [
-  { id: 1, x: 0.379, y: 0.289, z: 0.529, c: 7 },
-  { id: 2, x: 0.43, y: 0.164, z: 0.429, c: 10 },
-  { id: 3, x: 0.703, y: 0.211, z: 0.062, c: 5 },
-  { id: 4, x: 0.738, y: 0.91, z: 0.28, c: 10 },
-  { id: 5, x: 0.086, y: 0.651, z: 0.991, c: 1 },
-  { id: 6, x: 0.466, y: 0.008, z: 0.398, c: 7 },
-  { id: 7, x: 0.371, y: 0.373, z: 0.55, c: 1 },
-  { id: 8, x: 0.661, y: 0.644, z: 0.443, c: 7 },
-  { id: 9, x: 0.329, y: 0.508, z: 0.897, c: 9 },
-  { id: 10, x: 0.979, y: 0.72, z: 0.858, c: 9 },
-  { id: 11, x: 0.781, y: 0.529, z: 0.049, c: 10 },
-  { id: 12, x: 0.955, y: 0.361, z: 0.667, c: 1 },
-  { id: 13, x: 0.095, y: 0.111, z: 0.249, c: 4 },
-  { id: 14, x: 0.287, y: 0.101, z: 0.801, c: 3 },
-  { id: 15, x: 0.048, y: 0.508, z: 0.531, c: 2 },
-  { id: 16, x: 0.14, y: 0.216, z: 0.693, c: 9 },
-  { id: 17, x: 0.587, y: 0.692, z: 0.075, c: 6 },
-  { id: 18, x: 0.958, y: 0.609, z: 0.211, c: 1 },
-  { id: 19, x: 0.017, y: 0.382, z: 0.332, c: 9 },
-  { id: 20, x: 0.945, y: 0.634, z: 0.946, c: 10 },
-  { id: 21, x: 0.177, y: 0.756, z: 0.155, c: 10 },
-  { id: 22, x: 0.773, y: 0.053, z: 0.799, c: 3 },
-  { id: 23, x: 0.144, y: 0.276, z: 0.08, c: 3 },
-  { id: 24, x: 0.166, y: 0.125, z: 0.748, c: 2 },
-  { id: 25, x: 0.068, y: 0.246, z: 0.809, c: 8 },
-  { id: 26, x: 0.094, y: 0.807, z: 0.867, c: 9 },
-  { id: 27, x: 0.795, y: 0.818, z: 0.378, c: 6 },
-  { id: 28, x: 0.973, y: 0.21, z: 0.149, c: 6 },
-  { id: 29, x: 0.245, y: 0.55, z: 0.981, c: 4 },
-  { id: 30, x: 0.173, y: 0.867, z: 0.65, c: 9 },
-  { id: 31, x: 0.372, y: 0.514, z: 0.765, c: 5 },
-  { id: 32, x: 0.795, y: 0.934, z: 0.391, c: 2 },
-  { id: 33, x: 0.498, y: 0.917, z: 0.138, c: 8 },
-  { id: 34, x: 0.027, y: 0.232, z: 0.61, c: 1 },
-  { id: 35, x: 0.673, y: 0.244, z: 0.184, c: 8 },
-  { id: 36, x: 0.427, y: 0.217, z: 0.321, c: 4 },
-  { id: 37, x: 0.639, y: 0.847, z: 0.195, c: 1 },
-  { id: 38, x: 0.598, y: 0.337, z: 0.19, c: 8 },
-  { id: 39, x: 0.872, y: 0.415, z: 0.553, c: 7 },
-  { id: 40, x: 0.104, y: 0.693, z: 0.991, c: 2 },
-  { id: 41, x: 0.328, y: 0.772, z: 0.704, c: 8 },
-  { id: 42, x: 0.676, y: 0.2, z: 0.21, c: 4 },
-  { id: 43, x: 0.126, y: 0.915, z: 0.232, c: 2 },
-  { id: 44, x: 0.9, y: 0.564, z: 0.281, c: 3 },
-  { id: 45, x: 0.178, y: 0.33, z: 0.096, c: 1 },
-  { id: 46, x: 0.541, y: 0.324, z: 0.154, c: 3 },
-  { id: 47, x: 0.31, y: 0.029, z: 0.873, c: 6 },
-  { id: 48, x: 0.045, y: 0.79, z: 0.608, c: 4 },
-  { id: 49, x: 0.266, y: 0.014, z: 0.224, c: 5 },
-  { id: 50, x: 0.959, y: 0.077, z: 0.708, c: 4 },
-  { id: 51, x: 0.479, y: 0.644, z: 0.505, c: 1 },
-  { id: 52, x: 0.334, y: 0.322, z: 0.859, c: 1 },
-  { id: 53, x: 0.104, y: 0.931, z: 0.031, c: 10 },
-  { id: 54, x: 0.136, y: 0.156, z: 0.453, c: 5 },
-  { id: 55, x: 0.59, y: 0.478, z: 0.686, c: 10 },
-  { id: 56, x: 0.225, y: 0.954, z: 0.021, c: 7 },
-  { id: 57, x: 0.328, y: 0.689, z: 0.466, c: 9 },
-  { id: 58, x: 0.546, y: 0.826, z: 0.788, c: 1 },
-  { id: 59, x: 0.508, y: 0.594, z: 0.652, c: 8 },
-  { id: 60, x: 0.505, y: 0.487, z: 0.759, c: 9 },
-  { id: 61, x: 0.67, y: 0.286, z: 0.19, c: 9 },
-  { id: 62, x: 0.52, y: 0.05, z: 0.781, c: 7 },
-  { id: 63, x: 0.232, y: 0.756, z: 0.669, c: 1 },
-  { id: 64, x: 0.347, y: 0.772, z: 0.353, c: 3 },
-  { id: 65, x: 0.157, y: 0.544, z: 0.512, c: 6 },
-  { id: 66, x: 0.042, y: 0.081, z: 0.385, c: 2 },
-  { id: 67, x: 0.139, y: 0.635, z: 0.484, c: 4 },
-  { id: 68, x: 0.816, y: 0.231, z: 0.352, c: 3 },
-  { id: 69, x: 0.427, y: 0.073, z: 0.227, c: 4 },
-  { id: 70, x: 0.593, y: 0.527, z: 0.304, c: 4 },
-  { id: 71, x: 0.757, y: 0.839, z: 0.219, c: 7 },
-  { id: 72, x: 0.451, y: 0.913, z: 0.362, c: 4 },
-  { id: 73, x: 0.897, y: 0.26, z: 0.865, c: 10 },
-  { id: 74, x: 0.708, y: 0.066, z: 0.11, c: 5 },
-  { id: 75, x: 0.146, y: 0.01, z: 0.465, c: 2 },
-  { id: 76, x: 0.459, y: 0.668, z: 0.136, c: 6 },
-  { id: 77, x: 0.776, y: 0.807, z: 0.841, c: 4 },
-  { id: 78, x: 0.192, y: 0.417, z: 0.405, c: 1 },
-  { id: 79, x: 0.449, y: 0.329, z: 0.134, c: 6 },
-  { id: 80, x: 0.046, y: 0.869, z: 0.692, c: 6 },
-  { id: 81, x: 0.999, y: 0.74, z: 0.319, c: 1 },
-  { id: 82, x: 0.064, y: 0.807, z: 0.813, c: 2 },
-  { id: 83, x: 0.337, y: 0.349, z: 0.614, c: 8 },
-  { id: 84, x: 0.962, y: 0.005, z: 0.028, c: 6 },
-  { id: 85, x: 0.747, y: 0.111, z: 0.674, c: 2 },
-  { id: 86, x: 0.456, y: 0.945, z: 0.24, c: 10 },
-  { id: 87, x: 0.442, y: 0.324, z: 0.132, c: 4 },
-  { id: 88, x: 0.041, y: 0.858, z: 0.062, c: 1 },
-  { id: 89, x: 0.196, y: 0.817, z: 0.696, c: 1 },
-  { id: 90, x: 0.383, y: 0.351, z: 0.607, c: 4 },
-  { id: 91, x: 0.906, y: 0.904, z: 0.268, c: 1 },
-  { id: 92, x: 0.062, y: 0.036, z: 0.244, c: 1 },
-  { id: 93, x: 0.813, y: 0.57, z: 0.888, c: 6 },
-  { id: 94, x: 1.0, y: 0.624, z: 0.429, c: 10 },
-  { id: 95, x: 0.334, y: 0.707, z: 0.825, c: 5 },
-  { id: 96, x: 0.282, y: 0.591, z: 0.207, c: 10 },
-  { id: 97, x: 0.072, y: 0.643, z: 0.248, c: 2 },
-  { id: 98, x: 0.372, y: 0.031, z: 0.498, c: 1 },
-  { id: 99, x: 0.963, y: 0.546, z: 0.5, c: 5 },
-  { id: 100, x: 0.705, y: 0.285, z: 0.659, c: 7 },
+  { x: 0.379, y: 0.289, z: 0.529, c: 7 },
+  { x: 0.43, y: 0.164, z: 0.429, c: 10 },
+  { x: 0.703, y: 0.211, z: 0.062, c: 5 },
+  { x: 0.738, y: 0.91, z: 0.28, c: 10 },
+  { x: 0.086, y: 0.651, z: 0.991, c: 1 },
+  { x: 0.466, y: 0.008, z: 0.398, c: 7 },
+  { x: 0.371, y: 0.373, z: 0.55, c: 1 },
+  { x: 0.661, y: 0.644, z: 0.443, c: 7 },
+  { x: 0.329, y: 0.508, z: 0.897, c: 9 },
+  { x: 0.979, y: 0.72, z: 0.858, c: 9 },
+  { x: 0.781, y: 0.529, z: 0.049, c: 10 },
+  { x: 0.955, y: 0.361, z: 0.667, c: 1 },
+  { x: 0.095, y: 0.111, z: 0.249, c: 4 },
+  { x: 0.287, y: 0.101, z: 0.801, c: 3 },
+  { x: 0.048, y: 0.508, z: 0.531, c: 2 },
+  { x: 0.14, y: 0.216, z: 0.693, c: 9 },
+  { x: 0.587, y: 0.692, z: 0.075, c: 6 },
+  { x: 0.958, y: 0.609, z: 0.211, c: 1 },
+  { x: 0.017, y: 0.382, z: 0.332, c: 9 },
+  { x: 0.945, y: 0.634, z: 0.946, c: 10 },
+  { x: 0.177, y: 0.756, z: 0.155, c: 10 },
+  { x: 0.773, y: 0.053, z: 0.799, c: 3 },
+  { x: 0.144, y: 0.276, z: 0.08, c: 3 },
+  { x: 0.166, y: 0.125, z: 0.748, c: 2 },
+  { x: 0.068, y: 0.246, z: 0.809, c: 8 },
+  { x: 0.094, y: 0.807, z: 0.867, c: 9 },
+  { x: 0.795, y: 0.818, z: 0.378, c: 6 },
+  { x: 0.973, y: 0.21, z: 0.149, c: 6 },
+  { x: 0.245, y: 0.55, z: 0.981, c: 4 },
+  { x: 0.173, y: 0.867, z: 0.65, c: 9 },
+  { x: 0.372, y: 0.514, z: 0.765, c: 5 },
+  { x: 0.795, y: 0.934, z: 0.391, c: 2 },
+  { x: 0.498, y: 0.917, z: 0.138, c: 8 },
+  { x: 0.027, y: 0.232, z: 0.61, c: 1 },
+  { x: 0.673, y: 0.244, z: 0.184, c: 8 },
+  { x: 0.427, y: 0.217, z: 0.321, c: 4 },
+  { x: 0.639, y: 0.847, z: 0.195, c: 1 },
+  { x: 0.598, y: 0.337, z: 0.19, c: 8 },
+  { x: 0.872, y: 0.415, z: 0.553, c: 7 },
+  { x: 0.104, y: 0.693, z: 0.991, c: 2 },
+  { x: 0.328, y: 0.772, z: 0.704, c: 8 },
+  { x: 0.676, y: 0.2, z: 0.21, c: 4 },
+  { x: 0.126, y: 0.915, z: 0.232, c: 2 },
+  { x: 0.9, y: 0.564, z: 0.281, c: 3 },
+  { x: 0.178, y: 0.33, z: 0.096, c: 1 },
+  { x: 0.541, y: 0.324, z: 0.154, c: 3 },
+  { x: 0.31, y: 0.029, z: 0.873, c: 6 },
+  { x: 0.045, y: 0.79, z: 0.608, c: 4 },
+  { x: 0.266, y: 0.014, z: 0.224, c: 5 },
+  { x: 0.959, y: 0.077, z: 0.708, c: 4 },
+  { x: 0.479, y: 0.644, z: 0.505, c: 1 },
+  { x: 0.334, y: 0.322, z: 0.859, c: 1 },
+  { x: 0.104, y: 0.931, z: 0.031, c: 10 },
+  { x: 0.136, y: 0.156, z: 0.453, c: 5 },
+  { x: 0.59, y: 0.478, z: 0.686, c: 10 },
+  { x: 0.225, y: 0.954, z: 0.021, c: 7 },
+  { x: 0.328, y: 0.689, z: 0.466, c: 9 },
+  { x: 0.546, y: 0.826, z: 0.788, c: 1 },
+  { x: 0.508, y: 0.594, z: 0.652, c: 8 },
+  { x: 0.505, y: 0.487, z: 0.759, c: 9 },
+  { x: 0.67, y: 0.286, z: 0.19, c: 9 },
+  { x: 0.52, y: 0.05, z: 0.781, c: 7 },
+  { x: 0.232, y: 0.756, z: 0.669, c: 1 },
+  { x: 0.347, y: 0.772, z: 0.353, c: 3 },
+  { x: 0.157, y: 0.544, z: 0.512, c: 6 },
+  { x: 0.042, y: 0.081, z: 0.385, c: 2 },
+  { x: 0.139, y: 0.635, z: 0.484, c: 4 },
+  { x: 0.816, y: 0.231, z: 0.352, c: 3 },
+  { x: 0.427, y: 0.073, z: 0.227, c: 4 },
+  { x: 0.593, y: 0.527, z: 0.304, c: 4 },
+  { x: 0.757, y: 0.839, z: 0.219, c: 7 },
+  { x: 0.451, y: 0.913, z: 0.362, c: 4 },
+  { x: 0.897, y: 0.26, z: 0.865, c: 10 },
+  { x: 0.708, y: 0.066, z: 0.11, c: 5 },
+  { x: 0.146, y: 0.01, z: 0.465, c: 2 },
+  { x: 0.459, y: 0.668, z: 0.136, c: 6 },
+  { x: 0.776, y: 0.807, z: 0.841, c: 4 },
+  { x: 0.192, y: 0.417, z: 0.405, c: 1 },
+  { x: 0.449, y: 0.329, z: 0.134, c: 6 },
+  { x: 0.046, y: 0.869, z: 0.692, c: 6 },
+  { x: 0.999, y: 0.74, z: 0.319, c: 1 },
+  { x: 0.064, y: 0.807, z: 0.813, c: 2 },
+  { x: 0.337, y: 0.349, z: 0.614, c: 8 },
+  { x: 0.962, y: 0.005, z: 0.028, c: 6 },
+  { x: 0.747, y: 0.111, z: 0.674, c: 2 },
+  { x: 0.456, y: 0.945, z: 0.24, c: 10 },
+  { x: 0.442, y: 0.324, z: 0.132, c: 4 },
+  { x: 0.041, y: 0.858, z: 0.062, c: 1 },
+  { x: 0.196, y: 0.817, z: 0.696, c: 1 },
+  { x: 0.383, y: 0.351, z: 0.607, c: 4 },
+  { x: 0.906, y: 0.904, z: 0.268, c: 1 },
+  { x: 0.062, y: 0.036, z: 0.244, c: 1 },
+  { x: 0.813, y: 0.57, z: 0.888, c: 6 },
+  { x: 1.0, y: 0.624, z: 0.429, c: 10 },
+  { x: 0.334, y: 0.707, z: 0.825, c: 5 },
+  { x: 0.282, y: 0.591, z: 0.207, c: 10 },
+  { x: 0.072, y: 0.643, z: 0.248, c: 2 },
+  { x: 0.372, y: 0.031, z: 0.498, c: 1 },
+  { x: 0.963, y: 0.546, z: 0.5, c: 5 },
+  { x: 0.705, y: 0.285, z: 0.659, c: 7 },
 ];
 
 const histData = {
@@ -359,115 +366,247 @@ const summaryData = [
       'Coverage@100': 0.23,
     },
   },
-  {
-    name: 'VASP',
-    metrics: {
-      'Recall@20': 0.5,
-      'Recall@50': 0.6,
-      'NDCG@100': 0.6,
-      'Coverage@20': 0.6,
-      'Coverage@50': 0.8,
-      'Coverage@100': 0.5,
-    },
-  },
 ];
+
+const activeColor = '#ef553b';
+const defaultColor = '#DCDCDC';
 
 function ModelsEvaluation() {
   const [selectedModel, setSelectedModel] = useState(Object.keys(histData)[0]);
   const [selectedMetric, setSelectedMetric] = useState(Object.keys(histData[selectedModel][0])[0]);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+
+  const [activeTab, setActiveTab] = useState(0);
+
+  const histRef = useRef();
+
+  const handleTabChange = (event, newValue) => {
+    setActiveTab(newValue);
+  };
+
+  const resetHistSelection = () => {
+    setSelectedUsers([]);
+    Plotly.restyle(histRef.current.el, { selectedpoints: [null] });
+  };
+
+  const scatterColors = useMemo(() => {
+    if (selectedUsers.length === 0) {
+      return [];
+    }
+    const colors = [];
+    for (let i = 0; i < 100; i += 1) colors.push(defaultColor);
+    selectedUsers.forEach((p) => {
+      colors[p] = activeColor;
+    });
+    return colors;
+  }, [selectedUsers]);
+
+  const scatterPoints = useMemo(
+    () => ({
+      x: scatterData.map(({ x }) => x),
+      y: scatterData.map(({ y }) => y),
+      z: scatterData.map(({ z }) => z),
+    }),
+    []
+  );
+
   return (
     <Container maxWidth="xl">
       <Grid container direction="column" spacing={3}>
-        <Grid item xs={12}>
-          <Typography component="div" gutterBottom variant="h6">
-            Models Summary
-          </Typography>
-          <Grid container>
-            <Grid item xs={9}>
-              <Paper>
-                <BarPlot
-                  data={summaryData.map((model) => ({
-                    x: Object.keys(model.metrics),
-                    y: Object.values(model.metrics),
-                    name: model.name,
-                  }))}
-                  height={350}
-                />
-              </Paper>
+        {summaryData.length > 1 && (
+          <Grid item xs={12}>
+            <Typography component="div" variant="h6">
+              Models Summary
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom>
+              Metrics comparasion of the implemented models
+            </Typography>
+            <Grid container>
+              <Grid item xs={9}>
+                <Paper>
+                  <BarPlot
+                    data={summaryData.map((model) => ({
+                      x: Object.keys(model.metrics),
+                      y: Object.values(model.metrics),
+                      name: model.name,
+                    }))}
+                    height={350}
+                  />
+                </Paper>
+              </Grid>
             </Grid>
           </Grid>
-        </Grid>
-        <Grid item xs={6}>
-          <Typography component="div" gutterBottom variant="h6">
+        )}
+        <Grid item xs={12}>
+          <Typography component="div" variant="h6">
             Metrics Distribution
           </Typography>
-          <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-            <FormControl variant="filled" sx={{ width: 250 }}>
-              <InputLabel>Model</InputLabel>
-              <Select
-                value={selectedModel}
-                label="Model"
-                onChange={(e) => {
-                  setSelectedModel(e.target.value);
-                  setSelectedMetric(Object.keys(histData[selectedModel][0])[0]);
-                }}
-              >
-                {Object.keys(histData).map((model) => (
-                  <MenuItem key={model} value={model}>
-                    {model}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-            <FormControl variant="filled" sx={{ width: 250 }}>
-              <InputLabel>Metric</InputLabel>
-              <Select
-                value={selectedMetric}
-                label="Metric"
-                onChange={(e) => setSelectedMetric(e.target.value)}
-              >
-                {Object.keys(histData[selectedModel][0]).map((metric) => (
-                  <MenuItem key={metric} value={metric}>
-                    {metric}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Stack>
+          <Typography variant="subtitle1" gutterBottom>
+            A distribution of the metrics for each validation user
+          </Typography>
+
           <Grid container spacing={2}>
             <Grid item xs={7}>
-              <Paper>
+              <Paper sx={{ p: 2 }}>
+                <Stack direction="row" spacing={2}>
+                  <FormControl variant="filled" sx={{ width: 250 }}>
+                    <InputLabel>Model</InputLabel>
+                    <Select
+                      value={selectedModel}
+                      label="Model"
+                      onChange={(e) => {
+                        setSelectedModel(e.target.value);
+                        setSelectedMetric(Object.keys(histData[selectedModel][0])[0]);
+                        resetHistSelection();
+                      }}
+                    >
+                      {Object.keys(histData).map((model) => (
+                        <MenuItem key={model} value={model}>
+                          {model}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                  <FormControl variant="filled" sx={{ width: 250 }}>
+                    <InputLabel>Metric</InputLabel>
+                    <Select
+                      value={selectedMetric}
+                      label="Metric"
+                      onChange={(e) => {
+                        setSelectedMetric(e.target.value);
+                        resetHistSelection();
+                      }}
+                    >
+                      {Object.keys(histData[selectedModel][0]).map((metric) => (
+                        <MenuItem key={metric} value={metric}>
+                          {metric}
+                        </MenuItem>
+                      ))}
+                    </Select>
+                  </FormControl>
+                </Stack>
                 <HistogramPlot
                   data={histData[selectedModel].map((d) => d[selectedMetric])}
-                  height={400}
+                  height={350}
+                  innerRef={histRef}
                   onDeselect={() => {
-                    Plotly.restyle('scatter-plot', 'marker.color', [scatterData.map(({ c }) => c)]);
+                    setSelectedUsers([]);
                   }}
                   onSelected={(eventData) => {
                     if (eventData) {
                       const { points } = eventData;
                       const { selectedpoints } = points[0].data;
-                      const colors = [];
-                      for (let i = 0; i < 100; i += 1) colors.push('#c2a5cf');
-                      selectedpoints.forEach((p) => {
-                        colors[p] = '#7b3294';
-                      });
-                      Plotly.restyle('scatter-plot', 'marker.color', [colors]);
+                      setSelectedUsers(selectedpoints);
                     }
                   }}
                 />
               </Paper>
             </Grid>
             <Grid item xs={5}>
-              <Paper>
-                <Scatter3DPlot
-                  divId="scatter-plot"
-                  height={400}
-                  x={scatterData.map(({ x }) => x)}
-                  y={scatterData.map(({ y }) => y)}
-                  z={scatterData.map(({ z }) => z)}
-                  color={scatterData.map(({ c }) => c)}
-                />
+              <Paper sx={{ height: '100%' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs value={activeTab} onChange={handleTabChange}>
+                    <Tab label="Embeddings" />
+                    <Tab label="Insights" />
+                    <Tab label="Interactions" />
+                  </Tabs>
+                </Box>
+                {selectedUsers.length > 0 ? (
+                  <>
+                    <TabPanel value={activeTab} index={0}>
+                      <Box sx={{ p: 2 }}>
+                        {/* <Typography variant="subtitle2">Validation users embeddings</Typography> */}
+                        <Typography variant="body2" gutterBottom>
+                          A space of the embeddings created from users interactions.
+                        </Typography>
+                        <Scatter3DPlot
+                          height={320}
+                          x={scatterPoints.x}
+                          y={scatterPoints.y}
+                          z={scatterPoints.z}
+                          color={scatterColors}
+                        />
+                      </Box>
+                    </TabPanel>
+                    <TabPanel value={activeTab} index={1}>
+                      <Grid container spacing={3} sx={{ p: 2 }}>
+                        <Grid item xs={5}>
+                          {/* <Typography variant="subtitle2">Top Items</Typography> */}
+                          <Stack direction="column">
+                            <Chip label="30% users similarity" />
+                            <Chip label="34x avg. number of ratings" />
+                          </Stack>
+                        </Grid>
+                        <Grid item xs={7}>
+                          <Typography variant="subtitle2">The most interacted items</Typography>
+                          <Typography variant="body2">
+                            A list of items the users interacted with.
+                          </Typography>
+                        </Grid>
+                      </Grid>
+                    </TabPanel>
+                    <TabPanel value={activeTab} index={2}>
+                      <Box sx={{ p: 2 }}>
+                        <Typography variant="subtitle2">The most interacted items</Typography>
+                        <Typography variant="body2">
+                          A list of items the users interacted with the most.
+                        </Typography>
+                        <Grid container spacing={2}>
+                          <Grid item xs={6}>
+                            <List dense>
+                              <ItemListView
+                                title="Four Weddings and a Funeral (1994)"
+                                subtitle="Comedy, Drama, Romance"
+                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                              />
+                              <ItemListView
+                                title="Cutthroat Island (1995)"
+                                subtitle="Action, Adventure, Comedy"
+                              />
+                              <ItemListView
+                                title="Four Weddings and a Funeral (1994)"
+                                subtitle="Comedy, Drama, Romance"
+                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                              />
+                              <ItemListView
+                                title="Cutthroat Island (1995)"
+                                subtitle="Action, Adventure, Comedy"
+                              />
+                            </List>
+                          </Grid>
+                          <Grid item xs={6}>
+                            <List dense>
+                              <ItemListView
+                                title="Four Weddings and a Funeral (1994)"
+                                subtitle="Comedy, Drama, Romance"
+                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                              />
+                              <ItemListView
+                                title="Cutthroat Island (1995)"
+                                subtitle="Action, Adventure, Comedy"
+                              />
+                              <ItemListView
+                                title="Four Weddings and a Funeral (1994)"
+                                subtitle="Comedy, Drama, Romance"
+                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                              />
+                              <ItemListView
+                                title="Cutthroat Island (1995)"
+                                subtitle="Action, Adventure, Comedy"
+                              />
+                            </List>
+                          </Grid>
+                        </Grid>
+                      </Box>
+                    </TabPanel>
+                  </>
+                ) : (
+                  <Box sx={{ p: 2 }}>
+                    <Alert severity="info">
+                      To see the data, select a range of the users in the histogram plot.
+                    </Alert>
+                  </Box>
+                )}
               </Paper>
             </Grid>
           </Grid>
@@ -475,7 +614,7 @@ function ModelsEvaluation() {
         {summaryData.map((model) => (
           <Grid item xs={12} key={model.name}>
             <Typography component="div" gutterBottom variant="h6">
-              Model Metrics ({model.name})
+              Model Performance ({model.name})
             </Typography>
             <Paper>
               <Grid container>
