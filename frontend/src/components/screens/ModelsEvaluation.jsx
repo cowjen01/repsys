@@ -345,6 +345,8 @@ const summaryData = [
       'Coverage@20': 0.3,
       'Coverage@50': 0.8,
       'Coverage@100': 0.2,
+      'Novelty@10': 0.65,
+      'Recall@100': 0.32,
     },
     metricsPrev: {
       'Recall@20': 0.2,
@@ -364,6 +366,21 @@ const summaryData = [
       'Coverage@20': 0.36,
       'Coverage@50': 0.78,
       'Coverage@100': 0.23,
+      'Novelty@10': 0.32,
+      'Recall@100': 0.42,
+    },
+  },
+  {
+    name: 'VASP',
+    metrics: {
+      'Recall@20': 0.2,
+      'Recall@50': 0.5,
+      'NDCG@100': 0.23,
+      'Coverage@20': 0.36,
+      'Coverage@50': 0.78,
+      'Coverage@100': 0.23,
+      'Novelty@10': 0.43,
+      'Recall@100': 0.12,
     },
   },
 ];
@@ -376,12 +393,17 @@ function ModelsEvaluation() {
   const [selectedMetric, setSelectedMetric] = useState(Object.keys(histData[selectedModel][0])[0]);
   const [selectedUsers, setSelectedUsers] = useState([]);
 
-  const [activeTab, setActiveTab] = useState(0);
+  const [histTab, setHistTab] = useState(0);
+  const [modelTab, setModelTab] = useState(0);
 
   const histRef = useRef();
 
-  const handleTabChange = (event, newValue) => {
-    setActiveTab(newValue);
+  const handleHistTabChange = (event, newValue) => {
+    setHistTab(newValue);
+  };
+
+  const handleModelTabChange = (e, modelIndex) => {
+    setModelTab(modelIndex);
   };
 
   const resetHistSelection = () => {
@@ -412,31 +434,60 @@ function ModelsEvaluation() {
 
   return (
     <Container maxWidth="xl">
-      <Grid container direction="column" spacing={3}>
-        {summaryData.length > 1 && (
-          <Grid item xs={12}>
-            <Typography component="div" variant="h6">
-              Models Summary
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              Metrics comparasion of the implemented models
-            </Typography>
-            <Grid container>
-              <Grid item xs={9}>
+      <Grid container spacing={3}>
+        <Grid item xs={12}>
+          <Typography component="div" variant="h6">
+            Model Performance
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            A performance in the individual metrics with comparasion to the previous evaluation
+          </Typography>
+          <Grid container spacing={2}>
+            <Grid item xs={7}>
+              <Paper sx={{ height: '100%' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs value={modelTab} onChange={handleModelTabChange} variant="fullWidth">
+                    {summaryData.map((m) => (
+                      <Tab label={m.name} key={m.name} />
+                    ))}
+                  </Tabs>
+                </Box>
+                <Box sx={{ p: 2 }}>
+                  <Grid container>
+                    {Object.entries(summaryData[modelTab].metrics).map(([metric, value]) => (
+                      <Grid item xs={3} key={metric}>
+                        <IndicatorPlot
+                          title={metric}
+                          height={150}
+                          value={value * 100}
+                          delta={
+                            summaryData[0].metricsPrev && summaryData[0].metricsPrev[metric]
+                              ? summaryData[0].metricsPrev[metric] * 100
+                              : 0
+                          }
+                        />
+                      </Grid>
+                    ))}
+                  </Grid>
+                </Box>
+              </Paper>
+            </Grid>
+            {summaryData.length > 1 && (
+              <Grid item xs={5}>
                 <Paper>
                   <BarPlot
                     data={summaryData.map((model) => ({
-                      x: Object.keys(model.metrics),
-                      y: Object.values(model.metrics),
+                      y: Object.keys(model.metrics),
+                      x: Object.values(model.metrics),
                       name: model.name,
                     }))}
-                    height={350}
+                    height={400}
                   />
                 </Paper>
               </Grid>
-            </Grid>
+            )}
           </Grid>
-        )}
+        </Grid>
         <Grid item xs={12}>
           <Typography component="div" variant="h6">
             Metrics Distribution
@@ -444,7 +495,6 @@ function ModelsEvaluation() {
           <Typography variant="subtitle1" gutterBottom>
             A distribution of the metrics for each validation user
           </Typography>
-
           <Grid container spacing={2}>
             <Grid item xs={7}>
               <Paper sx={{ p: 2 }}>
@@ -505,18 +555,16 @@ function ModelsEvaluation() {
             <Grid item xs={5}>
               <Paper sx={{ height: '100%' }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={activeTab} onChange={handleTabChange}>
+                  <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
                     <Tab label="Embeddings" />
                     <Tab label="Insights" />
-                    <Tab label="Interactions" />
                   </Tabs>
                 </Box>
                 {selectedUsers.length > 0 ? (
                   <>
-                    <TabPanel value={activeTab} index={0}>
+                    <TabPanel value={histTab} index={0}>
                       <Box sx={{ p: 2 }}>
-                        {/* <Typography variant="subtitle2">Validation users embeddings</Typography> */}
-                        <Typography variant="body2" gutterBottom>
+                        <Typography variant="body2" sx={{ mb: 2 }}>
                           A space of the embeddings created from users interactions.
                         </Typography>
                         <Scatter3DPlot
@@ -528,7 +576,7 @@ function ModelsEvaluation() {
                         />
                       </Box>
                     </TabPanel>
-                    <TabPanel value={activeTab} index={1}>
+                    <TabPanel value={histTab} index={1}>
                       <Grid container spacing={3} sx={{ p: 2 }}>
                         <Grid item xs={5}>
                           {/* <Typography variant="subtitle2">Top Items</Typography> */}
@@ -542,68 +590,34 @@ function ModelsEvaluation() {
                           <Typography variant="body2">
                             A list of items the users interacted with.
                           </Typography>
+                          <List dense>
+                            <ItemListView
+                              title="Four Weddings and a Funeral (1994)"
+                              subtitle="Comedy, Drama, Romance"
+                              image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                            />
+                            <ItemListView
+                              title="Cutthroat Island (1995)"
+                              subtitle="Action, Adventure, Comedy"
+                            />
+                            <ItemListView
+                              title="Four Weddings and a Funeral (1994)"
+                              subtitle="Comedy, Drama, Romance"
+                              image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                            />
+                            <ItemListView
+                              title="Cutthroat Island (1995)"
+                              subtitle="Action, Adventure, Comedy"
+                            />
+                          </List>
                         </Grid>
                       </Grid>
-                    </TabPanel>
-                    <TabPanel value={activeTab} index={2}>
-                      <Box sx={{ p: 2 }}>
-                        <Typography variant="subtitle2">The most interacted items</Typography>
-                        <Typography variant="body2">
-                          A list of items the users interacted with the most.
-                        </Typography>
-                        <Grid container spacing={2}>
-                          <Grid item xs={6}>
-                            <List dense>
-                              <ItemListView
-                                title="Four Weddings and a Funeral (1994)"
-                                subtitle="Comedy, Drama, Romance"
-                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                              />
-                              <ItemListView
-                                title="Cutthroat Island (1995)"
-                                subtitle="Action, Adventure, Comedy"
-                              />
-                              <ItemListView
-                                title="Four Weddings and a Funeral (1994)"
-                                subtitle="Comedy, Drama, Romance"
-                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                              />
-                              <ItemListView
-                                title="Cutthroat Island (1995)"
-                                subtitle="Action, Adventure, Comedy"
-                              />
-                            </List>
-                          </Grid>
-                          <Grid item xs={6}>
-                            <List dense>
-                              <ItemListView
-                                title="Four Weddings and a Funeral (1994)"
-                                subtitle="Comedy, Drama, Romance"
-                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                              />
-                              <ItemListView
-                                title="Cutthroat Island (1995)"
-                                subtitle="Action, Adventure, Comedy"
-                              />
-                              <ItemListView
-                                title="Four Weddings and a Funeral (1994)"
-                                subtitle="Comedy, Drama, Romance"
-                                image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                              />
-                              <ItemListView
-                                title="Cutthroat Island (1995)"
-                                subtitle="Action, Adventure, Comedy"
-                              />
-                            </List>
-                          </Grid>
-                        </Grid>
-                      </Box>
                     </TabPanel>
                   </>
                 ) : (
                   <Box sx={{ p: 2 }}>
                     <Alert severity="info">
-                      To see the data, select a range of the users in the histogram plot.
+                      To see the details, select a range of users in the histogram plot.
                     </Alert>
                   </Box>
                 )}
@@ -611,30 +625,6 @@ function ModelsEvaluation() {
             </Grid>
           </Grid>
         </Grid>
-        {summaryData.map((model) => (
-          <Grid item xs={12} key={model.name}>
-            <Typography component="div" gutterBottom variant="h6">
-              Model Performance ({model.name})
-            </Typography>
-            <Paper>
-              <Grid container>
-                {Object.entries(model.metrics).map(([metric, value]) => (
-                  <Grid item xs={2} key={metric}>
-                    <IndicatorPlot
-                      title={metric}
-                      value={value * 100}
-                      delta={
-                        model.metricsPrev && model.metricsPrev[metric]
-                          ? model.metricsPrev[metric] * 100
-                          : 0
-                      }
-                    />
-                  </Grid>
-                ))}
-              </Grid>
-            </Paper>
-          </Grid>
-        ))}
       </Grid>
     </Container>
   );

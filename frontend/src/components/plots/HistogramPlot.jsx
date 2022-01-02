@@ -40,6 +40,7 @@ function HistogramPlot({ data, innerRef, height, ...props }) {
 HistogramPlot.propTypes = {
   data: pt.arrayOf(pt.number).isRequired,
   height: pt.oneOfType([pt.number, pt.string]),
+  // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
 };
 

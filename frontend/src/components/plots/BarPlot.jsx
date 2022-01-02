@@ -8,7 +8,7 @@ function BarPlot({ data, height, ...props }) {
   const { text } = theme.palette;
   return (
     <Plot
-      data={data.map((bar) => ({ ...bar, type: 'bar' }))}
+      data={data.map((bar) => ({ ...bar, type: 'bar', orientation: 'h' }))}
       style={{
         width: '100%',
         height,
@@ -19,7 +19,7 @@ function BarPlot({ data, height, ...props }) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { color: text.primary },
-        margin: { t: 40, b: 40, l: 40, r: 40 },
+        margin: { t: 30, b: 40, l: 120, r: 40 },
       }}
       {...props}
     />
@@ -29,8 +29,8 @@ function BarPlot({ data, height, ...props }) {
 BarPlot.propTypes = {
   data: pt.arrayOf(
     pt.shape({
-      x: pt.arrayOf(pt.string),
-      y: pt.arrayOf(pt.number),
+      x: pt.arrayOf(pt.number),
+      y: pt.arrayOf(pt.string),
       name: pt.string,
     })
   ).isRequired,

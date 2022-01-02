@@ -28,7 +28,7 @@ function IndicatorPlot({ title, value, min, max, height, delta }) {
         autosize: true,
         paper_bgcolor: 'rgba(0,0,0,0)',
         font: { color: text.primary },
-        margin: { b: 0, t: 50, l: 40, r: 40 },
+        margin: { b: 0, t: 30, l: 30, r: 30 },
       }}
     />
   );
