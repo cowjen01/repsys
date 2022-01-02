@@ -50,11 +50,12 @@ function InteractionsList() {
   }
 
   return (
-    <Paper sx={{ pl: 2, pr: 2 }}>
+    <Paper>
       <Typography
         sx={{
           lineHeight: '48px',
           color: 'text.secondary',
+          pl: '16px',
         }}
         variant="subtitle2"
         component="div"

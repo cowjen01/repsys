@@ -16,6 +16,7 @@ import {
   ListItem,
   Chip,
   Alert,
+  ListSubheader,
   ListItemText,
 } from '@mui/material';
 import Plotly from 'plotly.js';
@@ -556,41 +557,65 @@ function ModelsEvaluation() {
               <Paper sx={{ height: '100%' }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
-                    <Tab label="Embeddings" />
-                    <Tab label="Insights" />
+                    <Tab label="User embeddings" />
+                    <Tab label="User details" />
                   </Tabs>
                 </Box>
                 {selectedUsers.length > 0 ? (
                   <>
                     <TabPanel value={histTab} index={0}>
-                      <Box sx={{ p: 2 }}>
-                        <Typography variant="body2" sx={{ mb: 2 }}>
-                          A space of the embeddings created from users interactions.
-                        </Typography>
-                        <Scatter3DPlot
-                          height={320}
-                          x={scatterPoints.x}
-                          y={scatterPoints.y}
-                          z={scatterPoints.z}
-                          color={scatterColors}
-                        />
-                      </Box>
+                      <Scatter3DPlot
+                        height={380}
+                        x={scatterPoints.x}
+                        y={scatterPoints.y}
+                        z={scatterPoints.z}
+                        color={scatterColors}
+                      />
                     </TabPanel>
                     <TabPanel value={histTab} index={1}>
-                      <Grid container spacing={3} sx={{ p: 2 }}>
+                      <Grid container spacing={1} sx={{ p: 1 }}>
                         <Grid item xs={5}>
-                          {/* <Typography variant="subtitle2">Top Items</Typography> */}
-                          <Stack direction="column">
-                            <Chip label="30% users similarity" />
-                            <Chip label="34x avg. number of ratings" />
-                          </Stack>
+                          <List
+                            dense
+                            subheader={
+                              <ListSubheader component="div">Users Characteristic</ListSubheader>
+                            }
+                          >
+                            <ListItem>
+                              <ListItemText
+                                primary="45% users"
+                                secondary="Ratio of the selected users"
+                              />
+                            </ListItem>
+                            <ListItem>
+                              <ListItemText
+                                primary="30% similarity"
+                                secondary="Similarity between users"
+                              />
+                            </ListItem>
+                            <ListItem>
+                              <ListItemText
+                                primary="15.6 interactions"
+                                secondary="Avg. number of interactions"
+                              />
+                            </ListItem>
+                            <ListItem>
+                              <ListItemText
+                                primary="14% conformity"
+                                secondary="Ratio of items agreement"
+                              />
+                            </ListItem>
+                          </List>
                         </Grid>
                         <Grid item xs={7}>
-                          <Typography variant="subtitle2">The most interacted items</Typography>
-                          <Typography variant="body2">
-                            A list of items the users interacted with.
-                          </Typography>
-                          <List dense>
+                          <List
+                            dense
+                            subheader={
+                              <ListSubheader component="div">
+                                The Most Interacted Items
+                              </ListSubheader>
+                            }
+                          >
                             <ItemListView
                               title="Four Weddings and a Funeral (1994)"
                               subtitle="Comedy, Drama, Romance"
@@ -604,6 +629,10 @@ function ModelsEvaluation() {
                               title="Four Weddings and a Funeral (1994)"
                               subtitle="Comedy, Drama, Romance"
                               image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                            />
+                            <ItemListView
+                              title="Cutthroat Island (1995)"
+                              subtitle="Action, Adventure, Comedy"
                             />
                             <ItemListView
                               title="Cutthroat Island (1995)"

@@ -13,7 +13,7 @@ const typographyProps = {
 
 function ItemListView({ title, subtitle, image, style }) {
   return (
-    <ListItem disableGutters style={style}>
+    <ListItem style={style}>
       <ListItemAvatar>
         {image ? (
           <Avatar src={image} />
