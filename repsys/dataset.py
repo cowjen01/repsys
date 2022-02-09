@@ -208,6 +208,7 @@ class Dataset(ABC):
                 .tolist()
             )
             items[tags_col] = items[tags_col].fillna("")
+            items[tags_col] = items[tags_col].str.split(tags.sep)
 
         self.items = items
         self._is_fitted = True
@@ -308,7 +309,7 @@ class Dataset(ABC):
                 f.write("%s\n" % sid)
 
     def load(self, path: Text):
-        logger.debug(f"Loading dataset from '{path}'")
+        logger.info(f"Loading dataset from '{path}'")
 
         create_tmp_dir()
 

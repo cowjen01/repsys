@@ -71,7 +71,7 @@ function UserPanel() {
             <ListItemIcon>
               <BuildIcon />
             </ListItemIcon>
-            <ListItemText primary="Build mode" />
+            <ListItemText primary="Build Mode" />
             <Switch
               color="secondary"
               edge="end"
@@ -84,7 +84,7 @@ function UserPanel() {
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
-              <ListItemText primary="User selection" />
+              <ListItemText primary="User Selection" />
             </ListItemButton>
           </ListItem>
           <ListItem disablePadding>
@@ -92,7 +92,7 @@ function UserPanel() {
               <ListItemIcon>
                 <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
               </ListItemIcon>
-              <ListItemText primary={sessionRecord ? 'Stop recording' : 'Session record'} />
+              <ListItemText primary={sessionRecord ? 'Stop Recording' : 'Session Record'} />
             </ListItemButton>
           </ListItem>
         </List>

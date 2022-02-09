@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 
 import Layout from './Layout';
-import { ModelsEvaluation, RecPreviews } from './screens';
+import { DatasetEvaluation, ModelsEvaluation, RecPreviews } from './screens';
 import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
 import { fetchConfig } from '../reducers/config';
@@ -22,6 +22,7 @@ function App() {
       <Routes>
         <Route path="/" element={<RecPreviews />} />
         <Route path="/models" element={<ModelsEvaluation />} />
+        <Route path="/dataset" element={<DatasetEvaluation />} />
       </Routes>
       <Snackbar />
       <SettingsDialog />

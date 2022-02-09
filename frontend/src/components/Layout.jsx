@@ -7,6 +7,7 @@ import DonutSmallIcon from '@mui/icons-material/DonutSmall';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import SettingsIcon from '@mui/icons-material/Settings';
 import { Link as RouterLink } from 'react-router-dom';
+import EqualizerIcon from '@mui/icons-material/Equalizer';
 
 import { openSettingsDialog } from '../reducers/dialogs';
 
@@ -36,11 +37,20 @@ function Layout({ children }) {
             <Button
               to="/models"
               component={RouterLink}
-              startIcon={<DonutSmallIcon />}
+              startIcon={<EqualizerIcon />}
               color="inherit"
               variant="text"
             >
               Models
+            </Button>
+            <Button
+              to="/dataset"
+              component={RouterLink}
+              startIcon={<DonutSmallIcon />}
+              color="inherit"
+              variant="text"
+            >
+              Dataset
             </Button>
             <Button
               startIcon={<SettingsIcon />}

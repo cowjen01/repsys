@@ -63,7 +63,7 @@ function SettingsDialog() {
 
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle>Application settings</DialogTitle>
+      <DialogTitle>Application Settings</DialogTitle>
       {configStatus === 'succeeded' ? (
         <Formik
           initialValues={{
@@ -106,7 +106,7 @@ function SettingsDialog() {
                     <Typography variant="subtitle2" component="div">
                       Appearance
                     </Typography>
-                    <Field name="darkMode" label="Nightshift mode" component={CheckboxField} />
+                    <Field name="darkMode" label="Nightshift Mode" component={CheckboxField} />
                   </Grid>
                 </Grid>
               </DialogContent>

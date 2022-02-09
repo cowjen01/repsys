@@ -3,7 +3,7 @@ import pt from 'prop-types';
 import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
 
-function HistogramPlot({ data, innerRef, height, ...props }) {
+function HistogramPlot({ data, innerRef, layoutProps, height, ...props }) {
   const theme = useTheme();
   const { text } = theme.palette;
   return (
@@ -31,6 +31,7 @@ function HistogramPlot({ data, innerRef, height, ...props }) {
         font: { color: text.primary },
         uirevision: true,
         margin: { t: 20, b: 20, l: 20, r: 20 },
+        ...layoutProps,
       }}
       {...props}
     />
@@ -42,11 +43,14 @@ HistogramPlot.propTypes = {
   height: pt.oneOfType([pt.number, pt.string]),
   // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
+  // eslint-disable-next-line react/forbid-prop-types
+  layoutProps: pt.any,
 };
 
 HistogramPlot.defaultProps = {
   height: '100%',
   innerRef: null,
+  layoutProps: {},
 };
 
 export default HistogramPlot;

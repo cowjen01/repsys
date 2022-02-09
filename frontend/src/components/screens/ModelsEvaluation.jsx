@@ -4,27 +4,22 @@ import {
   Grid,
   Paper,
   Typography,
-  Select,
-  MenuItem,
-  FormControl,
-  InputLabel,
   Stack,
   List,
   Box,
   Tabs,
   Tab,
   ListItem,
-  Chip,
   Alert,
   ListSubheader,
   ListItemText,
 } from '@mui/material';
 import Plotly from 'plotly.js';
-import GroupIcon from '@mui/icons-material/Group';
 
-import { IndicatorPlot, HistogramPlot, Scatter3DPlot, BarPlot } from '../plots';
+import { IndicatorPlot, HistogramPlot, ScatterPlot, BarPlot } from '../plots';
 import { ItemListView } from '../items';
 import TabPanel from '../TabPanel';
+import { CategoryFilter } from '../filters';
 
 const scatterData = [
   { x: 0.379, y: 0.289, z: 0.529, c: 7 },
@@ -437,12 +432,15 @@ function ModelsEvaluation() {
     <Container maxWidth="xl">
       <Grid container spacing={3}>
         <Grid item xs={12}>
-          <Typography component="div" variant="h6">
-            Model Performance
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom>
-            A performance in the individual metrics with comparasion to the previous evaluation
-          </Typography>
+          <Box pl={1}>
+            <Typography component="div" variant="h6">
+              Models Performance
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom>
+              A performance in the individual metrics with comparasion to the previous evaluation
+            </Typography>
+          </Box>
+
           <Grid container spacing={2}>
             <Grid item xs={7}>
               <Paper sx={{ height: '100%' }}>
@@ -460,10 +458,10 @@ function ModelsEvaluation() {
                         <IndicatorPlot
                           title={metric}
                           height={150}
-                          value={value * 100}
+                          value={value}
                           delta={
                             summaryData[0].metricsPrev && summaryData[0].metricsPrev[metric]
-                              ? summaryData[0].metricsPrev[metric] * 100
+                              ? summaryData[0].metricsPrev[metric]
                               : 0
                           }
                         />
@@ -477,11 +475,15 @@ function ModelsEvaluation() {
               <Grid item xs={5}>
                 <Paper>
                   <BarPlot
+                    orientation="h"
                     data={summaryData.map((model) => ({
                       y: Object.keys(model.metrics),
                       x: Object.values(model.metrics),
                       name: model.name,
                     }))}
+                    layoutProps={{
+                      margin: { t: 30, b: 40, l: 120, r: 40 },
+                    }}
                     height={400}
                   />
                 </Paper>
@@ -490,51 +492,43 @@ function ModelsEvaluation() {
           </Grid>
         </Grid>
         <Grid item xs={12}>
-          <Typography component="div" variant="h6">
-            Metrics Distribution
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom>
-            A distribution of the metrics for each validation user
-          </Typography>
+          <Box pl={1}>
+            <Typography component="div" variant="h6">
+              Metrics Distribution
+            </Typography>
+            <Typography variant="subtitle1" gutterBottom>
+              A distribution of the metrics for each validation user
+            </Typography>
+          </Box>
           <Grid container spacing={2}>
             <Grid item xs={7}>
               <Paper sx={{ p: 2 }}>
                 <Stack direction="row" spacing={2}>
-                  <FormControl variant="filled" sx={{ width: 250 }}>
-                    <InputLabel>Model</InputLabel>
-                    <Select
-                      value={selectedModel}
-                      label="Model"
-                      onChange={(e) => {
-                        setSelectedModel(e.target.value);
-                        setSelectedMetric(Object.keys(histData[selectedModel][0])[0]);
-                        resetHistSelection();
-                      }}
-                    >
-                      {Object.keys(histData).map((model) => (
-                        <MenuItem key={model} value={model}>
-                          {model}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <FormControl variant="filled" sx={{ width: 250 }}>
-                    <InputLabel>Metric</InputLabel>
-                    <Select
-                      value={selectedMetric}
-                      label="Metric"
-                      onChange={(e) => {
-                        setSelectedMetric(e.target.value);
-                        resetHistSelection();
-                      }}
-                    >
-                      {Object.keys(histData[selectedModel][0]).map((metric) => (
-                        <MenuItem key={metric} value={metric}>
-                          {metric}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
+                  <CategoryFilter
+                    label="Model"
+                    value={selectedModel}
+                    onChange={(newValue) => {
+                      setSelectedModel(newValue);
+                      setSelectedMetric(Object.keys(histData[selectedModel][0])[0]);
+                      resetHistSelection();
+                    }}
+                    options={Object.keys(histData).map((model) => ({
+                      value: model,
+                      label: model,
+                    }))}
+                  />
+                  <CategoryFilter
+                    label="Metric"
+                    value={selectedMetric}
+                    onChange={(newValue) => {
+                      setSelectedMetric(newValue);
+                      resetHistSelection();
+                    }}
+                    options={Object.keys(histData[selectedModel][0]).map((metric) => ({
+                      value: metric,
+                      label: metric,
+                    }))}
+                  />
                 </Stack>
                 <HistogramPlot
                   data={histData[selectedModel].map((d) => d[selectedMetric])}
@@ -564,7 +558,7 @@ function ModelsEvaluation() {
                 {selectedUsers.length > 0 ? (
                   <>
                     <TabPanel value={histTab} index={0}>
-                      <Scatter3DPlot
+                      <ScatterPlot
                         height={380}
                         x={scatterPoints.x}
                         y={scatterPoints.y}

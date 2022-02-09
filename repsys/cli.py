@@ -220,7 +220,6 @@ def server(
     # remove_tmp_dir()
 
     # evaluator.print()
-
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
     run_server(port, models, dataset)
