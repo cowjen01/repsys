@@ -2,6 +2,7 @@ import React from 'react';
 import pt from 'prop-types';
 import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
+import { plotColors } from '../../const';
 
 function ScatterPlot({ x, y, label, meta, innerRef, color, height, ...props }) {
   const theme = useTheme();
@@ -26,7 +27,13 @@ function ScatterPlot({ x, y, label, meta, innerRef, color, height, ...props }) {
           unselected: {
             marker: {
               opacity: 1,
-              color: '#e8eaf6',
+              color: plotColors.unselectedMarker,
+            },
+          },
+          selected: {
+            marker: {
+              opacity: 1,
+              color: plotColors.selectedMarker,
             },
           },
           marker: {
@@ -44,7 +51,7 @@ function ScatterPlot({ x, y, label, meta, innerRef, color, height, ...props }) {
         uirevision: true,
         xaxis: { zeroline: false },
         yaxis: { zeroline: false },
-        margin: { t: 20, b: 20, l: 20, r: 20 },
+        margin: { t: 20, b: 20, l: 30, r: 20 },
       }}
       {...props}
     />
