@@ -3,6 +3,7 @@ import { Container, Grid, Typography, Box } from '@mui/material';
 
 import EmbeddingsPlot from './EmbeddingsPlot';
 import ItemDescriptionPanel from './ItemDescriptionPanel';
+import UserDescriptionPanel from './UserDescriptionPanel';
 
 const columns = {
   year: {
@@ -40,12 +41,16 @@ function DatasetEvaluation() {
               A space of item embeddings and their attributes to explore the primary space
             </Typography>
           </Box>
-          <Grid container spacing={2}>
-            <Grid item md={8} xs={12}>
-              <EmbeddingsPlot columns={columns} onSelect={(ids) => setSelectedItems(ids)} />
+          <Grid container spacing={2} sx={{ height: 560 }}>
+            <Grid item md={8} xs={12} sx={{ height: '100%' }}>
+              <EmbeddingsPlot
+                dataType="items"
+                columns={columns}
+                onSelect={(ids) => setSelectedItems(ids)}
+              />
             </Grid>
-            <Grid item xs={12} md={4}>
-              <ItemDescriptionPanel columns={columns} selectedItems={selectedItems} />
+            <Grid item xs={12} md={4} sx={{ height: '100%' }}>
+              <ItemDescriptionPanel columns={columns} itemIds={selectedItems} />
             </Grid>
           </Grid>
         </Grid>
@@ -58,14 +63,18 @@ function DatasetEvaluation() {
               A space of user embeddings to explore the primary space
             </Typography>
           </Box>
-          {/* <Grid container spacing={2}>
-            <Grid item md={8} xs={12}>
-              <EmbeddingsPlot columns={columns} onSelect={(ids) => setSelectedUsers(ids)} />
+          <Grid container spacing={2} sx={{ height: 560 }}>
+            <Grid item md={8} xs={12} sx={{ height: '100%' }}>
+              <EmbeddingsPlot
+                dataType="users"
+                columns={columns}
+                onSelect={(ids) => setSelectedUsers(ids)}
+              />
             </Grid>
-            <Grid item xs={12} md={4}>
-              <ItemDescriptionPanel columns={columns} selectedItems={selectedUsers} />
+            <Grid item xs={12} md={4} sx={{ height: '100%' }}>
+              <UserDescriptionPanel userIds={selectedUsers} />
             </Grid>
-          </Grid> */}
+          </Grid>
         </Grid>
       </Grid>
     </Container>

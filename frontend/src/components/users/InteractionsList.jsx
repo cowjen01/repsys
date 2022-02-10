@@ -12,7 +12,7 @@ import {
 } from '../../reducers/interactions';
 import { itemFieldsSelector } from '../../reducers/settings';
 
-const INTERACTIONS_HEIGHT = 360;
+const listHeight = 360;
 
 function renderRow({ index, style, data }) {
   const { interactions, itemFields } = data;
@@ -46,7 +46,7 @@ function InteractionsList() {
   const interactions = customInteractions.length ? customInteractions : userInteractions;
 
   if (selectedUser && status !== 'succeeded') {
-    return <Skeleton variant="rectangular" height={INTERACTIONS_HEIGHT + 48} width="100%" />;
+    return <Skeleton variant="rectangular" height={listHeight + 48} width="100%" />;
   }
 
   return (
@@ -63,7 +63,7 @@ function InteractionsList() {
         Interactions ({interactions.length})
       </Typography>
       <FixedSizeList
-        height={INTERACTIONS_HEIGHT}
+        height={listHeight}
         itemData={{
           interactions,
           itemFields,

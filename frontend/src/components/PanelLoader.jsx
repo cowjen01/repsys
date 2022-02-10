@@ -1,4 +1,5 @@
 import React from 'react';
+import pt from 'prop-types';
 import { Box, CircularProgress } from '@mui/material';
 
 function PanelLoader({ height }) {
@@ -15,8 +16,12 @@ function PanelLoader({ height }) {
   );
 }
 
+PanelLoader.propTypes = {
+  height: pt.number,
+};
+
 PanelLoader.defaultProps = {
-  height: 100,
+  height: 300,
 };
 
 export default PanelLoader;

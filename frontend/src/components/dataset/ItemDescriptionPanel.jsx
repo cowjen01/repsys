@@ -3,6 +3,7 @@ import { Paper, Typography, Stack, Box, Alert, Chip, CircularProgress } from '@m
 
 import { BarPlot } from '../plots';
 import PanelLoader from '../PanelLoader';
+import BarPlotHistogram from './BarPlotHistogram';
 
 const characteristics = {
   genres: {
@@ -25,7 +26,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function ItemDescriptionPanel({ columns, selectedItems }) {
+function ItemDescriptionPanel({ columns, itemIds }) {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -35,12 +36,12 @@ function ItemDescriptionPanel({ columns, selectedItems }) {
       setIsLoading(false);
     }
 
-    if (selectedItems.length) {
+    if (itemIds.length) {
       loadData();
     }
-  }, [selectedItems]);
+  }, [itemIds]);
 
-  if (!selectedItems.length) {
+  if (!itemIds.length) {
     return null;
   }
 
@@ -49,7 +50,7 @@ function ItemDescriptionPanel({ columns, selectedItems }) {
   }
 
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, maxHeight: '100%', overflow: 'auto' }}>
       <Stack spacing={2}>
         {Object.entries(characteristics).map(([col, data]) => (
           <Box key={col}>
@@ -71,23 +72,9 @@ function ItemDescriptionPanel({ columns, selectedItems }) {
             {columns[col].dtype === 'number' && (
               <>
                 <Typography gutterBottom variant="body2">
-                  Values distribution
+                  Attribute values distribution
                 </Typography>
-                <BarPlot
-                  height={150}
-                  layoutProps={{
-                    bargap: 0,
-                    xaxis: {
-                      tickfont: { size: 10 },
-                    },
-                  }}
-                  data={[
-                    {
-                      x: data.hist.map((_, index) => `${data.bins[index]}-${data.bins[index + 1]}`),
-                      y: data.hist,
-                    },
-                  ]}
-                />
+                <BarPlotHistogram bins={data.bins} hist={data.hist} />
               </>
             )}
           </Box>

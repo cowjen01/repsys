@@ -43,7 +43,7 @@ function SettingsDialog() {
       dispatch(setItemFields(values.itemFields));
       dispatch(
         openSnackbar({
-          message: 'All settings applied!',
+          message: 'All settings successfully applied!',
         })
       );
       handleClose();

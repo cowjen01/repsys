@@ -1,10 +1,163 @@
-import React, { useState, useMemo, useRef } from 'react';
-import { Paper, Stack, Backdrop, Box, CircularProgress } from '@mui/material';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { Paper, Stack, Backdrop, Box, CircularProgress, TextField } from '@mui/material';
 import Plotly from 'plotly.js';
 
 import { ScatterPlot } from '../plots';
 import { CategoryFilter } from '../filters';
 import { plotColors } from '../../const';
+
+const userEmbeddings = [
+  {
+    id: 1,
+    x: 0.89,
+    y: 0.4,
+  },
+  {
+    id: 2,
+    x: 0.3,
+    y: 0.29,
+  },
+  {
+    id: 3,
+    x: 0.41,
+    y: 0.25,
+  },
+  {
+    id: 4,
+    x: 0.56,
+    y: 0.59,
+  },
+  {
+    id: 5,
+    x: 0.37,
+    y: 0.73,
+  },
+  {
+    id: 6,
+    x: 0.32,
+    y: 0.33,
+  },
+  {
+    id: 7,
+    x: 0.68,
+    y: 0.95,
+  },
+  {
+    id: 8,
+    x: 0.25,
+    y: 0.44,
+  },
+  {
+    id: 9,
+    x: 0.71,
+    y: 0.39,
+  },
+  {
+    id: 10,
+    x: 0.35,
+    y: 0.87,
+  },
+  {
+    id: 11,
+    x: 0.19,
+    y: 0.16,
+  },
+  {
+    id: 12,
+    x: 0.47,
+    y: 0.26,
+  },
+  {
+    id: 13,
+    x: 0.46,
+    y: 0.99,
+  },
+  {
+    id: 14,
+    x: 0.44,
+    y: 0.32,
+  },
+  {
+    id: 15,
+    x: 0.4,
+    y: 0.9,
+  },
+  {
+    id: 16,
+    x: 0.28,
+    y: 0.78,
+  },
+  {
+    id: 17,
+    x: 0.54,
+    y: 0.08,
+  },
+  {
+    id: 18,
+    x: 0.13,
+    y: 0.73,
+  },
+  {
+    id: 19,
+    x: 0.42,
+    y: 0.27,
+  },
+  {
+    id: 20,
+    x: 0.16,
+    y: 0.11,
+  },
+  {
+    id: 21,
+    x: 0.8,
+    y: 0.11,
+  },
+  {
+    id: 22,
+    x: 0.21,
+    y: 0.89,
+  },
+  {
+    id: 23,
+    x: 0.15,
+    y: 0.83,
+  },
+  {
+    id: 24,
+    x: 0.84,
+    y: 0.19,
+  },
+  {
+    id: 25,
+    x: 0.16,
+    y: 0.13,
+  },
+  {
+    id: 26,
+    x: 0.96,
+    y: 0.76,
+  },
+  {
+    id: 27,
+    x: 0.32,
+    y: 0.39,
+  },
+  {
+    id: 28,
+    x: 0.52,
+    y: 0.99,
+  },
+  {
+    id: 29,
+    x: 0.18,
+    y: 0.93,
+  },
+  {
+    id: 30,
+    x: 0.68,
+    y: 0.34,
+  },
+];
 
 const itemEmbeddings = [
   {
@@ -137,13 +290,29 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function EmbeddingsPlot({ columns, onSelect }) {
-  const [isLoading, setIsLoading] = useState(false);
+function EmbeddingsPlot({ columns, onSelect, dataType }) {
+  const [embeddingsData, setEmbeddingsData] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedField, setSelectedField] = useState('');
   const [selectedValues, setSelectedValues] = useState([]);
-  const [isPlotSelection, setIsPlotSelection] = useState(false);
+  const [minInteractions, setMinInteractions] = useState(5);
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
+
+  useEffect(() => {
+    async function fetchData() {
+      setIsLoading(true);
+      await sleep(1000);
+      setIsLoading(false);
+    }
+    if (dataType === 'users') {
+      fetchData();
+      setEmbeddingsData(userEmbeddings);
+    } else {
+      fetchData();
+      setEmbeddingsData(itemEmbeddings);
+    }
+  }, []);
 
   const scatterColors = useMemo(() => {
     if (!highlightedPoints.length) {
@@ -151,7 +320,7 @@ function EmbeddingsPlot({ columns, onSelect }) {
     }
 
     const colors = [];
-    for (let i = 0; i < itemEmbeddings.length; i += 1) {
+    for (let i = 0; i < embeddingsData.length; i += 1) {
       colors.push(plotColors.unselectedMarker);
     }
 
@@ -181,12 +350,12 @@ function EmbeddingsPlot({ columns, onSelect }) {
 
   const scatterPoints = useMemo(
     () => ({
-      x: itemEmbeddings.map(({ x }) => x),
-      y: itemEmbeddings.map(({ y }) => y),
-      meta: itemEmbeddings.map(({ id }) => ({ id })),
-      label: itemEmbeddings.map(({ label }) => label),
+      x: embeddingsData.map(({ x }) => x),
+      y: embeddingsData.map(({ y }) => y),
+      meta: embeddingsData.map(({ id }) => ({ id })),
+      label: embeddingsData.map(({ label }) => label),
     }),
-    []
+    [isLoading]
   );
 
   const isMultipleSelect = useMemo(() => {
@@ -203,27 +372,28 @@ function EmbeddingsPlot({ columns, onSelect }) {
   };
 
   const resetScatterSelection = () => {
-    setIsPlotSelection(false);
     Plotly.restyle(scatterRef.current.el, { selectedpoints: [null] });
   };
 
   const handleFilterApply = async () => {
-    setIsLoading(true);
-    await sleep(500);
-    setIsLoading(false);
+    if (selectedValues.length) {
+      setIsLoading(true);
+      await sleep(500);
+      setIsLoading(false);
 
-    const ids = getItemIds(selectedField, selectedValues);
+      const ids = getItemIds(selectedField, selectedValues);
 
-    if (!ids.length) {
-      setHighlightedPoints([]);
-    } else {
-      const indices = itemEmbeddings.reduce((acc, item, index) => {
-        if (ids.includes(item.id)) {
-          acc.push(index);
-        }
-        return acc;
-      }, []);
-      setHighlightedPoints(indices);
+      if (!ids.length) {
+        setHighlightedPoints([]);
+      } else {
+        const indices = embeddingsData.reduce((acc, item, index) => {
+          if (ids.includes(item.id)) {
+            acc.push(index);
+          }
+          return acc;
+        }, []);
+        setHighlightedPoints(indices);
+      }
     }
   };
 
@@ -248,7 +418,6 @@ function EmbeddingsPlot({ columns, onSelect }) {
       const { points } = eventData;
       const itemsIds = points.map((p) => p.customdata.id);
       onSelect(itemsIds);
-      setIsPlotSelection(true);
       setHighlightedPoints(points[0].data.selectedpoints);
       resetFilterSelection();
     }
@@ -261,8 +430,12 @@ function EmbeddingsPlot({ columns, onSelect }) {
     resetFilterSelection();
   };
 
+  const handleMinInteractionsChange = (event) => {
+    setMinInteractions(event.target.value);
+  };
+
   return (
-    <Paper sx={{ p: 2 }}>
+    <Paper sx={{ p: 2, height: '100%' }}>
       <Stack direction="row" spacing={2}>
         <CategoryFilter
           label="Item attribute"
@@ -283,6 +456,19 @@ function EmbeddingsPlot({ columns, onSelect }) {
           onChange={handleValuesChange}
           options={filterOptions}
         />
+        {dataType === 'users' && (
+          <TextField
+            sx={{ minWidth: 250 }}
+            disabled={!selectedField}
+            label="Min. interactions"
+            type="number"
+            onBlur={handleFilterApply}
+            inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1 }}
+            onChange={handleMinInteractionsChange}
+            value={minInteractions}
+            variant="filled"
+          />
+        )}
       </Stack>
       <Box position="relative">
         {isLoading && (
@@ -298,7 +484,6 @@ function EmbeddingsPlot({ columns, onSelect }) {
             <CircularProgress color="inherit" />
           </Backdrop>
         )}
-
         <ScatterPlot
           height={450}
           x={scatterPoints.x}

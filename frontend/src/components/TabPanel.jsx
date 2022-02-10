@@ -1,23 +1,19 @@
 import React from 'react';
 import pt from 'prop-types';
+import { Box } from '@mui/material';
 
-function TabPanel({ children, value, index, padding, ...other }) {
+function TabPanel({ children, value, index, ...other }) {
   return (
-    <div role="tabpanel" hidden={value !== index} {...other}>
+    <Box role="tabpanel" hidden={value !== index} {...other}>
       {value === index ? children : null}
-    </div>
+    </Box>
   );
 }
-
-TabPanel.defaultProps = {
-  padding: 0,
-};
 
 TabPanel.propTypes = {
   children: pt.element.isRequired,
   value: pt.number.isRequired,
   index: pt.number.isRequired,
-  padding: pt.number,
 };
 
 export default TabPanel;
