@@ -18,8 +18,9 @@ import {
   setItemFields,
 } from '../../reducers/settings';
 import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
-import { configStatusSelector, datasetSelector } from '../../reducers/config';
 import { SelectField, CheckboxField } from '../fields';
+
+import { useGetConfigQuery } from '../../services/api';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -29,9 +30,9 @@ function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
   const dialogOpen = useSelector(settingsDialogSelector);
   const dispatch = useDispatch();
-  const configStatus = useSelector(configStatusSelector);
-  const dataset = useSelector(datasetSelector);
   const itemFields = useSelector(itemFieldsSelector);
+
+  const config = useGetConfigQuery();
 
   const handleClose = () => {
     dispatch(closeSettingsDialog());
@@ -52,19 +53,19 @@ function SettingsDialog() {
   );
 
   const itemColumnOptions = useMemo(() => {
-    if (configStatus !== 'succeeded') {
+    if (config.isLoading) {
       return [];
     }
 
-    const options = dataset.columns.map((col) => ({ label: col, value: col }));
+    const options = config.data.dataset.columns.map((col) => ({ label: col, value: col }));
 
     return ['', ...options];
-  }, [configStatus]);
+  }, [config.isLoading]);
 
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Application Settings</DialogTitle>
-      {configStatus === 'succeeded' ? (
+      {config.isSuccess ? (
         <Formik
           initialValues={{
             darkMode,

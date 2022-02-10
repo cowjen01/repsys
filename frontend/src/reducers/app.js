@@ -2,7 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 export const slice = createSlice({
-  name: 'root',
+  name: 'app',
   initialState: {
     buildMode: false,
     selectedUser: null,
@@ -49,14 +49,14 @@ export const {
   setCustomInteractions,
 } = slice.actions;
 
-export const buildModeSelector = (state) => state.root.buildMode;
+export const buildModeSelector = (state) => state.app.buildMode;
 
-export const selectedUserSelector = (state) => state.root.selectedUser;
+export const selectedUserSelector = (state) => state.app.selectedUser;
 
-export const favouriteUsersSelector = (state) => state.root.favouriteUsers;
+export const favouriteUsersSelector = (state) => state.app.favouriteUsers;
 
-export const sessionRecordingSelector = (state) => state.root.sessionRecording;
+export const sessionRecordingSelector = (state) => state.app.sessionRecording;
 
-export const customInteractionsSelector = (state) => state.root.customInteractions;
+export const customInteractionsSelector = (state) => state.app.customInteractions;
 
 export default slice.reducer;

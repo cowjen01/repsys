@@ -18,14 +18,16 @@ import {
 } from '../../reducers/recommenders';
 import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
 import { TextField, SelectField, CheckboxField } from '../fields';
-import { configStatusSelector, modelsSelector } from '../../reducers/config';
+import { useGetConfigQuery } from '../../services/api';
 
 function RecEditDialog() {
   const dialog = useSelector(recEditDialogSelector);
   const dispatch = useDispatch();
-  const configStatus = useSelector(configStatusSelector);
-  const models = useSelector(modelsSelector);
   const recommenders = useSelector(recommendersSelector);
+
+  const config = useGetConfigQuery();
+
+  const models = config.data ? config.data.models : [];
 
   const handleClose = () => {
     dispatch(closeRecEditDialog());
@@ -53,7 +55,7 @@ function RecEditDialog() {
   );
 
   const initialValues = useMemo(() => {
-    if (configStatus !== 'succeeded') {
+    if (config.isLoading) {
       return null;
     }
 
@@ -81,12 +83,12 @@ function RecEditDialog() {
     }
 
     return data;
-  }, [dialog, configStatus]);
+  }, [dialog, config.isLoading]);
 
   return (
     <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Recommender settings</DialogTitle>
-      {configStatus === 'succeeded' ? (
+      {!config.isLoading ? (
         <Formik
           initialValues={initialValues}
           validate={(values) => {

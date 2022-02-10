@@ -1,16 +1,13 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Paper, Skeleton, Typography } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
+import { useSelector } from 'react-redux';
 import { FixedSizeList } from 'react-window';
 
 import { ItemListView } from '../items';
-import { customInteractionsSelector, selectedUserSelector } from '../../reducers/root';
-import {
-  fetchInteractions,
-  interactionsSelector,
-  interactionsStatusSelector,
-} from '../../reducers/interactions';
+import { customInteractionsSelector, selectedUserSelector } from '../../reducers/app';
 import { itemFieldsSelector } from '../../reducers/settings';
+
+import { useGetInteractionsByUserQuery } from '../../services/api';
 
 const listHeight = 360;
 
@@ -30,22 +27,17 @@ function renderRow({ index, style, data }) {
 }
 
 function InteractionsList() {
-  const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
-  const userInteractions = useSelector(interactionsSelector);
-  const status = useSelector(interactionsStatusSelector);
   const itemFields = useSelector(itemFieldsSelector);
 
-  useEffect(() => {
-    if (selectedUser) {
-      dispatch(fetchInteractions(selectedUser));
-    }
-  }, [selectedUser, dispatch]);
+  const userInteractions = useGetInteractionsByUserQuery(selectedUser, {
+    skip: !selectedUser,
+  });
 
-  const interactions = customInteractions.length ? customInteractions : userInteractions;
+  const interactions = customInteractions.length ? customInteractions : userInteractions.data;
 
-  if (selectedUser && status !== 'succeeded') {
+  if (selectedUser && userInteractions.isLoading) {
     return <Skeleton variant="rectangular" height={listHeight + 48} width="100%" />;
   }
 

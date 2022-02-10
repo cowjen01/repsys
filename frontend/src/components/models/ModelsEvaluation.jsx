@@ -283,107 +283,61 @@ function ModelsEvaluation() {
             </Typography>
           </Box>
           <Grid container spacing={2}>
-            <Grid item xs={7}>
+            <Grid item xs={8}>
               <MetricsHistogramPlot onSelect={(users) => setSelectedUsers(users.points)} />
             </Grid>
-            <Grid item xs={5}>
-              <Paper sx={{ height: '100%' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
-                    <Tab label="User embeddings" />
-                    <Tab label="User details" />
-                  </Tabs>
-                </Box>
-                {selectedUsers.length > 0 ? (
-                  <>
-                    <TabPanel value={histTab} index={0}>
-                      <ScatterPlot
-                        height={380}
-                        x={scatterPoints.x}
-                        y={scatterPoints.y}
-                        z={scatterPoints.z}
-                        color={scatterColors}
-                      />
-                    </TabPanel>
-                    <TabPanel value={histTab} index={1}>
-                      <Grid container spacing={1} sx={{ p: 1 }}>
-                        <Grid item xs={5}>
-                          <List
-                            dense
-                            subheader={
-                              <ListSubheader component="div">Users Characteristic</ListSubheader>
-                            }
-                          >
-                            <ListItem>
-                              <ListItemText
-                                primary="45% users"
-                                secondary="Ratio of the selected users"
-                              />
-                            </ListItem>
-                            <ListItem>
-                              <ListItemText
-                                primary="30% similarity"
-                                secondary="Similarity between users"
-                              />
-                            </ListItem>
-                            <ListItem>
-                              <ListItemText
-                                primary="15.6 interactions"
-                                secondary="Avg. number of interactions"
-                              />
-                            </ListItem>
-                            <ListItem>
-                              <ListItemText
-                                primary="14% conformity"
-                                secondary="Ratio of items agreement"
-                              />
-                            </ListItem>
-                          </List>
-                        </Grid>
-                        <Grid item xs={7}>
-                          <List
-                            dense
-                            subheader={
-                              <ListSubheader component="div">
-                                The Most Interacted Items
-                              </ListSubheader>
-                            }
-                          >
-                            <ItemListView
-                              title="Four Weddings and a Funeral (1994)"
-                              subtitle="Comedy, Drama, Romance"
-                              image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                            />
-                            <ItemListView
-                              title="Cutthroat Island (1995)"
-                              subtitle="Action, Adventure, Comedy"
-                            />
-                            <ItemListView
-                              title="Four Weddings and a Funeral (1994)"
-                              subtitle="Comedy, Drama, Romance"
-                              image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                            />
-                            <ItemListView
-                              title="Cutthroat Island (1995)"
-                              subtitle="Action, Adventure, Comedy"
-                            />
-                            <ItemListView
-                              title="Cutthroat Island (1995)"
-                              subtitle="Action, Adventure, Comedy"
-                            />
-                          </List>
-                        </Grid>
-                      </Grid>
-                    </TabPanel>
-                  </>
-                ) : (
-                  <Box sx={{ p: 2 }}>
-                    <Alert severity="info">
-                      To see the details, select a range of users in the histogram plot.
-                    </Alert>
+            <Grid item xs={4}>
+              {selectedUsers.length > 0 && (
+                <Paper sx={{ height: '100%' }}>
+                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                    <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
+                      <Tab label="User embeddings" />
+                      <Tab label="User details" />
+                    </Tabs>
                   </Box>
-                )}
-              </Paper>
+
+                  <TabPanel value={histTab} index={0}>
+                    <ScatterPlot
+                      height={380}
+                      x={scatterPoints.x}
+                      y={scatterPoints.y}
+                      z={scatterPoints.z}
+                      color={scatterColors}
+                    />
+                  </TabPanel>
+                  <TabPanel value={histTab} index={1}>
+                    <List
+                      dense
+                      subheader={
+                        <ListSubheader component="div">The Most Interacted Items</ListSubheader>
+                      }
+                    >
+                      <ItemListView
+                        title="Four Weddings and a Funeral (1994)"
+                        subtitle="Comedy, Drama, Romance"
+                        image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                      />
+                      <ItemListView
+                        title="Cutthroat Island (1995)"
+                        subtitle="Action, Adventure, Comedy"
+                      />
+                      <ItemListView
+                        title="Four Weddings and a Funeral (1994)"
+                        subtitle="Comedy, Drama, Romance"
+                        image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                      />
+                      <ItemListView
+                        title="Cutthroat Island (1995)"
+                        subtitle="Action, Adventure, Comedy"
+                      />
+                      <ItemListView
+                        title="Cutthroat Island (1995)"
+                        subtitle="Action, Adventure, Comedy"
+                      />
+                    </List>
+                  </TabPanel>
+                </Paper>
+              )}
             </Grid>
           </Grid>
         </Grid>

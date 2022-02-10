@@ -1,40 +1,40 @@
-import { createStore, combineReducers, applyMiddleware } from '@reduxjs/toolkit';
-import { persistStore, persistReducer } from 'redux-persist';
-import { composeWithDevTools } from 'redux-devtools-extension';
+import { configureStore } from '@reduxjs/toolkit';
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER,
+} from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import stateReconciler from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
-import thunkMiddleware from 'redux-thunk';
 
-import rootReducer from './reducers/root';
-import recommendersReducer from './reducers/recommenders';
-import settingsReducer from './reducers/settings';
-import dialogsReducer from './reducers/dialogs';
-import interactionsReducer from './reducers/interactions';
-import configReducer from './reducers/config';
-import itemsReducer from './reducers/items';
-import usersReducer from './reducers/users';
-
-const combinedReducers = combineReducers({
-  root: rootReducer,
-  recommenders: recommendersReducer,
-  settings: settingsReducer,
-  dialogs: dialogsReducer,
-  interactions: interactionsReducer,
-  config: configReducer,
-  items: itemsReducer,
-  users: usersReducer,
-});
+import rootReducer from './reducers';
+import { repsysApi } from './services/api';
 
 const persistConfig = {
   key: 'repsys',
   storage,
   stateReconciler,
-  blacklist: ['dialogs', 'interactions', 'config', 'items', 'users'],
+  whitelist: ['app', 'recommenders', 'settings'],
 };
 
-const persistedReducer = persistReducer(persistConfig, combinedReducers);
+const persistedReducer = persistReducer(persistConfig, rootReducer);
 
-const store = createStore(persistedReducer, composeWithDevTools(applyMiddleware(thunkMiddleware)));
+const store = configureStore({
+  reducer: persistedReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware({
+      serializableCheck: {
+        ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
+      },
+    }).concat(repsysApi.middleware),
+  devTools: process.env.NODE_ENV !== 'production',
+});
+
 const persistor = persistStore(store);
 
 export { store, persistor };

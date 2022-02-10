@@ -300,7 +300,7 @@ function MetricsHistogramPlot({ onSelect }) {
         <HistogramPlot
           data={histogramPoints.x}
           meta={histogramPoints.meta}
-          height={350}
+          height={400}
           innerRef={histRef}
           onDeselect={() => {
             resetSelection();

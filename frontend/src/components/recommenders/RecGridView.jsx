@@ -13,7 +13,7 @@ import {
   selectedUserSelector,
   sessionRecordingSelector,
   addCustomInteraction,
-} from '../../reducers/root';
+} from '../../reducers/app';
 import { itemFieldsSelector } from '../../reducers/settings';
 
 function RecGridView({ recommender }) {

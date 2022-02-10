@@ -12,7 +12,7 @@ import {
   selectedUserSelector,
   addUserToFavourites,
   removeUserFromFavourites,
-} from '../../reducers/root';
+} from '../../reducers/app';
 import { openRecEditDialog } from '../../reducers/dialogs';
 import { UserPanel, UserSelectDialog } from '../users';
 import { ItemDetailDialog } from '../items';

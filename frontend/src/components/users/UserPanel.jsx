@@ -25,10 +25,11 @@ import {
   buildModeSelector,
   toggleBuildMode,
   setSelectedUser,
-} from '../../reducers/root';
+} from '../../reducers/app';
 import InteractionsList from './InteractionsList';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
-import { interactionsSelector } from '../../reducers/interactions';
+
+import { useGetInteractionsByUserQuery } from '../../services/api';
 
 function UserPanel() {
   const dispatch = useDispatch();
@@ -36,7 +37,9 @@ function UserPanel() {
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const buildMode = useSelector(buildModeSelector);
-  const userInteractions = useSelector(interactionsSelector);
+
+  // FIXME
+  const userInteractions = useGetInteractionsByUserQuery(selectedUser);
 
   const handleDelete = () => {
     dispatch(setCustomInteractions([]));
