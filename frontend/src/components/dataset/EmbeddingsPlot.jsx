@@ -1,10 +1,12 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import pt from 'prop-types';
 import { Paper, Stack, Backdrop, Box, CircularProgress, TextField } from '@mui/material';
 import Plotly from 'plotly.js';
 
 import { ScatterPlot } from '../plots';
 import { CategoryFilter } from '../filters';
 import { plotColors } from '../../const';
+import PlotLoader from '../PlotLoader';
 
 const userEmbeddings = [
   {
@@ -376,7 +378,6 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
   };
 
   const handleFilterApply = async () => {
-    console.log(selectedValues);
     if (selectedValues.length) {
       setIsLoading(true);
       await sleep(500);
@@ -417,8 +418,7 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
   const handleScatterSelect = (eventData) => {
     if (eventData && eventData.points.length) {
       const { points } = eventData;
-      const itemsIds = points.map((p) => p.customdata.id);
-      onSelect(itemsIds);
+      onSelect(points.map((p) => p.customdata.id));
       setHighlightedPoints(points[0].data.selectedpoints);
       resetFilterSelection();
     }
@@ -472,19 +472,7 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
         )}
       </Stack>
       <Box position="relative">
-        {isLoading && (
-          <Backdrop
-            sx={{
-              position: 'absolute',
-              color: '#000',
-              backgroundColor: 'rgba(255,255,255,0.6)',
-              zIndex: 100,
-            }}
-            open
-          >
-            <CircularProgress color="inherit" />
-          </Backdrop>
-        )}
+        {isLoading && <PlotLoader />}
         <ScatterPlot
           height={450}
           x={scatterPoints.x}
@@ -500,5 +488,9 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
     </Paper>
   );
 }
+
+EmbeddingsPlot.propTypes = {
+  onSelect: pt.func.isRequired,
+};
 
 export default EmbeddingsPlot;

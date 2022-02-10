@@ -3,14 +3,14 @@ import pt from 'prop-types';
 import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
 
-function BarPlot({ data, height, width, orientation, layoutProps, ...props }) {
+function BarPlot({ data, height, orientation, layoutProps, ...props }) {
   const theme = useTheme();
   const { text } = theme.palette;
   return (
     <Plot
       data={data.map((bar) => ({ ...bar, type: 'bar', orientation }))}
       style={{
-        width,
+        width: '100%',
         height,
       }}
       useResizeHandler
@@ -37,7 +37,6 @@ BarPlot.propTypes = {
     })
   ).isRequired,
   height: pt.oneOfType([pt.number, pt.string]),
-  width: pt.oneOfType([pt.number, pt.string]),
   // eslint-disable-next-line react/forbid-prop-types
   layoutProps: pt.any,
 };
@@ -45,7 +44,6 @@ BarPlot.propTypes = {
 BarPlot.defaultProps = {
   orientation: 'v',
   height: '100%',
-  width: '100%',
   layoutProps: {},
 };
 
