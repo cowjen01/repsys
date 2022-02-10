@@ -14,14 +14,15 @@ import {
   removeUserFromFavourites,
 } from '../../reducers/root';
 import { openRecEditDialog } from '../../reducers/dialogs';
-import { RecEditView, RecGridView, RecEditDialog } from '../recommenders';
 import { UserPanel, UserSelectDialog } from '../users';
 import { ItemDetailDialog } from '../items';
-
+import RecEditView from './RecEditView';
+import RecGridView from './RecGridView';
+import RecEditDialog from './RecEditDialog';
 import ConfirmDialog from '../ConfirmDialog';
 import { itemFieldsSelector } from '../../reducers/settings';
 
-function App() {
+function RecPreviews() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
@@ -48,7 +49,7 @@ function App() {
   return (
     <Container maxWidth="xl">
       <Grid container spacing={4}>
-        {!buildMode && !itemFields.title && recommenders.length > 0 && (
+        {!itemFields.title && (
           <Grid item xs={12}>
             <Alert severity="warning">
               <AlertTitle>Views not configured</AlertTitle>
@@ -57,20 +58,18 @@ function App() {
             </Alert>
           </Grid>
         )}
-        {recommenders.length === 0 && (
-          <Grid item xs={12}>
-            <Alert severity="info">
-              <AlertTitle>Recommenders not configured</AlertTitle>
-              {!buildMode
-                ? 'There are no recommenders, switch to the build mode to create one.'
-                : 'There are no recommenders, press the add button to create one.'}
-            </Alert>
-          </Grid>
-        )}
-        {recommenders.length !== 0 && (itemFields.title || buildMode) && (
+        {(itemFields.title || buildMode) && (
           <>
             <Grid item xs={12} lg={9}>
               <Grid container spacing={3}>
+                {recommenders.length === 0 && (
+                  <Grid item xs={12}>
+                    <Alert severity="info">
+                      <AlertTitle>Recommenders not configured</AlertTitle>
+                      There are no recommenders, switch to the build mode to create one.
+                    </Alert>
+                  </Grid>
+                )}
                 {recommenders.map((recommender, index) =>
                   !buildMode ? (
                     <Grid item xs={12} key={recommender.id}>
@@ -132,4 +131,4 @@ function App() {
   );
 }
 
-export default App;
+export default RecPreviews;

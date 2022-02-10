@@ -3,7 +3,8 @@ import { useDispatch } from 'react-redux';
 import { Routes, Route } from 'react-router-dom';
 
 import Layout from './Layout';
-import { ModelsEvaluation, RecPreviews } from './screens';
+import { ModelsEvaluation } from './models';
+import { RecPreviews } from './recommenders';
 import { DatasetEvaluation } from './dataset';
 import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';

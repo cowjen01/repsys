@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Paper, Typography, Stack, Box, List } from '@mui/material';
+import { Paper, Typography, Stack, Box, List, Alert, AlertTitle } from '@mui/material';
 import { useSelector } from 'react-redux';
 
 import BarPlotHistogram from './BarPlotHistogram';
@@ -112,7 +112,7 @@ function UserDescriptionPanel({ userIds }) {
                 title={item[itemFields.title]}
                 subtitle={item[itemFields.subtitle]}
                 image={item[itemFields.image]}
-                style={{ paddingLeft: 0 }}
+                style={{ paddingLeft: 5 }}
               />
             ))}
           </List>
@@ -122,7 +122,7 @@ function UserDescriptionPanel({ userIds }) {
             Interactions Distribution
           </Typography>
           <Typography gutterBottom variant="body2">
-            A distribution of interactions per each user
+            A distribution of total interactions made by users
           </Typography>
           <BarPlotHistogram bins={data.interactions.bins} hist={data.interactions.hist} />
         </Box>

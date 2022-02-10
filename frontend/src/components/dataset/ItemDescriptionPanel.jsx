@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Paper, Typography, Stack, Box, Alert, Chip, CircularProgress } from '@mui/material';
+import { Paper, Typography, Stack, Box, Alert, Chip, AlertTitle } from '@mui/material';
 
-import { BarPlot } from '../plots';
 import PanelLoader from '../PanelLoader';
 import BarPlotHistogram from './BarPlotHistogram';
 

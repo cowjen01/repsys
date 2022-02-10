@@ -2,7 +2,7 @@ import React from 'react';
 import pt from 'prop-types';
 import { FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 
-function CategoryFilter({ onChange, onClose, value, options, label, displayEmpty, ...rest }) {
+function CategoryFilter({ onChange, value, options, label, displayEmpty, ...rest }) {
   const handleChange = (e) => {
     onChange(e.target.value);
   };
@@ -10,8 +10,7 @@ function CategoryFilter({ onChange, onClose, value, options, label, displayEmpty
   const handleClose = () => {
     setTimeout(() => {
       document.activeElement.blur();
-    }, 0);
-    onClose();
+    }, 100);
   };
 
   return (
@@ -36,12 +35,10 @@ function CategoryFilter({ onChange, onClose, value, options, label, displayEmpty
 CategoryFilter.defaultProps = {
   value: '',
   displayEmpty: false,
-  onClose: () => {},
 };
 
 CategoryFilter.propTypes = {
   onChange: pt.func.isRequired,
-  onClose: pt.func,
   label: pt.string.isRequired,
   value: pt.oneOfType([pt.string, pt.number, pt.arrayOf(pt.string)]),
   displayEmpty: pt.bool,

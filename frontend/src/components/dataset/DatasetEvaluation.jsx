@@ -38,18 +38,18 @@ function DatasetEvaluation() {
               Item Embeddings
             </Typography>
             <Typography variant="subtitle1" gutterBottom>
-              A space of item embeddings and their attributes to explore the primary space
+              Exploration of the item embeddings created from the training split
             </Typography>
           </Box>
           <Grid container spacing={2} sx={{ height: 560 }}>
-            <Grid item md={8} xs={12} sx={{ height: '100%' }}>
+            <Grid item xs={8} sx={{ height: '100%' }}>
               <EmbeddingsPlot
                 dataType="items"
                 columns={columns}
                 onSelect={(ids) => setSelectedItems(ids)}
               />
             </Grid>
-            <Grid item xs={12} md={4} sx={{ height: '100%' }}>
+            <Grid item xs={4} sx={{ height: '100%' }}>
               <ItemDescriptionPanel columns={columns} itemIds={selectedItems} />
             </Grid>
           </Grid>
@@ -60,18 +60,18 @@ function DatasetEvaluation() {
               User Embeddings
             </Typography>
             <Typography variant="subtitle1" gutterBottom>
-              A space of user embeddings to explore the primary space
+              Exploration of the user embeddings regulated by a minimum number of interactions
             </Typography>
           </Box>
           <Grid container spacing={2} sx={{ height: 560 }}>
-            <Grid item md={8} xs={12} sx={{ height: '100%' }}>
+            <Grid item xs={8} sx={{ height: '100%' }}>
               <EmbeddingsPlot
                 dataType="users"
                 columns={columns}
                 onSelect={(ids) => setSelectedUsers(ids)}
               />
             </Grid>
-            <Grid item xs={12} md={4} sx={{ height: '100%' }}>
+            <Grid item xs={4} sx={{ height: '100%' }}>
               <UserDescriptionPanel userIds={selectedUsers} />
             </Grid>
           </Grid>

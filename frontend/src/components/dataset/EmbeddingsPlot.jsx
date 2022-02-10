@@ -376,6 +376,7 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
   };
 
   const handleFilterApply = async () => {
+    console.log(selectedValues);
     if (selectedValues.length) {
       setIsLoading(true);
       await sleep(500);
@@ -452,7 +453,7 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
           disabled={!selectedField}
           value={isMultipleSelect ? selectedValues : selectedValues[0]}
           multiple={isMultipleSelect}
-          onClose={handleFilterApply}
+          onBlur={handleFilterApply}
           onChange={handleValuesChange}
           options={filterOptions}
         />
