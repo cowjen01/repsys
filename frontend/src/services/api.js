@@ -16,6 +16,13 @@ export const repsysApi = createApi({
     getConfig: builder.query({
       query: () => '/config',
     }),
+    getRecomsForUser: builder.mutation({
+      query: (body) => ({
+        url: '/predict',
+        method: 'POST',
+        body,
+      }),
+    }),
   }),
 });
 
@@ -24,4 +31,5 @@ export const {
   useGetItemsByTitleQuery,
   useGetInteractionsByUserQuery,
   useGetConfigQuery,
+  useGetRecomsForUserMutation,
 } = repsysApi;

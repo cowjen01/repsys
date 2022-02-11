@@ -6,7 +6,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Skeleton, Typography, Grid, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
 
 import { ItemCardView } from '../items';
-import { fetchPredictions } from './api';
 import { openItemDetailDialog } from '../../reducers/dialogs';
 import {
   customInteractionsSelector,
@@ -15,6 +14,7 @@ import {
   addCustomInteraction,
 } from '../../reducers/app';
 import { itemFieldsSelector } from '../../reducers/settings';
+import { useGetRecomsForUserMutation } from '../../services/api';
 
 function RecGridView({ recommender }) {
   const dispatch = useDispatch();
@@ -27,18 +27,22 @@ function RecGridView({ recommender }) {
 
   const { title, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
-  const { items, isLoading, error } = fetchPredictions({
-    model,
-    ...(selectedUser
-      ? {
-          user: selectedUser,
-        }
-      : {
-          interactions: customInteractions.map((x) => x.id),
-        }),
-    params: modelParams[model],
-    limit: itemsLimit,
-  });
+  const [getRecoms, { isLoading, isSuccess, data, error, isError }] = useGetRecomsForUserMutation();
+
+  useEffect(() => {
+    getRecoms({
+      model,
+      ...(selectedUser
+        ? {
+            user: selectedUser,
+          }
+        : {
+            interactions: customInteractions.map((x) => x.id),
+          }),
+      params: modelParams[model],
+      limit: itemsLimit,
+    });
+  }, []);
 
   const handleItemClick = (item) => {
     if (sessionRecording) {
@@ -71,14 +75,14 @@ function RecGridView({ recommender }) {
               {title}
             </Typography>
           </Grid>
-          {!isLoading && !error && (
+          {isSuccess && (
             <Grid item>
               <Stack direction="row">
                 <IconButton disabled={page === 0} onClick={() => setPage(page - 1)}>
                   <KeyboardArrowLeftIcon />
                 </IconButton>
                 <IconButton
-                  disabled={page === Math.ceil(items.length / itemsPerPage) - 1}
+                  disabled={page === Math.ceil(data.length / itemsPerPage) - 1}
                   onClick={() => setPage(page + 1)}
                 >
                   <KeyboardArrowRightIcon />
@@ -90,9 +94,8 @@ function RecGridView({ recommender }) {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={2}>
-          {!isLoading &&
-            !error &&
-            items.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
+          {isSuccess &&
+            data.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
               <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
                 <ItemCardView
                   title={item[itemFields.title]}
@@ -114,7 +117,7 @@ function RecGridView({ recommender }) {
                 />
               </Grid>
             ))}
-          {!isLoading && !error && items.length === 0 && (
+          {isSuccess && data.length === 0 && (
             <Grid item xs={12}>
               <Alert severity="warning">
                 <AlertTitle>No recommended items</AlertTitle>
@@ -122,7 +125,7 @@ function RecGridView({ recommender }) {
               </Alert>
             </Grid>
           )}
-          {!isLoading && error && (
+          {isError && (
             <Grid item xs={12}>
               <Alert severity="error">
                 <AlertTitle>API Error</AlertTitle>
