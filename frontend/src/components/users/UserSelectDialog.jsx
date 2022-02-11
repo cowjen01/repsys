@@ -16,7 +16,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { favouriteUsersSelector, setCustomInteractions, setSelectedUser } from '../../reducers/app';
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
 import TabPanel from '../TabPanel';
-import { useGetUsersQuery, useGetItemsByTitleQuery } from '../../services/api';
+import { useGetUsersQuery, useGetItemsByTitleQuery } from '../../api';
 
 let timerID;
 

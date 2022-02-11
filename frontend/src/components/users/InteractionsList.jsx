@@ -7,7 +7,7 @@ import { ItemListView } from '../items';
 import { customInteractionsSelector, selectedUserSelector } from '../../reducers/app';
 import { itemFieldsSelector } from '../../reducers/settings';
 
-import { useGetInteractionsByUserQuery } from '../../services/api';
+import { useGetInteractionsByUserQuery } from '../../api';
 
 const listHeight = 360;
 

@@ -22,7 +22,7 @@ import RecEditDialog from './RecEditDialog';
 import ConfirmDialog from '../ConfirmDialog';
 import { itemFieldsSelector } from '../../reducers/settings';
 
-function RecPreviews() {
+function RecomsPreview() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
@@ -131,4 +131,4 @@ function RecPreviews() {
   );
 }
 
-export default RecPreviews;
+export default RecomsPreview;

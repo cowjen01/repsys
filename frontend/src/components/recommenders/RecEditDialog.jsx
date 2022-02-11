@@ -18,7 +18,7 @@ import {
 } from '../../reducers/recommenders';
 import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
 import { TextField, SelectField, CheckboxField } from '../fields';
-import { useGetModelsQuery } from '../../services/api';
+import { useGetModelsQuery } from '../../api';
 
 function RecEditDialog() {
   const dialog = useSelector(recEditDialogSelector);

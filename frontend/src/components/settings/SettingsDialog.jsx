@@ -20,7 +20,7 @@ import {
 import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
 import { SelectField, CheckboxField } from '../fields';
 
-import { useGetDatasetQuery } from '../../services/api';
+import { useGetDatasetQuery } from '../../api';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);

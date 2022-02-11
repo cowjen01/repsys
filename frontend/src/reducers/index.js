@@ -5,7 +5,7 @@ import recommendersReducer from './recommenders';
 import settingsReducer from './settings';
 import dialogsReducer from './dialogs';
 
-import { repsysApi } from '../services/api';
+import { repsysApi } from '../api';
 
 export default combineReducers({
   app: appReducer,

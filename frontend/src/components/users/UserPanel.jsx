@@ -29,7 +29,7 @@ import {
 import InteractionsList from './InteractionsList';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
 
-import { useGetInteractionsByUserQuery } from '../../services/api';
+import { useGetInteractionsByUserQuery } from '../../api';
 
 function UserPanel() {
   const dispatch = useDispatch();

@@ -14,7 +14,7 @@ import {
   addCustomInteraction,
 } from '../../reducers/app';
 import { itemFieldsSelector } from '../../reducers/settings';
-import { useGetRecomsForUserMutation } from '../../services/api';
+import { useGetRecomsForUserMutation } from '../../api';
 
 function RecGridView({ recommender }) {
   const dispatch = useDispatch();
