@@ -18,16 +18,14 @@ import {
 } from '../../reducers/recommenders';
 import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
 import { TextField, SelectField, CheckboxField } from '../fields';
-import { useGetConfigQuery } from '../../services/api';
+import { useGetModelsQuery } from '../../services/api';
 
 function RecEditDialog() {
   const dialog = useSelector(recEditDialogSelector);
   const dispatch = useDispatch();
   const recommenders = useSelector(recommendersSelector);
 
-  const config = useGetConfigQuery();
-
-  const models = config.data ? config.data.models : [];
+  const models = useGetModelsQuery();
 
   const handleClose = () => {
     dispatch(closeRecEditDialog());
@@ -55,12 +53,12 @@ function RecEditDialog() {
   );
 
   const initialValues = useMemo(() => {
-    if (config.isLoading) {
+    if (!models.isSuccess) {
       return null;
     }
 
     const defaultParams = Object.fromEntries(
-      models.map((m) => [m.name, Object.fromEntries(m.params.map((a) => [a.name, a.default]))])
+      models.data.map((m) => [m.name, Object.fromEntries(m.params.map((a) => [a.name, a.default]))])
     );
 
     if (dialog.index === null) {
@@ -68,7 +66,7 @@ function RecEditDialog() {
         title: 'New bar',
         itemsPerPage: 4,
         itemsLimit: 20,
-        model: models[0].name,
+        model: models.data[0].name,
         modelParams: defaultParams,
       };
     }
@@ -83,12 +81,12 @@ function RecEditDialog() {
     }
 
     return data;
-  }, [dialog, config.isLoading]);
+  }, [dialog, models.isLoading]);
 
   return (
     <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Recommender settings</DialogTitle>
-      {!config.isLoading ? (
+      {!models.isLoading ? (
         <Formik
           initialValues={initialValues}
           validate={(values) => {
@@ -112,7 +110,7 @@ function RecEditDialog() {
         >
           {({ submitForm, isSubmitting, values }) => {
             const model = useMemo(
-              () => models.find((m) => m.name === values.model),
+              () => models.data.find((m) => m.name === values.model),
               [values.model]
             );
             return (
@@ -151,7 +149,7 @@ function RecEditDialog() {
                         name="model"
                         label="Model"
                         component={SelectField}
-                        options={[...models.map((m) => ({ label: m.name, value: m.name }))]}
+                        options={[...models.data.map((m) => ({ label: m.name, value: m.name }))]}
                         displayEmpty
                       />
                       {model &&

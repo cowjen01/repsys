@@ -13,12 +13,15 @@ export const repsysApi = createApi({
     getInteractionsByUser: builder.query({
       query: (id) => `/interactions?user=${id}`,
     }),
-    getConfig: builder.query({
-      query: () => '/config',
+    getDataset: builder.query({
+      query: () => '/dataset',
+    }),
+    getModels: builder.query({
+      query: () => '/models',
     }),
     getRecomsForUser: builder.mutation({
       query: (body) => ({
-        url: '/predict',
+        url: '/recommend',
         method: 'POST',
         body,
       }),
@@ -30,6 +33,7 @@ export const {
   useGetUsersQuery,
   useGetItemsByTitleQuery,
   useGetInteractionsByUserQuery,
-  useGetConfigQuery,
+  useGetDatasetQuery,
+  useGetModelsQuery,
   useGetRecomsForUserMutation,
 } = repsysApi;

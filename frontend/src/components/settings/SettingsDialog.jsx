@@ -20,7 +20,7 @@ import {
 import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
 import { SelectField, CheckboxField } from '../fields';
 
-import { useGetConfigQuery } from '../../services/api';
+import { useGetDatasetQuery } from '../../services/api';
 
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
@@ -32,7 +32,7 @@ function SettingsDialog() {
   const dispatch = useDispatch();
   const itemFields = useSelector(itemFieldsSelector);
 
-  const config = useGetConfigQuery();
+  const dataset = useGetDatasetQuery();
 
   const handleClose = () => {
     dispatch(closeSettingsDialog());
@@ -53,19 +53,19 @@ function SettingsDialog() {
   );
 
   const itemColumnOptions = useMemo(() => {
-    if (config.isLoading) {
+    if (!dataset.isSuccess) {
       return [];
     }
 
-    const options = config.data.dataset.columns.map((col) => ({ label: col, value: col }));
+    const options = dataset.data.columns.map((col) => ({ label: col, value: col }));
 
     return ['', ...options];
-  }, [config.isLoading]);
+  }, [dataset.isLoading]);
 
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Application Settings</DialogTitle>
-      {config.isSuccess ? (
+      {!dataset.isLoading ? (
         <Formik
           initialValues={{
             darkMode,

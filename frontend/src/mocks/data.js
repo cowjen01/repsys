@@ -1,50 +1,49 @@
-export const config = {
-  models: [
-    {
-      name: 'KNN',
-      params: [
-        {
-          name: 'n',
-          label: 'Neighbors',
-          type: 'number',
-          default: 5,
-        },
-        {
-          name: 'category',
-          label: 'Movie category',
-          type: 'select',
-          options: ['comedy', 'horror'],
-        },
-        {
-          name: 'exclude',
-          label: 'Exclude history',
-          type: 'bool',
-          default: true,
-        },
-        {
-          name: 'normalize',
-          label: 'Normalize distances',
-          type: 'bool',
-          default: false,
-        },
-      ],
-    },
-    {
-      name: 'VASP',
-      params: [
-        {
-          name: 'h',
-          label: 'Some parameter',
-          type: 'text',
-        },
-      ],
-    },
-  ],
-  dataset: {
-    items: 20071,
-    columns: ['title', 'about', 'image', 'genres', 'languages'],
-  },
+export const dataset = {
+  items: 20071,
+  columns: ['title', 'about', 'image', 'genres', 'languages'],
 };
+
+export const models = [
+  {
+    name: 'KNN',
+    params: [
+      {
+        name: 'n',
+        label: 'Neighbors',
+        type: 'number',
+        default: 5,
+      },
+      {
+        name: 'category',
+        label: 'Movie category',
+        type: 'select',
+        options: ['comedy', 'horror'],
+      },
+      {
+        name: 'exclude',
+        label: 'Exclude history',
+        type: 'bool',
+        default: true,
+      },
+      {
+        name: 'normalize',
+        label: 'Normalize distances',
+        type: 'bool',
+        default: false,
+      },
+    ],
+  },
+  {
+    name: 'VASP',
+    params: [
+      {
+        name: 'h',
+        label: 'Some parameter',
+        type: 'text',
+      },
+    ],
+  },
+];
 
 export const movies = [
   {
