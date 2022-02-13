@@ -20,13 +20,13 @@ import RecEditView from './RecEditView';
 import RecGridView from './RecGridView';
 import RecEditDialog from './RecEditDialog';
 import ConfirmDialog from '../ConfirmDialog';
-import { itemFieldsSelector } from '../../reducers/settings';
+import { itemViewSelector } from '../../reducers/settings';
 
 function RecomsPreview() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const dispatch = useDispatch();
-  const itemFields = useSelector(itemFieldsSelector);
+  const itemView = useSelector(itemViewSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
   const selectedUser = useSelector(selectedUserSelector);
 
@@ -49,7 +49,7 @@ function RecomsPreview() {
   return (
     <Container maxWidth="xl">
       <Grid container spacing={4}>
-        {!itemFields.title && (
+        {!itemView.title && (
           <Grid item xs={12}>
             <Alert severity="warning">
               <AlertTitle>Views not configured</AlertTitle>
@@ -58,7 +58,7 @@ function RecomsPreview() {
             </Alert>
           </Grid>
         )}
-        {(itemFields.title || buildMode) && (
+        {(itemView.title || buildMode) && (
           <>
             <Grid item xs={12} lg={9}>
               <Grid container spacing={3}>
@@ -72,12 +72,12 @@ function RecomsPreview() {
                 )}
                 {recommenders.map((recommender, index) =>
                   !buildMode ? (
-                    <Grid item xs={12} key={recommender.id}>
+                    <Grid item xs={12} key={recommender.name}>
                       <RecGridView recommender={recommender} />
                     </Grid>
                   ) : (
-                    <Grid item xs={12} key={recommender.id}>
-                      <RecEditView title={recommender.title} index={index} />
+                    <Grid item xs={12} key={recommender.name}>
+                      <RecEditView name={recommender.name} index={index} />
                     </Grid>
                   )
                 )}
@@ -93,7 +93,7 @@ function RecomsPreview() {
       <RecEditDialog />
       <ItemDetailDialog />
       <UserSelectDialog />
-      {buildMode && (
+      {itemView.title && buildMode && (
         <Fab
           sx={{
             position: 'absolute',
@@ -108,7 +108,7 @@ function RecomsPreview() {
           Add recommender
         </Fab>
       )}
-      {selectedUser && !buildMode && (
+      {itemView.title && selectedUser && !buildMode && (
         <Fab
           onClick={handleFavouriteToggle}
           variant="extended"

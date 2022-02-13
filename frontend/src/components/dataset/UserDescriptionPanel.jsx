@@ -5,7 +5,7 @@ import { useSelector } from 'react-redux';
 import BarPlotHistogram from './BarPlotHistogram';
 import PanelLoader from '../PanelLoader';
 import { ItemListView } from '../items';
-import { itemFieldsSelector } from '../../reducers/settings';
+import { itemViewSelector } from '../../reducers/settings';
 import { sleep } from '../../utils';
 
 const data = {
@@ -69,7 +69,7 @@ const data = {
 
 function UserDescriptionPanel({ userIds }) {
   const [isLoading, setIsLoading] = useState(false);
-  const itemFields = useSelector(itemFieldsSelector);
+  const itemView = useSelector(itemViewSelector);
 
   useEffect(() => {
     async function loadData() {
@@ -106,9 +106,9 @@ function UserDescriptionPanel({ userIds }) {
               <ItemListView
                 key={item.id}
                 id={item.id}
-                title={item[itemFields.title]}
-                subtitle={item[itemFields.subtitle]}
-                image={item[itemFields.image]}
+                title={item[itemView.title]}
+                subtitle={item[itemView.subtitle]}
+                image={item[itemView.image]}
                 style={{ paddingLeft: 5 }}
               />
             ))}

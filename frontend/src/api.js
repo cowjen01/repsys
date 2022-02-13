@@ -5,13 +5,14 @@ export const repsysApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
   endpoints: (builder) => ({
     getUsers: builder.query({
-      query: (split = 'train') => `/users/${split}`,
+      query: (split = 'train') => `/users?split=${split}`,
     }),
-    getUsersByInteractions: builder.mutation({
+    searchUsersByInteractions: builder.mutation({
       query: ({ split = 'train', attribute, value, threshold }) => ({
-        url: `/users/${split}/search`,
+        url: `/users/search`,
         method: 'POST',
         body: {
+          split,
           interactions: {
             attribute,
             value,
@@ -20,7 +21,7 @@ export const repsysApi = createApi({
         },
       }),
     }),
-    getItemsByAttribute: builder.mutation({
+    searchItemsByAttribute: builder.mutation({
       query: ({ attribute, value }) => ({
         url: `/items/search`,
         method: 'POST',
@@ -36,11 +37,14 @@ export const repsysApi = createApi({
     getUserByID: builder.query({
       query: (userID) => `/users/${userID}`,
     }),
-    getUsersDescription: builder.mutation({
+    describeUsers: builder.mutation({
       query: ({ split = 'train', users }) => ({
-        url: `/users/${split}/describe`,
+        url: `/users/describe`,
         method: 'POST',
-        body: users,
+        body: {
+          split,
+          users,
+        },
       }),
     }),
     getDataset: builder.query({
@@ -52,7 +56,7 @@ export const repsysApi = createApi({
     getMetricsByModel: builder.query({
       query: (model) => `/models/${model}/metrics`,
     }),
-    getPredictionByModel: builder.mutation({
+    predictItemsByModel: builder.mutation({
       query: ({ model, ...body }) => ({
         url: `/models/${model}/predict`,
         method: 'POST',
@@ -62,35 +66,37 @@ export const repsysApi = createApi({
     getModelsMetrics: builder.query({
       query: () => '/models/metrics',
     }),
-    getItemsDescription: builder.mutation({
+    describeItems: builder.mutation({
       query: (items) => ({
         url: '/items/describe',
         method: 'POST',
-        body: items,
+        body: {
+          items,
+        },
       }),
     }),
     getUsersEmbeddings: builder.query({
-      query: (split = 'train') => `/embeddings/${split}/users`,
+      query: (split = 'train') => `/users/embeddings?split=${split}`,
     }),
     getItemsEmbeddings: builder.query({
-      query: (split = 'train') => `/embeddings/${split}/items`,
+      query: (split = 'train') => `/items/embeddings?split=${split}`,
     }),
   }),
 });
 
 export const {
   useGetDatasetQuery,
-  useGetItemsByAttributeMutation,
   useGetItemsByTitleQuery,
-  useGetItemsDescriptionMutation,
   useGetItemsEmbeddingsQuery,
   useGetMetricsByModelQuery,
   useGetModelsMetricsQuery,
   useGetModelsQuery,
-  useGetPredictionByModelMutation,
   useGetUserByIDQuery,
-  useGetUsersByInteractionsMutation,
-  useGetUsersDescriptionMutation,
   useGetUsersEmbeddingsQuery,
-  useGetUsersQuery
+  useGetUsersQuery,
+  useDescribeItemsMutation,
+  useDescribeUsersMutation,
+  useSearchItemsByAttributeMutation,
+  useSearchUsersByInteractionsMutation,
+  usePredictItemsByModelMutation,
 } = repsysApi;

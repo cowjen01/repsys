@@ -19,6 +19,7 @@ export const models = {
     params: {
       param: {
         field: 'text',
+        default: '',
       },
     },
   },

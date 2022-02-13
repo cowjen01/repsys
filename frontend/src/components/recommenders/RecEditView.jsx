@@ -14,7 +14,7 @@ import { openConfirmDialog, openRecEditDialog } from '../../reducers/dialogs';
 
 const ITEM_TYPE = 'recommender';
 
-function RecEditView({ index, title }) {
+function RecEditView({ index, name }) {
   const dispatch = useDispatch();
   const dragRef = useRef(null);
   const previewRef = useRef(null);
@@ -125,7 +125,7 @@ function RecEditView({ index, title }) {
           />
         </Box>
         <Typography variant="h6" component="div">
-          {title}
+          {name}
         </Typography>
       </Box>
       <Stack direction="row" spacing={1}>
@@ -144,7 +144,7 @@ function RecEditView({ index, title }) {
 }
 
 RecEditView.propTypes = {
-  title: pt.string.isRequired,
+  name: pt.string.isRequired,
   index: pt.number.isRequired,
 };
 

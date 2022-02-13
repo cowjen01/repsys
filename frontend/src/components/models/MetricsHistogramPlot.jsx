@@ -5,7 +5,6 @@ import Plotly from 'plotly.js';
 
 import { CategoryFilter } from '../filters';
 import { HistogramPlot } from '../plots';
-import PlotLoader from '../PlotLoader';
 
 const histogramData = {
   KNN: [
@@ -295,27 +294,25 @@ function MetricsHistogramPlot({ onSelect }) {
           }))}
         />
       </Stack>
-      <Box position="relative">
-        {isLoading && <PlotLoader />}
-        <HistogramPlot
-          data={histogramPoints.x}
-          meta={histogramPoints.meta}
-          height={400}
-          innerRef={histRef}
-          onDeselect={() => {
-            resetSelection();
-          }}
-          onSelected={(eventData) => {
-            if (eventData && eventData.points.length) {
-              const { points } = eventData;
-              onSelect({
-                ids: points.map((p) => p.customdata.id),
-                points: points[0].data.selectedpoints,
-              });
-            }
-          }}
-        />
-      </Box>
+      <HistogramPlot
+        data={histogramPoints.x}
+        meta={histogramPoints.meta}
+        height={400}
+        isLoading={isLoading}
+        innerRef={histRef}
+        onDeselect={() => {
+          resetSelection();
+        }}
+        onSelected={(eventData) => {
+          if (eventData && eventData.points.length) {
+            const { points } = eventData;
+            onSelect({
+              ids: points.map((p) => p.customdata.id),
+              points: points[0].data.selectedpoints,
+            });
+          }
+        }}
+      />
     </Paper>
   );
 }

@@ -13,21 +13,22 @@ import {
   sessionRecordingSelector,
   addCustomInteraction,
 } from '../../reducers/app';
-import { itemFieldsSelector } from '../../reducers/settings';
-import { useGetRecomsForUserMutation } from '../../api';
+import { itemViewSelector } from '../../reducers/settings';
+import { usePredictItemsByModelMutation } from '../../api';
 
 function RecGridView({ recommender }) {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const sessionRecording = useSelector(sessionRecordingSelector);
-  const itemFields = useSelector(itemFieldsSelector);
+  const itemView = useSelector(itemViewSelector);
 
   const [page, setPage] = useState(0);
 
-  const { title, model, itemsLimit, modelParams, itemsPerPage } = recommender;
+  const { name, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
-  const [getRecoms, { isLoading, isSuccess, data, error, isError }] = useGetRecomsForUserMutation();
+  const [getRecoms, { isLoading, isSuccess, data, error, isError }] =
+    usePredictItemsByModelMutation();
 
   useEffect(() => {
     getRecoms({
@@ -50,8 +51,8 @@ function RecGridView({ recommender }) {
     } else {
       dispatch(
         openItemDetailDialog({
-          title: item[itemFields.title],
-          content: item[itemFields.content],
+          title: item[itemView.title],
+          content: item[itemView.content],
         })
       );
     }
@@ -72,7 +73,7 @@ function RecGridView({ recommender }) {
         >
           <Grid item>
             <Typography variant="h6" component="div">
-              {title}
+              {name}
             </Typography>
           </Grid>
           {isSuccess && (
@@ -98,10 +99,7 @@ function RecGridView({ recommender }) {
             data.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
               <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
                 <ItemCardView
-                  title={item[itemFields.title]}
-                  subtitle={item[itemFields.subtitle]}
-                  caption={item[itemFields.caption]}
-                  image={item[itemFields.image]}
+                  item={item}
                   imageHeight={Math.ceil(600 / itemsPerPage)}
                   onClick={() => handleItemClick(item)}
                 />
@@ -141,7 +139,7 @@ function RecGridView({ recommender }) {
 
 RecGridView.propTypes = {
   recommender: pt.shape({
-    title: pt.string,
+    name: pt.string,
     itemsPerPage: pt.number,
     itemsLimit: pt.number,
     model: pt.string,

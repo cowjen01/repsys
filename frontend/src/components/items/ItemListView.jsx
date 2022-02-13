@@ -2,6 +2,9 @@ import React from 'react';
 import pt from 'prop-types';
 import { ListItemAvatar, Avatar, ListItemText, ListItem } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
+import { useSelector } from 'react-redux';
+
+import { itemViewSelector } from '../../reducers/settings';
 
 const typographyProps = {
   style: {
@@ -11,12 +14,14 @@ const typographyProps = {
   },
 };
 
-function ItemListView({ title, subtitle, image, style }) {
+function ItemListView({ style, item }) {
+  const itemView = useSelector(itemViewSelector);
+
   return (
     <ListItem style={style}>
       <ListItemAvatar>
-        {image ? (
-          <Avatar src={image} />
+        {item[itemView.image] ? (
+          <Avatar src={item[itemView.image]} />
         ) : (
           <Avatar>
             <ImageIcon />
@@ -26,23 +31,20 @@ function ItemListView({ title, subtitle, image, style }) {
       <ListItemText
         primaryTypographyProps={typographyProps}
         secondaryTypographyProps={typographyProps}
-        primary={title}
-        secondary={subtitle}
+        primary={item[itemView.title]}
+        secondary={item[itemView.subtitle]}
       />
     </ListItem>
   );
 }
 
 ItemListView.defaultProps = {
-  subtitle: '',
-  image: null,
   style: {},
 };
 
 ItemListView.propTypes = {
-  subtitle: pt.string,
-  image: pt.string,
-  title: pt.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  item: pt.any.isRequired,
   // eslint-disable-next-line react/forbid-prop-types
   style: pt.any,
 };

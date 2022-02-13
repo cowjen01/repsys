@@ -5,41 +5,29 @@ import { FixedSizeList } from 'react-window';
 
 import { ItemListView } from '../items';
 import { customInteractionsSelector, selectedUserSelector } from '../../reducers/app';
-import { itemFieldsSelector } from '../../reducers/settings';
 
-import { useGetInteractionsByUserQuery } from '../../api';
+import { useGetUserByIDQuery } from '../../api';
 
 const listHeight = 360;
 
 function renderRow({ index, style, data }) {
-  const { interactions, itemFields } = data;
-  const item = interactions[index];
-  return (
-    <ItemListView
-      style={style}
-      key={item.id}
-      id={item.id}
-      title={item[itemFields.title]}
-      subtitle={item[itemFields.subtitle]}
-      image={item[itemFields.image]}
-    />
-  );
+  const item = data[index];
+  return <ItemListView style={style} key={item.id} item={item} />;
 }
 
 function InteractionsList() {
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
-  const itemFields = useSelector(itemFieldsSelector);
 
-  const userInteractions = useGetInteractionsByUserQuery(selectedUser, {
+  const user = useGetUserByIDQuery(selectedUser, {
     skip: !selectedUser,
   });
 
-  const interactions = customInteractions.length ? customInteractions : userInteractions.data;
-
-  if (selectedUser && userInteractions.isLoading) {
+  if (selectedUser && user.isLoading) {
     return <Skeleton variant="rectangular" height={listHeight + 48} width="100%" />;
   }
+
+  const interactions = customInteractions.length ? customInteractions : user.data.interactions;
 
   return (
     <Paper>
@@ -56,10 +44,7 @@ function InteractionsList() {
       </Typography>
       <FixedSizeList
         height={listHeight}
-        itemData={{
-          interactions,
-          itemFields,
-        }}
+        itemData={interactions}
         itemSize={60}
         itemCount={interactions.length}
       >

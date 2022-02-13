@@ -19,6 +19,7 @@ import {
 import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
 import { TextField, SelectField, CheckboxField } from '../fields';
 import { useGetModelsQuery } from '../../api';
+import { capitalize } from '../../utils';
 
 function RecEditDialog() {
   const dialog = useSelector(recEditDialogSelector);
@@ -37,10 +38,17 @@ function RecEditDialog() {
         ...values,
         itemsPerPage: parseInt(values.itemsPerPage, 10),
       };
-      if (!values.id) {
+
+      // the index can be 0, so !dialog.index is not enough
+      if (dialog.index === null) {
         dispatch(addRecommender(data));
       } else {
-        dispatch(updateRecommender(data));
+        dispatch(
+          updateRecommender({
+            index: dialog.index,
+            data,
+          })
+        );
       }
       dispatch(
         openSnackbar({
@@ -49,7 +57,7 @@ function RecEditDialog() {
       );
       handleClose();
     },
-    [dispatch]
+    [dispatch, dialog]
   );
 
   const initialValues = useMemo(() => {
@@ -58,15 +66,23 @@ function RecEditDialog() {
     }
 
     const defaultParams = Object.fromEntries(
-      models.data.map((m) => [m.name, Object.fromEntries(m.params.map((a) => [a.name, a.default]))])
+      Object.entries(models.data).map(([modelName, modelData]) => [
+        modelName,
+        Object.fromEntries(
+          Object.entries(modelData.params).map(([paramName, paramData]) => [
+            paramName,
+            paramData.default,
+          ])
+        ),
+      ])
     );
 
     if (dialog.index === null) {
       return {
-        title: 'New bar',
+        name: 'New Recommender',
         itemsPerPage: 4,
         itemsLimit: 20,
-        model: models.data[0].name,
+        model: Object.keys(models.data)[0],
         modelParams: defaultParams,
       };
     }
@@ -92,8 +108,14 @@ function RecEditDialog() {
           validate={(values) => {
             const errors = {};
             const requiredMessage = 'This field is required.';
-            if (!values.title) {
-              errors.title = requiredMessage;
+            if (!values.name) {
+              errors.name = requiredMessage;
+            }
+            if (
+              dialog.index === null &&
+              recommenders.map(({ name }) => name).includes(values.name)
+            ) {
+              errors.name = 'The name must be unique.';
             }
             if (!values.itemsLimit) {
               errors.itemsLimit = requiredMessage;
@@ -109,10 +131,7 @@ function RecEditDialog() {
           }}
         >
           {({ submitForm, isSubmitting, values }) => {
-            const model = useMemo(
-              () => models.data.find((m) => m.name === values.model),
-              [values.model]
-            );
+            const model = useMemo(() => models.data[values.model], [values.model]);
             return (
               <>
                 <DialogContent>
@@ -121,7 +140,7 @@ function RecEditDialog() {
                       <Typography variant="subtitle2" component="div">
                         Appearance
                       </Typography>
-                      <Field name="title" label="Title" fullWidth component={TextField} />
+                      <Field name="name" label="Name" fullWidth component={TextField} />
                       <Grid container spacing={2}>
                         <Grid item xs={6}>
                           <Field
@@ -149,32 +168,37 @@ function RecEditDialog() {
                         name="model"
                         label="Model"
                         component={SelectField}
-                        options={[...models.data.map((m) => ({ label: m.name, value: m.name }))]}
+                        options={Object.keys(models.data).map((m) => ({ label: m, value: m }))}
                         displayEmpty
                       />
                       {model &&
                         model.params &&
-                        model.params.map((a) => {
-                          const name = `modelParams.${values.model}.${a.name}`;
+                        Object.entries(model.params).map(([paramName, paramData]) => {
+                          const name = `modelParams.${values.model}.${paramName}`;
                           const props = {
                             name,
-                            label: a.label,
+                            label: capitalize(paramName),
                           };
-                          if (a.type === 'select') {
+                          if (paramData.field === 'select') {
                             return (
                               <Field
-                                key={a.name}
+                                key={paramName}
                                 component={SelectField}
-                                options={a.options.map((b) => ({ label: b, value: b }))}
+                                options={paramData.options.map((b) => ({ label: b, value: b }))}
                                 {...props}
                               />
                             );
                           }
-                          if (a.type === 'bool') {
-                            return <Field key={a.name} component={CheckboxField} {...props} />;
+                          if (paramData.field === 'checkbox') {
+                            return <Field key={paramName} component={CheckboxField} {...props} />;
                           }
                           return (
-                            <Field key={a.name} component={TextField} type={a.type} {...props} />
+                            <Field
+                              key={paramName}
+                              component={TextField}
+                              type={paramData.field}
+                              {...props}
+                            />
                           );
                         })}
                     </Grid>

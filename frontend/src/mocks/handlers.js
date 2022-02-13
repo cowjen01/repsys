@@ -22,23 +22,29 @@ function randomInt(min, max) {
 }
 
 export const handlers = [
-  rest.get('/api/users/:splitName', (req, res, ctx) => {
+  rest.get('/api/users', (req, res, ctx) => {
     // train, validation, test
-    const { splitName } = req.params;
-    return res(ctx.json(splitName === 'validation' ? vadUsers : trainUsers));
+    const split = req.url.searchParams.get('split');
+    if (!split) return res(ctx.status(400));
+    return res(ctx.json(split === 'validation' ? vadUsers : trainUsers));
   }),
-  rest.post('/api/users/:splitName/search', (req, res, ctx) => {
-    const { splitName } = req.params;
-    const { interactions } = req.body;
+  rest.get('/api/users/embeddings', (req, res, ctx) => {
+    // split name: train, validation, test
+    const split = req.url.searchParams.get('split');
+    if (!split) return res(ctx.status(400));
+    const data = split === 'validation' ? vadUsersEmbeddings : trainUsersEmbeddings;
+    return res(ctx.delay(1500), ctx.json(data));
+  }),
+  rest.post('/api/users/search', (req, res, ctx) => {
+    const { interactions, split } = req.body;
     const { attribute, value, threshold } = interactions;
-
-    const shuffledArray = shuffle(splitName === 'validation' ? vadUsers : trainUsers);
+    if (!split) return res(ctx.status(400));
+    const shuffledArray = shuffle(split === 'validation' ? vadUsers : trainUsers);
     const randIds = shuffledArray.slice(0, randomInt(3, 20));
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
-  rest.post('/api/users/:splitName/describe', (req, res, ctx) => {
-    const { splitName } = req.params;
-    const { userIds } = req.body;
+  rest.post('/api/users/describe', (req, res, ctx) => {
+    const { users: userIDs, split } = req.body;
     usersDescription.topItems = shuffle(items).slice(0, 5);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
@@ -68,11 +74,7 @@ export const handlers = [
   }),
   rest.get('/api/items', (req, res, ctx) => {
     const query = req.url.searchParams.get('query');
-
-    if (!query) {
-      return res(ctx.status(400));
-    }
-
+    if (!query) return res(ctx.status(400));
     const randItems = shuffle(items).slice(0, randomInt(3, 20));
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
@@ -84,16 +86,12 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/items/describe', (req, res, ctx) => {
-    const itemIds = req.body;
+    const { items: itemIDs } = req.body;
     return res(ctx.delay(1000), ctx.json(itemsDescription));
   }),
-  rest.get('/api/embeddings/:splitName/users', (req, res, ctx) => {
-    // split name: train, validation, test
-    const { splitName } = req.params;
-    const data = splitName === 'validation' ? vadUsersEmbeddings : trainUsersEmbeddings;
-    return res(ctx.delay(1500), ctx.json(data));
+  rest.get('/api/items/embeddings', (req, res, ctx) => {
+    const split = req.url.searchParams.get('split');
+    if (!split) return res(ctx.status(400));
+    return res(ctx.delay(1500), ctx.json(itemsEmbeddings));
   }),
-  rest.get('/api/embeddings/:splitName/items', (req, res, ctx) =>
-    res(ctx.delay(1500), ctx.json(itemsEmbeddings))
-  ),
 ];

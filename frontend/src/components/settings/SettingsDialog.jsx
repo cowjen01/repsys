@@ -13,9 +13,9 @@ import { Formik, Field } from 'formik';
 
 import {
   darkModeSelector,
-  itemFieldsSelector,
+  itemViewSelector,
   setDarkMode,
-  setItemFields,
+  setItemView,
 } from '../../reducers/settings';
 import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
 import { SelectField, CheckboxField } from '../fields';
@@ -30,7 +30,7 @@ function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
   const dialogOpen = useSelector(settingsDialogSelector);
   const dispatch = useDispatch();
-  const itemFields = useSelector(itemFieldsSelector);
+  const itemView = useSelector(itemViewSelector);
 
   const dataset = useGetDatasetQuery();
 
@@ -41,7 +41,7 @@ function SettingsDialog() {
   const handleSubmit = useCallback(
     (values) => {
       dispatch(setDarkMode(values.darkMode));
-      dispatch(setItemFields(values.itemFields));
+      dispatch(setItemView(values.itemView));
       dispatch(
         openSnackbar({
           message: 'All settings successfully applied!',
@@ -57,7 +57,10 @@ function SettingsDialog() {
       return [];
     }
 
-    const options = dataset.data.columns.map((col) => ({ label: col, value: col }));
+    const options = Object.keys(dataset.data.attributes).map((attr) => ({
+      label: attr,
+      value: attr,
+    }));
 
     return ['', ...options];
   }, [dataset.isLoading]);
@@ -69,13 +72,13 @@ function SettingsDialog() {
         <Formik
           initialValues={{
             darkMode,
-            itemFields,
+            itemView,
           }}
           validate={(values) => {
             const errors = {};
             const requiredMessage = 'This field is required.';
-            if (!values.itemFields.title) {
-              errors['itemFields.title'] = requiredMessage;
+            if (!values.itemView.title) {
+              errors['itemView.title'] = requiredMessage;
             }
             return errors;
           }}
@@ -95,7 +98,7 @@ function SettingsDialog() {
                     {['title', 'subtitle', 'caption', 'image', 'content'].map((field) => (
                       <Field
                         key={field}
-                        name={`itemFields.${field}`}
+                        name={`itemView.${field}`}
                         label={`${capitalize(field)} field column`}
                         fullWidth
                         component={SelectField}

@@ -6,7 +6,6 @@ import Plotly from 'plotly.js';
 import { ScatterPlot } from '../plots';
 import { CategoryFilter } from '../filters';
 import { plotColors } from '../../const';
-import PlotLoader from '../PlotLoader';
 
 const userEmbeddings = [
   {
@@ -471,20 +470,18 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
           />
         )}
       </Stack>
-      <Box position="relative">
-        {isLoading && <PlotLoader />}
-        <ScatterPlot
-          height={450}
-          x={scatterPoints.x}
-          y={scatterPoints.y}
-          meta={scatterPoints.meta}
-          color={scatterColors}
-          label={scatterPoints.label}
-          innerRef={scatterRef}
-          onDeselect={handleScatterUnselect}
-          onSelected={handleScatterSelect}
-        />
-      </Box>
+      <ScatterPlot
+        height={450}
+        isLoading={isLoading}
+        x={scatterPoints.x}
+        y={scatterPoints.y}
+        meta={scatterPoints.meta}
+        color={scatterColors}
+        label={scatterPoints.label}
+        innerRef={scatterRef}
+        onDeselect={handleScatterUnselect}
+        onSelected={handleScatterSelect}
+      />
     </Paper>
   );
 }

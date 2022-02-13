@@ -5,27 +5,27 @@ export const slice = createSlice({
   name: 'settings',
   initialState: {
     darkMode: false,
-    itemFields: {
-      title: null,
-      image: null,
-      content: null,
-      caption: null,
-      subtitle: null,
+    itemView: {
+      title: '',
+      subtitle: '',
+      caption: '',
+      image: '',
+      content: '',
     },
   },
   reducers: {
     setDarkMode: (state, { payload }) => {
       state.darkMode = payload;
     },
-    setItemFields: (state, { payload }) => {
-      state.itemFields = payload;
+    setItemView: (state, { payload }) => {
+      state.itemView = payload;
     },
   },
 });
 
-export const { setDarkMode, setItemFields } = slice.actions;
+export const { setDarkMode, setItemView } = slice.actions;
 
 export const darkModeSelector = (state) => state.settings.darkMode;
-export const itemFieldsSelector = (state) => state.settings.itemFields;
+export const itemViewSelector = (state) => state.settings.itemView;
 
 export default slice.reducer;

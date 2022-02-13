@@ -17,21 +17,6 @@ export const dataset = {
       dtype: 'tags',
       options: ['Adventure', 'Animation', 'Children', 'Comedy', 'Musical', 'Crime', 'Thriller'],
     },
-    languages: {
-      dtype: 'tags',
-      options: [
-        'Nepali',
-        'Haitian Creole',
-        'Gujarati',
-        'Māori',
-        'Montenegrin',
-        'Lao',
-        'Moldovan',
-        'Swati',
-        'Somali',
-        'Punjabi',
-      ],
-    },
     country: {
       dtype: 'category',
       options: [

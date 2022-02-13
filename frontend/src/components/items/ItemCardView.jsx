@@ -1,9 +1,13 @@
 import React, { useState } from 'react';
 import pt from 'prop-types';
 import { Typography, Card, CardContent, CardMedia, CardActionArea, Skeleton } from '@mui/material';
+import { useSelector } from 'react-redux';
 
-function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick }) {
+import { itemViewSelector } from '../../reducers/settings';
+
+function ItemCardView({ item, imageHeight, onClick }) {
   const [imageLoaded, setImageLoaded] = useState(false);
+  const itemView = useSelector(itemViewSelector);
 
   return (
     <Card sx={{ width: '100%', height: '100%' }}>
@@ -11,7 +15,7 @@ function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick })
         sx={{ height: '100%', flexDirection: 'column', alignItems: 'stretch' }}
         onClick={onClick}
       >
-        {image && (
+        {item[itemView.image] && (
           <CardMedia
             sx={{
               height: imageHeight,
@@ -19,25 +23,25 @@ function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick })
               display: !imageLoaded ? 'none' : 'block',
             }}
             component="img"
-            image={image}
+            image={item[itemView.image]}
             onLoad={() => setImageLoaded(true)}
           />
         )}
-        {image && !imageLoaded && (
+        {item[itemView.image] && !imageLoaded && (
           <Skeleton variant="rectangular" height={imageHeight} width="100%" />
         )}
         <CardContent>
-          {caption && (
+          {item[itemView.caption] && (
             <Typography noWrap sx={{ fontSize: 13 }} color="text.secondary" gutterBottom>
-              {caption}
+              {item[itemView.caption]}
             </Typography>
           )}
           <Typography noWrap sx={{ fontSize: 16 }} component="div">
-            {title}
+            {item[itemView.title]}
           </Typography>
-          {subtitle && (
+          {item[itemView.subtitle] && (
             <Typography noWrap sx={{ fontSize: 15 }} color="text.secondary">
-              {subtitle}
+              {item[itemView.subtitle]}
             </Typography>
           )}
         </CardContent>
@@ -46,18 +50,10 @@ function ItemCardView({ caption, title, subtitle, image, imageHeight, onClick })
   );
 }
 
-ItemCardView.defaultProps = {
-  caption: '',
-  subtitle: '',
-  image: '',
-};
-
 ItemCardView.propTypes = {
   imageHeight: pt.number.isRequired,
-  caption: pt.string,
-  subtitle: pt.string,
-  image: pt.string,
-  title: pt.string.isRequired,
+  // eslint-disable-next-line react/forbid-prop-types
+  item: pt.any.isRequired,
   onClick: pt.func.isRequired,
 };
 

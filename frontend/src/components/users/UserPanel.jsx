@@ -29,7 +29,7 @@ import {
 import InteractionsList from './InteractionsList';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
 
-import { useGetInteractionsByUserQuery } from '../../api';
+import { useGetUserByIDQuery } from '../../api';
 
 function UserPanel() {
   const dispatch = useDispatch();
@@ -39,7 +39,7 @@ function UserPanel() {
   const buildMode = useSelector(buildModeSelector);
 
   // FIXME
-  const userInteractions = useGetInteractionsByUserQuery(selectedUser);
+  const user = useGetUserByIDQuery(selectedUser);
 
   const handleDelete = () => {
     dispatch(setCustomInteractions([]));
@@ -48,7 +48,7 @@ function UserPanel() {
 
   const handleRecordBtnClick = () => {
     if (selectedUser) {
-      dispatch(toggleSessionRecording(userInteractions));
+      dispatch(toggleSessionRecording(user.data.interactions));
     } else {
       dispatch(toggleSessionRecording());
     }
