@@ -141,15 +141,24 @@ class Dataset(ABC):
     def _build_tr_te_matrix(cls, tp, n_items):
         tp_tr, tp_te = tp
 
+        # we need to get a bottom and top index of the vad/test users
         start_idx = min(tp_tr["user_idx"].min(), tp_te["user_idx"].min())
         end_idx = max(tp_tr["user_idx"].max(), tp_te["user_idx"].max())
 
+        # shift all indexes by a number of the train users (in a case of the validation users)
+        # or the validation users (in a case of test users) to start from a zero
         rows_tr, cols_tr = tp_tr["user_idx"] - start_idx, tp_tr["item_idx"]
         rows_te, cols_te = tp_te["user_idx"] - start_idx, tp_te["item_idx"]
 
+        # the first vad/test user is at the zero position of the sparse matrix
+        # to get his ID, we need to take the index (e.g. 0) and add the total
+        # number of the train users to get the index in the dictionary (user_index.txt)
+        # at the line number xyz will be user's ID
         data_tr = sparse.csr_matrix(
             (np.ones_like(rows_tr), (rows_tr, cols_tr)),
             dtype="float64",
+            # a size of the sparse matrix is a difference between the lowest index
+            # and the highest index of the current vad/test set
             shape=(end_idx - start_idx + 1, n_items),
         )
 
@@ -190,7 +199,8 @@ class Dataset(ABC):
             self._raw_test_data, self.n_items
         )
 
-        self.vad_users = list(self._user2idx.keys())
+        vad_users_idxs = self._raw_vad_data[0]['user_idx'].unique()
+        self.vad_users = list(map(lambda x: self._idx2user[x], vad_users_idxs))
 
         logger.debug("Processing items data ...")
 
@@ -477,6 +487,9 @@ class DatasetSplitter:
         # filter only interactions with items included in the item index
         interacts = interacts.loc[interacts[self.item_col].isin(item_index)]
         # filter only interactions meet the main criteria
+        # this way we ensure there will be no vad/test user with less
+        # than x interactions (this could cause some user gets into the vad-tr set
+        # but not into the vad-te set because of not enough interactions)
         interacts, activity, _ = self._filter_triplets(interacts)
 
         return interacts, activity.index
@@ -549,6 +562,10 @@ class DatasetSplitter:
             test_interacts
         )
 
+        # train users come from the original shuffled index
+        # but the vad/test users are fetched from the dataframe index
+        # which is created during adhoc triplets filtration process
+        # this is a reason, why the users are sorted by their ID
         train_split = Split(train_interacts, None, tr_users)
         vad_split = Split(vad_interacts_tr, vad_interacts_te, vad_users)
         test_split = Split(test_interacts_tr, test_interacts_te, test_users)

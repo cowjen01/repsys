@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Paper, Typography, Stack, Box, Alert, Chip, AlertTitle } from '@mui/material';
+import { Paper, Typography, Stack, Box, Chip } from '@mui/material';
 
 import PanelLoader from '../PanelLoader';
 import BarPlotHistogram from './BarPlotHistogram';
+import { sleep, capitalize } from '../../utils';
 
 const characteristics = {
   genres: {
@@ -16,14 +17,6 @@ const characteristics = {
     bins: [0, 2000, 2006, 2020, 2050, 2070],
   },
 };
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function ItemDescriptionPanel({ columns, itemIds }) {
   const [isLoading, setIsLoading] = useState(false);

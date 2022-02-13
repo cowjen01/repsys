@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Paper, Typography, Stack, Box, List, Alert, AlertTitle } from '@mui/material';
+import { Paper, Typography, Stack, Box, List } from '@mui/material';
 import { useSelector } from 'react-redux';
 
 import BarPlotHistogram from './BarPlotHistogram';
 import PanelLoader from '../PanelLoader';
 import { ItemListView } from '../items';
 import { itemFieldsSelector } from '../../reducers/settings';
+import { sleep } from '../../utils';
 
 const data = {
   usersRatio: 0.45,
@@ -65,10 +66,6 @@ const data = {
     },
   ],
 };
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function UserDescriptionPanel({ userIds }) {
   const [isLoading, setIsLoading] = useState(false);

@@ -9,3 +9,5 @@ pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases
 ```
 
 For Macbook M1 support install JAXLIB from here: https://anaconda.org/conda-forge/jaxlib
+
+https://www.npmjs.com/package/insomnia-documenter
