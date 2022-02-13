@@ -25,16 +25,16 @@ export const handlers = [
   rest.get('/api/users/:splitName', (req, res, ctx) => {
     // train, validation, test
     const { splitName } = req.params;
-    const interactionsFilter = req.url.searchParams.get('interactionsFilter');
-    const interactionsLimit = req.url.searchParams.get('interactionsLimit');
-
-    if (interactionsFilter && interactionsLimit) {
-      const shuffledArray = shuffle(splitName === 'validation' ? vadUsers : trainUsers);
-      const randIds = shuffledArray.slice(0, randomInt(3, 20));
-      return res(ctx.delay(1000), ctx.json(randIds));
-    }
-
     return res(ctx.json(splitName === 'validation' ? vadUsers : trainUsers));
+  }),
+  rest.post('/api/users/:splitName/search', (req, res, ctx) => {
+    const { splitName } = req.params;
+    const { interactions } = req.body;
+    const { attribute, value, threshold } = interactions;
+
+    const shuffledArray = shuffle(splitName === 'validation' ? vadUsers : trainUsers);
+    const randIds = shuffledArray.slice(0, randomInt(3, 20));
+    return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/users/:splitName/describe', (req, res, ctx) => {
     const { splitName } = req.params;
@@ -67,19 +67,24 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
   rest.get('/api/items', (req, res, ctx) => {
-    const fieldMask = req.url.searchParams.get('fieldMask');
-    // attribute name-attribute value pairs
-    const filter = req.url.searchParams.get('filter');
+    const query = req.url.searchParams.get('query');
 
-    if (!filter) {
+    if (!query) {
       return res(ctx.status(400));
     }
 
     const randItems = shuffle(items).slice(0, randomInt(3, 20));
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
+  rest.post('/api/items/search', (req, res, ctx) => {
+    const { attribute, value } = req.body;
+    const randIds = shuffle(items)
+      .slice(0, randomInt(3, 20))
+      .map(({ id }) => id);
+    return res(ctx.delay(1000), ctx.json(randIds));
+  }),
   rest.post('/api/items/describe', (req, res, ctx) => {
-    const { itemIds } = req.body;
+    const itemIds = req.body;
     return res(ctx.delay(1000), ctx.json(itemsDescription));
   }),
   rest.get('/api/embeddings/:splitName/users', (req, res, ctx) => {
