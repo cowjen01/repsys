@@ -8,26 +8,21 @@ export const repsysApi = createApi({
       query: (split = 'train') => `/users?split=${split}`,
     }),
     searchUsersByInteractions: builder.mutation({
-      query: ({ split = 'train', attribute, value, threshold }) => ({
+      query: ({ split = 'train', query }) => ({
         url: `/users/search`,
         method: 'POST',
         body: {
           split,
-          interactions: {
-            attribute,
-            value,
-            threshold,
-          },
+          query,
         },
       }),
     }),
     searchItemsByAttribute: builder.mutation({
-      query: ({ attribute, value }) => ({
+      query: (query) => ({
         url: `/items/search`,
         method: 'POST',
         body: {
-          attribute,
-          value,
+          query,
         },
       }),
     }),

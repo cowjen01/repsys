@@ -1,6 +1,6 @@
 import React from 'react';
 import pt from 'prop-types';
-import { Box, Toolbar, AppBar, Typography, Stack, Button, Grid } from '@mui/material';
+import { Box, Toolbar, AppBar, Typography, Stack, Button, Grid, Container } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import DonutSmallIcon from '@mui/icons-material/DonutSmall';
@@ -76,7 +76,7 @@ function Layout({ children }) {
         }}
       >
         <Toolbar />
-        {children}
+        <Container maxWidth="xl">{children}</Container>
       </Box>
     </>
   );

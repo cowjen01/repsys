@@ -47,7 +47,7 @@ function RecomsPreview() {
   };
 
   return (
-    <Container maxWidth="xl">
+    <>
       <Grid container spacing={4}>
         {!itemView.title && (
           <Grid item xs={12}>
@@ -127,7 +127,7 @@ function RecomsPreview() {
           Favourite user
         </Fab>
       )}
-    </Container>
+    </>
   );
 }
 

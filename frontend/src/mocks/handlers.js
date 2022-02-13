@@ -36,8 +36,8 @@ export const handlers = [
     return res(ctx.delay(1500), ctx.json(data));
   }),
   rest.post('/api/users/search', (req, res, ctx) => {
-    const { interactions, split } = req.body;
-    const { attribute, value, threshold } = interactions;
+    const { query, split } = req.body;
+    const { attribute, values, range, threshold } = query;
     if (!split) return res(ctx.status(400));
     const shuffledArray = shuffle(split === 'validation' ? vadUsers : trainUsers);
     const randIds = shuffledArray.slice(0, randomInt(3, 20));
@@ -45,7 +45,7 @@ export const handlers = [
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
     const { users: userIDs, split } = req.body;
-    usersDescription.topItems = shuffle(items).slice(0, 5);
+    usersDescription.interactions.topItems = shuffle(items).slice(0, 5);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {
@@ -79,7 +79,7 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
   rest.post('/api/items/search', (req, res, ctx) => {
-    const { attribute, value } = req.body;
+    const { attribute, values, range } = req.body.query;
     const randIds = shuffle(items)
       .slice(0, randomInt(3, 20))
       .map(({ id }) => id);
@@ -87,11 +87,15 @@ export const handlers = [
   }),
   rest.post('/api/items/describe', (req, res, ctx) => {
     const { items: itemIDs } = req.body;
+    const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 5);
+    const randCountries = shuffle(dataset.attributes.genres.options).slice(0, 5);
+    itemsDescription.attributes.genres.topValues = randGenres;
+    itemsDescription.attributes.country.topValues = randCountries;
     return res(ctx.delay(1000), ctx.json(itemsDescription));
   }),
   rest.get('/api/items/embeddings', (req, res, ctx) => {
     const split = req.url.searchParams.get('split');
     if (!split) return res(ctx.status(400));
-    return res(ctx.delay(1500), ctx.json(itemsEmbeddings));
+    return res(ctx.delay(500), ctx.json(itemsEmbeddings));
   }),
 ];

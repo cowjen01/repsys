@@ -212,137 +212,135 @@ function ModelsEvaluation() {
   );
 
   return (
-    <Container maxWidth="xl">
-      <Grid container spacing={3}>
-        <Grid item xs={12}>
-          <Box pl={1}>
-            <Typography component="div" variant="h6">
-              Models Performance
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              A performance in the individual metrics with comparasion to the previous evaluation
-            </Typography>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid item xs={7}>
-              <Paper sx={{ height: '100%' }}>
-                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                  <Tabs value={modelTab} onChange={handleModelTabChange} variant="fullWidth">
-                    {summaryData.map((m) => (
-                      <Tab label={m.name} key={m.name} />
-                    ))}
-                  </Tabs>
-                </Box>
-                <Box sx={{ p: 2 }}>
-                  <Grid container>
-                    {Object.entries(summaryData[modelTab].metrics).map(([metric, value]) => (
-                      <Grid item xs={3} key={metric}>
-                        <IndicatorPlot
-                          title={metric}
-                          height={150}
-                          value={value}
-                          delta={
-                            summaryData[0].metricsPrev && summaryData[0].metricsPrev[metric]
-                              ? summaryData[0].metricsPrev[metric]
-                              : 0
-                          }
-                        />
-                      </Grid>
-                    ))}
-                  </Grid>
-                </Box>
+    <Grid container spacing={3}>
+      <Grid item xs={12}>
+        <Box pl={1}>
+          <Typography component="div" variant="h6">
+            Models Performance
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            A performance in the individual metrics with comparasion to the previous evaluation
+          </Typography>
+        </Box>
+        <Grid container spacing={2}>
+          <Grid item xs={7}>
+            <Paper sx={{ height: '100%' }}>
+              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                <Tabs value={modelTab} onChange={handleModelTabChange} variant="fullWidth">
+                  {summaryData.map((m) => (
+                    <Tab label={m.name} key={m.name} />
+                  ))}
+                </Tabs>
+              </Box>
+              <Box sx={{ p: 2 }}>
+                <Grid container>
+                  {Object.entries(summaryData[modelTab].metrics).map(([metric, value]) => (
+                    <Grid item xs={3} key={metric}>
+                      <IndicatorPlot
+                        title={metric}
+                        height={150}
+                        value={value}
+                        delta={
+                          summaryData[0].metricsPrev && summaryData[0].metricsPrev[metric]
+                            ? summaryData[0].metricsPrev[metric]
+                            : 0
+                        }
+                      />
+                    </Grid>
+                  ))}
+                </Grid>
+              </Box>
+            </Paper>
+          </Grid>
+          {summaryData.length > 1 && (
+            <Grid item xs={5}>
+              <Paper>
+                <BarPlot
+                  orientation="h"
+                  data={summaryData.map((model) => ({
+                    y: Object.keys(model.metrics),
+                    x: Object.values(model.metrics),
+                    name: model.name,
+                  }))}
+                  layoutProps={{
+                    margin: { t: 30, b: 40, l: 120, r: 40 },
+                  }}
+                  height={400}
+                />
               </Paper>
             </Grid>
-            {summaryData.length > 1 && (
-              <Grid item xs={5}>
-                <Paper>
-                  <BarPlot
-                    orientation="h"
-                    data={summaryData.map((model) => ({
-                      y: Object.keys(model.metrics),
-                      x: Object.values(model.metrics),
-                      name: model.name,
-                    }))}
-                    layoutProps={{
-                      margin: { t: 30, b: 40, l: 120, r: 40 },
-                    }}
-                    height={400}
+          )}
+        </Grid>
+      </Grid>
+      <Grid item xs={12}>
+        <Box pl={1}>
+          <Typography component="div" variant="h6">
+            Metrics Distribution
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            A distribution of the metrics for each validation user
+          </Typography>
+        </Box>
+        <Grid container spacing={2}>
+          <Grid item xs={8}>
+            <MetricsHistogramPlot onSelect={(users) => setSelectedUsers(users.points)} />
+          </Grid>
+          <Grid item xs={4}>
+            {selectedUsers.length > 0 && (
+              <Paper sx={{ height: '100%' }}>
+                <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+                  <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
+                    <Tab label="User embeddings" />
+                    <Tab label="User details" />
+                  </Tabs>
+                </Box>
+
+                <TabPanel value={histTab} index={0}>
+                  <ScatterPlot
+                    height={380}
+                    x={scatterPoints.x}
+                    y={scatterPoints.y}
+                    z={scatterPoints.z}
+                    color={scatterColors}
                   />
-                </Paper>
-              </Grid>
+                </TabPanel>
+                <TabPanel value={histTab} index={1}>
+                  <List
+                    dense
+                    subheader={
+                      <ListSubheader component="div">The Most Interacted Items</ListSubheader>
+                    }
+                  >
+                    <ItemListView
+                      title="Four Weddings and a Funeral (1994)"
+                      subtitle="Comedy, Drama, Romance"
+                      image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                    />
+                    <ItemListView
+                      title="Cutthroat Island (1995)"
+                      subtitle="Action, Adventure, Comedy"
+                    />
+                    <ItemListView
+                      title="Four Weddings and a Funeral (1994)"
+                      subtitle="Comedy, Drama, Romance"
+                      image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
+                    />
+                    <ItemListView
+                      title="Cutthroat Island (1995)"
+                      subtitle="Action, Adventure, Comedy"
+                    />
+                    <ItemListView
+                      title="Cutthroat Island (1995)"
+                      subtitle="Action, Adventure, Comedy"
+                    />
+                  </List>
+                </TabPanel>
+              </Paper>
             )}
           </Grid>
         </Grid>
-        <Grid item xs={12}>
-          <Box pl={1}>
-            <Typography component="div" variant="h6">
-              Metrics Distribution
-            </Typography>
-            <Typography variant="subtitle1" gutterBottom>
-              A distribution of the metrics for each validation user
-            </Typography>
-          </Box>
-          <Grid container spacing={2}>
-            <Grid item xs={8}>
-              <MetricsHistogramPlot onSelect={(users) => setSelectedUsers(users.points)} />
-            </Grid>
-            <Grid item xs={4}>
-              {selectedUsers.length > 0 && (
-                <Paper sx={{ height: '100%' }}>
-                  <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                    <Tabs value={histTab} onChange={handleHistTabChange} variant="fullWidth">
-                      <Tab label="User embeddings" />
-                      <Tab label="User details" />
-                    </Tabs>
-                  </Box>
-
-                  <TabPanel value={histTab} index={0}>
-                    <ScatterPlot
-                      height={380}
-                      x={scatterPoints.x}
-                      y={scatterPoints.y}
-                      z={scatterPoints.z}
-                      color={scatterColors}
-                    />
-                  </TabPanel>
-                  <TabPanel value={histTab} index={1}>
-                    <List
-                      dense
-                      subheader={
-                        <ListSubheader component="div">The Most Interacted Items</ListSubheader>
-                      }
-                    >
-                      <ItemListView
-                        title="Four Weddings and a Funeral (1994)"
-                        subtitle="Comedy, Drama, Romance"
-                        image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                      />
-                      <ItemListView
-                        title="Cutthroat Island (1995)"
-                        subtitle="Action, Adventure, Comedy"
-                      />
-                      <ItemListView
-                        title="Four Weddings and a Funeral (1994)"
-                        subtitle="Comedy, Drama, Romance"
-                        image="https://m.media-amazon.com/images/M/MV5BMTMyNzg2NzgxNV5BMl5BanBnXkFtZTcwMTcxNzczNA@@..jpg"
-                      />
-                      <ItemListView
-                        title="Cutthroat Island (1995)"
-                        subtitle="Action, Adventure, Comedy"
-                      />
-                      <ItemListView
-                        title="Cutthroat Island (1995)"
-                        subtitle="Action, Adventure, Comedy"
-                      />
-                    </List>
-                  </TabPanel>
-                </Paper>
-              )}
-            </Grid>
-          </Grid>
-        </Grid>
       </Grid>
-    </Container>
+    </Grid>
   );
 }
 

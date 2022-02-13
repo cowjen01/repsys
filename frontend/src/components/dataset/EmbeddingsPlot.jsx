@@ -1,319 +1,38 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import pt from 'prop-types';
-import { Paper, Stack, Backdrop, Box, CircularProgress, TextField } from '@mui/material';
+import { Paper, Stack, TextField } from '@mui/material';
 import Plotly from 'plotly.js';
 
 import { ScatterPlot } from '../plots';
 import { CategoryFilter } from '../filters';
 import { plotColors } from '../../const';
+import { capitalize } from '../../utils';
 
-const userEmbeddings = [
-  {
-    id: 1,
-    x: 0.89,
-    y: 0.4,
-  },
-  {
-    id: 2,
-    x: 0.3,
-    y: 0.29,
-  },
-  {
-    id: 3,
-    x: 0.41,
-    y: 0.25,
-  },
-  {
-    id: 4,
-    x: 0.56,
-    y: 0.59,
-  },
-  {
-    id: 5,
-    x: 0.37,
-    y: 0.73,
-  },
-  {
-    id: 6,
-    x: 0.32,
-    y: 0.33,
-  },
-  {
-    id: 7,
-    x: 0.68,
-    y: 0.95,
-  },
-  {
-    id: 8,
-    x: 0.25,
-    y: 0.44,
-  },
-  {
-    id: 9,
-    x: 0.71,
-    y: 0.39,
-  },
-  {
-    id: 10,
-    x: 0.35,
-    y: 0.87,
-  },
-  {
-    id: 11,
-    x: 0.19,
-    y: 0.16,
-  },
-  {
-    id: 12,
-    x: 0.47,
-    y: 0.26,
-  },
-  {
-    id: 13,
-    x: 0.46,
-    y: 0.99,
-  },
-  {
-    id: 14,
-    x: 0.44,
-    y: 0.32,
-  },
-  {
-    id: 15,
-    x: 0.4,
-    y: 0.9,
-  },
-  {
-    id: 16,
-    x: 0.28,
-    y: 0.78,
-  },
-  {
-    id: 17,
-    x: 0.54,
-    y: 0.08,
-  },
-  {
-    id: 18,
-    x: 0.13,
-    y: 0.73,
-  },
-  {
-    id: 19,
-    x: 0.42,
-    y: 0.27,
-  },
-  {
-    id: 20,
-    x: 0.16,
-    y: 0.11,
-  },
-  {
-    id: 21,
-    x: 0.8,
-    y: 0.11,
-  },
-  {
-    id: 22,
-    x: 0.21,
-    y: 0.89,
-  },
-  {
-    id: 23,
-    x: 0.15,
-    y: 0.83,
-  },
-  {
-    id: 24,
-    x: 0.84,
-    y: 0.19,
-  },
-  {
-    id: 25,
-    x: 0.16,
-    y: 0.13,
-  },
-  {
-    id: 26,
-    x: 0.96,
-    y: 0.76,
-  },
-  {
-    id: 27,
-    x: 0.32,
-    y: 0.39,
-  },
-  {
-    id: 28,
-    x: 0.52,
-    y: 0.99,
-  },
-  {
-    id: 29,
-    x: 0.18,
-    y: 0.93,
-  },
-  {
-    id: 30,
-    x: 0.68,
-    y: 0.34,
-  },
-];
-
-const itemEmbeddings = [
-  {
-    x: 0.72,
-    y: 0.7,
-    c: 3,
-    label: 'Ghosts of Mississippi',
-    year: 1968,
-    id: 1307,
-    country: 'CO',
-    genres: ['comedy', 'action'],
-  },
-  {
-    x: 0.37,
-    y: 0.78,
-    c: 1,
-    id: 1303,
-    label: 'American Pie 2',
-    year: 1996,
-    country: 'CO',
-    genres: ['action'],
-  },
-  {
-    x: 0.07,
-    y: 0.44,
-    c: 5,
-    id: 1302,
-    label: 'Inglorious Bastards (Quel maledetto treno blindato)',
-    year: 1997,
-    country: 'MK',
-    genres: ['comedy', 'horror', 'action'],
-  },
-  {
-    x: 0.07,
-    y: 0.93,
-    c: 3,
-    id: 1300,
-    label: 'Prince of Egypt, The',
-    year: 2001,
-    country: 'FR',
-    genres: ['action'],
-  },
-  {
-    x: 0.63,
-    y: 0.79,
-    c: 3,
-    id: 1322,
-    label: 'Friday the 13th',
-    year: 2010,
-    country: 'CN',
-    genres: ['horror'],
-  },
-  {
-    x: 0.65,
-    y: 0.4,
-    c: 2,
-    id: 1325,
-    label: 'Pearl Harbor',
-    year: 2015,
-    country: 'ID',
-    genres: ['drama'],
-  },
-  {
-    x: 0.42,
-    y: 0.79,
-    c: 3,
-    id: 1329,
-    label: 'Ghosts of Mississippi',
-    year: 1968,
-    country: 'CO',
-    genres: ['comedy', 'action'],
-  },
-  {
-    x: 0.17,
-    y: 0.98,
-    c: 1,
-    id: 13212,
-    label: 'American Pie 2',
-    year: 1996,
-    country: 'CO',
-    genres: ['action'],
-  },
-  {
-    x: 0.37,
-    y: 0.84,
-    c: 5,
-    id: 13232,
-    label: 'Inglorious Bastards (Quel maledetto treno blindato)',
-    year: 1997,
-    country: 'MK',
-    genres: ['comedy', 'horror', 'action'],
-  },
-  {
-    x: 0.27,
-    y: 0.43,
-    c: 3,
-    id: 13543,
-    label: 'Prince of Egypt, The',
-    year: 2001,
-    country: 'FR',
-    genres: ['action'],
-  },
-  {
-    x: 0.43,
-    y: 0.29,
-    c: 3,
-    id: 1312,
-    label: 'Friday the 13th',
-    year: 2010,
-    country: 'CN',
-    genres: ['horror'],
-  },
-  {
-    x: 0.6,
-    y: 0.44,
-    c: 2,
-    id: 13765,
-    label: 'Pearl Harbor',
-    year: 2015,
-    country: 'ID',
-    genres: ['drama'],
-  },
-];
-
-function getItemIds(argumentName, argumentValue) {
-  return [13765, 1312, 1325, 1322];
-}
-
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function EmbeddingsPlot({ columns, onSelect, dataType }) {
-  const [embeddingsData, setEmbeddingsData] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedField, setSelectedField] = useState('');
+function EmbeddingsPlot({
+  attributes,
+  onSelect,
+  onFilterApply,
+  displayThreshold,
+  filterResults,
+  embeddings,
+}) {
+  const [selectedAttribute, setSelectedAttribute] = useState('');
   const [selectedValues, setSelectedValues] = useState([]);
-  const [minInteractions, setMinInteractions] = useState(5);
+  const [selectedThreshold, setSelectedThreshold] = useState(5);
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
 
   useEffect(() => {
-    async function fetchData() {
-      setIsLoading(true);
-      await sleep(1000);
-      setIsLoading(false);
+    if (filterResults.length) {
+      const indices = embeddings.reduce((acc, item, index) => {
+        if (filterResults.includes(item.id)) {
+          acc.push(index);
+        }
+        return acc;
+      }, []);
+      setHighlightedPoints(indices);
     }
-    if (dataType === 'users') {
-      fetchData();
-      setEmbeddingsData(userEmbeddings);
-    } else {
-      fetchData();
-      setEmbeddingsData(itemEmbeddings);
-    }
-  }, []);
+  }, [filterResults]);
 
   const scatterColors = useMemo(() => {
     if (!highlightedPoints.length) {
@@ -321,7 +40,7 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
     }
 
     const colors = [];
-    for (let i = 0; i < embeddingsData.length; i += 1) {
+    for (let i = 0; i < embeddings.length; i += 1) {
       colors.push(plotColors.unselectedMarker);
     }
 
@@ -332,13 +51,24 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
     return colors;
   }, [highlightedPoints]);
 
+  const attributeOptions = useMemo(
+    () =>
+      Object.entries(attributes)
+        .filter((attribute) => ['number', 'category', 'tags'].includes(attribute[1].dtype))
+        .map((attribute) => ({
+          value: attribute[0],
+          label: capitalize(attribute[0]),
+        })),
+    [attributes]
+  );
+
   const filterOptions = useMemo(() => {
-    if (selectedField) {
-      const col = columns[selectedField];
+    if (selectedAttribute) {
+      const col = attributes[selectedAttribute];
       if (col.dtype === 'number') {
-        return col.bins.map((bin, index) => ({
+        return col.bins.slice(1).map((bin, index) => ({
           value: index,
-          label: `${bin[0]} - ${bin[1]}`,
+          label: `${col.bins[index]} - ${bin}`,
         }));
       }
       return col.options.map((option) => ({
@@ -347,59 +77,58 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
       }));
     }
     return [];
-  }, [selectedField]);
+  }, [selectedAttribute]);
 
   const scatterPoints = useMemo(
     () => ({
-      x: embeddingsData.map(({ x }) => x),
-      y: embeddingsData.map(({ y }) => y),
-      meta: embeddingsData.map(({ id }) => ({ id })),
-      label: embeddingsData.map(({ label }) => label),
+      x: embeddings.map(({ x }) => x),
+      y: embeddings.map(({ y }) => y),
+      meta: embeddings.map(({ id }) => ({ id })),
+      label: embeddings.map(({ label }) => label),
     }),
-    [isLoading]
+    [embeddings]
   );
 
   const isMultipleSelect = useMemo(() => {
-    if (selectedField) {
-      const fieldType = columns[selectedField].dtype;
-      return fieldType === 'tags' || fieldType === 'category';
+    if (selectedAttribute) {
+      const fieldType = attributes[selectedAttribute].dtype;
+      return fieldType === 'tags';
     }
     return false;
-  }, [selectedField]);
+  }, [selectedAttribute]);
 
   const resetFilterSelection = () => {
     setSelectedValues([]);
-    setSelectedField('');
+    setSelectedAttribute('');
   };
 
   const resetScatterSelection = () => {
     Plotly.restyle(scatterRef.current.el, { selectedpoints: [null] });
   };
 
-  const handleFilterApply = async () => {
+  const handleFilterApply = () => {
     if (selectedValues.length) {
-      setIsLoading(true);
-      await sleep(500);
-      setIsLoading(false);
-
-      const ids = getItemIds(selectedField, selectedValues);
-
-      if (!ids.length) {
-        setHighlightedPoints([]);
+      const fieldType = attributes[selectedAttribute].dtype;
+      if (fieldType === 'number') {
+        const { bins } = attributes[selectedAttribute];
+        const index = selectedValues[0];
+        onFilterApply({
+          attribute: selectedAttribute,
+          range: [bins[index], bins[index + 1]],
+          threshold: selectedThreshold,
+        });
       } else {
-        const indices = embeddingsData.reduce((acc, item, index) => {
-          if (ids.includes(item.id)) {
-            acc.push(index);
-          }
-          return acc;
-        }, []);
-        setHighlightedPoints(indices);
+        onFilterApply({
+          attribute: selectedAttribute,
+          values: selectedValues,
+          threshold: parseInt(selectedThreshold, 10),
+        });
       }
     }
   };
 
   const handleAttributeChange = (newValue) => {
-    setSelectedField(newValue);
+    setSelectedAttribute(newValue);
     setSelectedValues([]);
     setHighlightedPoints([]);
     resetScatterSelection();
@@ -430,8 +159,8 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
     resetFilterSelection();
   };
 
-  const handleMinInteractionsChange = (event) => {
-    setMinInteractions(event.target.value);
+  const handleThresholdChange = (event) => {
+    setSelectedThreshold(event.target.value);
   };
 
   return (
@@ -440,39 +169,36 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
         <CategoryFilter
           label="Item attribute"
           displayEmpty
-          value={selectedField}
+          value={selectedAttribute}
           onChange={handleAttributeChange}
-          options={Object.keys(columns).map((col) => ({
-            value: col,
-            label: col,
-          }))}
+          options={attributeOptions}
         />
         <CategoryFilter
           label="Attribute value"
-          disabled={!selectedField}
+          disabled={!selectedAttribute}
           value={isMultipleSelect ? selectedValues : selectedValues[0]}
           multiple={isMultipleSelect}
           onBlur={handleFilterApply}
           onChange={handleValuesChange}
           options={filterOptions}
         />
-        {dataType === 'users' && (
+        {displayThreshold && (
           <TextField
             sx={{ minWidth: 250 }}
-            disabled={!selectedField}
+            disabled={!selectedAttribute}
             label="Min. interactions"
             type="number"
             onBlur={handleFilterApply}
             inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', min: 1 }}
-            onChange={handleMinInteractionsChange}
-            value={minInteractions}
+            onChange={handleThresholdChange}
+            value={selectedThreshold}
             variant="filled"
           />
         )}
       </Stack>
       <ScatterPlot
         height={450}
-        isLoading={isLoading}
+        // isLoading={isLoading}
         x={scatterPoints.x}
         y={scatterPoints.y}
         meta={scatterPoints.meta}
@@ -486,8 +212,27 @@ function EmbeddingsPlot({ columns, onSelect, dataType }) {
   );
 }
 
+EmbeddingsPlot.defaultProps = {
+  displayThreshold: false,
+  filterResults: [],
+  embeddings: [],
+};
+
 EmbeddingsPlot.propTypes = {
   onSelect: pt.func.isRequired,
+  onFilterApply: pt.func.isRequired,
+  displayThreshold: pt.bool,
+  // eslint-disable-next-line react/forbid-prop-types
+  attributes: pt.any.isRequired,
+  filterResults: pt.arrayOf(pt.number),
+  embeddings: pt.arrayOf(
+    pt.shape({
+      title: pt.string,
+      x: pt.number,
+      y: pt.number,
+      id: pt.number,
+    })
+  ),
 };
 
 export default EmbeddingsPlot;

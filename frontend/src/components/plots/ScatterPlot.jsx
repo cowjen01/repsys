@@ -1,66 +1,61 @@
 import React from 'react';
 import pt from 'prop-types';
 import Plot from 'react-plotly.js';
-import { Box } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 
 import { plotColors } from '../../const';
-import PlotLoader from './PlotLoader';
 
-function ScatterPlot({ x, y, label, meta, innerRef, color, height, isLoading, ...props }) {
+function ScatterPlot({ x, y, label, meta, innerRef, color, height, ...props }) {
   const theme = useTheme();
   const { text } = theme.palette;
   return (
-    <Box position="relative">
-      {isLoading && <PlotLoader />}
-      <Plot
-        style={{
-          width: '100%',
-          height,
-        }}
-        useResizeHandler
-        ref={innerRef}
-        data={[
-          {
-            x,
-            y,
-            hovertext: label,
-            hoverinfo: 'text',
-            type: 'scatter',
-            mode: 'markers',
-            customdata: meta,
-            unselected: {
-              marker: {
-                opacity: 1,
-                color: plotColors.unselectedMarker,
-              },
-            },
-            selected: {
-              marker: {
-                opacity: 1,
-                color: plotColors.selectedMarker,
-              },
-            },
+    <Plot
+      style={{
+        width: '100%',
+        height,
+      }}
+      useResizeHandler
+      ref={innerRef}
+      data={[
+        {
+          x,
+          y,
+          hovertext: label,
+          hoverinfo: 'text',
+          type: 'scatter',
+          mode: 'markers',
+          customdata: meta,
+          unselected: {
             marker: {
-              size: 4,
-              color,
+              opacity: 1,
+              color: plotColors.unselectedMarker,
             },
           },
-        ]}
-        layout={{
-          autosize: true,
-          dragmode: 'lasso',
-          paper_bgcolor: 'rgba(0,0,0,0)',
-          plot_bgcolor: 'rgba(0,0,0,0)',
-          font: { color: text.primary },
-          uirevision: true,
-          xaxis: { zeroline: false },
-          yaxis: { zeroline: false },
-          margin: { t: 20, b: 20, l: 30, r: 20 },
-        }}
-        {...props}
-      />
-    </Box>
+          selected: {
+            marker: {
+              opacity: 1,
+              color: plotColors.selectedMarker,
+            },
+          },
+          marker: {
+            size: 4,
+            color,
+          },
+        },
+      ]}
+      layout={{
+        autosize: true,
+        dragmode: 'lasso',
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: text.primary },
+        uirevision: true,
+        xaxis: { zeroline: false },
+        yaxis: { zeroline: false },
+        margin: { t: 20, b: 20, l: 30, r: 20 },
+      }}
+      {...props}
+    />
   );
 }
 
@@ -73,12 +68,10 @@ ScatterPlot.propTypes = {
   meta: pt.arrayOf(pt.any),
   // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
-  isLoading: pt.bool,
 };
 
 ScatterPlot.defaultProps = {
   height: '100%',
-  isLoading: false,
   color: [],
   label: [],
   meta: [],

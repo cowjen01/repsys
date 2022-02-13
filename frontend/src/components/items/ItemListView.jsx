@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import pt from 'prop-types';
-import { ListItemAvatar, Avatar, ListItemText, ListItem } from '@mui/material';
+import { ListItemAvatar, Avatar, ListItemText, ListItem, Skeleton } from '@mui/material';
 import ImageIcon from '@mui/icons-material/Image';
 import { useSelector } from 'react-redux';
 
@@ -15,14 +15,23 @@ const typographyProps = {
 };
 
 function ItemListView({ style, item }) {
+  const [imageLoaded, setImageLoaded] = useState(false);
   const itemView = useSelector(itemViewSelector);
 
   return (
     <ListItem style={style}>
       <ListItemAvatar>
-        {item[itemView.image] ? (
-          <Avatar src={item[itemView.image]} />
-        ) : (
+        {item[itemView.image] && !imageLoaded && (
+          <Skeleton variant="circular" width={40} height={40} />
+        )}
+        {item[itemView.image] && (
+          <Avatar
+            onLoad={() => setImageLoaded(true)}
+            sx={{ display: !imageLoaded ? 'none' : 'block' }}
+            src={item[itemView.image]}
+          />
+        )}
+        {!item[itemView.image] && (
           <Avatar>
             <ImageIcon />
           </Avatar>
