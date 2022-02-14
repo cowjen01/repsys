@@ -1,10 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import pt from 'prop-types';
-import { Paper } from '@mui/material';
 import Plotly from 'plotly.js';
 
-import ScatterPlot from './ScatterPlot';
-import { plotColors } from '../../const';
+import ScatterPlot from '../plots/ScatterPlot';
 
 function EmbeddingsPlot({ onSelect, filterResults, embeddings, onUnselect, resetIndex }) {
   const [highlightedPoints, setHighlightedPoints] = useState([]);
@@ -40,29 +38,12 @@ function EmbeddingsPlot({ onSelect, filterResults, embeddings, onUnselect, reset
     }
   }, [filterResults]);
 
-  const scatterColors = useMemo(() => {
-    if (!highlightedPoints.length) {
-      return plotColors.selectedMarker;
-    }
-
-    const colors = [];
-    for (let i = 0; i < embeddings.length; i += 1) {
-      colors.push(plotColors.unselectedMarker);
-    }
-
-    highlightedPoints.forEach((p) => {
-      colors[p] = plotColors.selectedMarker;
-    });
-
-    return colors;
-  }, [highlightedPoints]);
-
   const scatterPoints = useMemo(
     () => ({
       x: embeddings.map(({ x }) => x),
       y: embeddings.map(({ y }) => y),
       meta: embeddings.map(({ id }) => ({ id })),
-      label: embeddings.map(({ label }) => label),
+      label: embeddings.map(({ title }) => title),
     }),
     [embeddings]
   );
@@ -75,18 +56,16 @@ function EmbeddingsPlot({ onSelect, filterResults, embeddings, onUnselect, reset
   }, [resetIndex]);
 
   return (
-    <Paper sx={{ p: 2, height: '100%' }}>
-      <ScatterPlot
-        x={scatterPoints.x}
-        y={scatterPoints.y}
-        meta={scatterPoints.meta}
-        color={scatterColors}
-        label={scatterPoints.label}
-        innerRef={scatterRef}
-        onDeselect={handleUnselect}
-        onSelected={handleSelect}
-      />
-    </Paper>
+    <ScatterPlot
+      x={scatterPoints.x}
+      y={scatterPoints.y}
+      meta={scatterPoints.meta}
+      highlighted={highlightedPoints}
+      label={scatterPoints.label}
+      innerRef={scatterRef}
+      onDeselect={handleUnselect}
+      onSelected={handleSelect}
+    />
   );
 }
 
@@ -94,11 +73,13 @@ EmbeddingsPlot.defaultProps = {
   filterResults: [],
   embeddings: [],
   resetIndex: 0,
+  onSelect: () => {},
+  onUnselect: () => {},
 };
 
 EmbeddingsPlot.propTypes = {
-  onSelect: pt.func.isRequired,
-  onUnselect: pt.func.isRequired,
+  onSelect: pt.func,
+  onUnselect: pt.func,
   resetIndex: pt.number,
   // eslint-disable-next-line react/forbid-prop-types
   filterResults: pt.arrayOf(pt.number),

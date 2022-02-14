@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import pt from 'prop-types';
-import { Box, Typography, Grid } from '@mui/material';
+import { Box, Grid, Paper } from '@mui/material';
 
 import ErrorAlert from '../ErrorAlert';
-import { EmbeddingsPlot } from '../plots';
+import EmbeddingsPlot from './EmbeddingsPlot';
 import { useGetItemsEmbeddingsQuery, useSearchItemsByAttributeMutation } from '../../api';
 import PlotLoader from '../PlotLoader';
-import AttributeFilter from './AttributeFilter';
+import AttributesSelector from './AttributesSelector';
 import ItemsDescription from './ItemsDescription';
 
 function ItemsEmbeddings({ attributes }) {
@@ -48,7 +48,7 @@ function ItemsEmbeddings({ attributes }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <AttributeFilter
+        <AttributesSelector
           onChange={handleFilterChange}
           resetIndex={filterResetIndex}
           disabled={isLoading}
@@ -58,20 +58,26 @@ function ItemsEmbeddings({ attributes }) {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={2} sx={{ height: 500 }}>
-          <Grid item xs={8} sx={{ height: '100%' }}>
-            <Box position="relative" height="100%">
+          <Grid item xs={8}>
+            <Box position="relative">
               {isLoading && <PlotLoader />}
-              <EmbeddingsPlot
-                resetIndex={plotResetIndex}
-                onUnselect={handlePlotUnselect}
-                embeddings={embeddings.data}
-                onSelect={handlePlotSelect}
-                filterResults={items.data}
-              />
+              <Paper sx={{ p: 2 }}>
+                <EmbeddingsPlot
+                  resetIndex={plotResetIndex}
+                  onUnselect={handlePlotUnselect}
+                  embeddings={embeddings.data}
+                  onSelect={handlePlotSelect}
+                  filterResults={items.data}
+                />
+              </Paper>
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            <ItemsDescription attributes={attributes} items={selectedItems} />
+            {selectedItems.length > 0 && (
+              <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
+                <ItemsDescription attributes={attributes} items={selectedItems} />
+              </Paper>
+            )}
           </Grid>
         </Grid>
       </Grid>

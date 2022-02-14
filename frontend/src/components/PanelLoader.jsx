@@ -7,7 +7,7 @@ function PanelLoader({ height }) {
     <Box
       display="flex"
       textAlign="center"
-      minHeight={height}
+      height={height}
       alignItems="center"
       justifyContent="center"
     >
@@ -17,11 +17,11 @@ function PanelLoader({ height }) {
 }
 
 PanelLoader.propTypes = {
-  height: pt.number,
+  height: pt.oneOfType([pt.number, pt.string]),
 };
 
 PanelLoader.defaultProps = {
-  height: 300,
+  height: '100%',
 };
 
 export default PanelLoader;

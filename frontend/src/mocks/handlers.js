@@ -2,7 +2,7 @@
 import { rest } from 'msw';
 
 import { dataset } from './data/dataset';
-import { models, modelsMetricsFull, modelsMetricsSummary } from './data/models';
+import { models, modelsMetricsFull, modelsMetrics } from './data/models';
 import { items, itemsDescription, itemsEmbeddings } from './data/items';
 import {
   vadUsers,
@@ -60,11 +60,11 @@ export const handlers = [
   rest.get('/api/models', (req, res, ctx) => res(ctx.json(models))),
   rest.get('/api/models/metrics', (req, res, ctx) =>
     // summary of the current and previous metrics
-    res(ctx.delay(800), ctx.json(modelsMetricsSummary))
+    res(ctx.delay(800), ctx.json(modelsMetrics))
   ),
   rest.get('/api/models/:modelName/metrics', (req, res, ctx) => {
     const { modelName } = req.params;
-    return res(ctx.delay(500), ctx.json(modelsMetricsFull[modelName]));
+    return res(ctx.delay(1000), ctx.json(modelsMetricsFull[modelName]));
   }),
   rest.post('/api/models/:modelName/predict', (req, res, ctx) => {
     const { modelName } = req.params;
@@ -88,7 +88,7 @@ export const handlers = [
   rest.post('/api/items/describe', (req, res, ctx) => {
     const { items: itemIDs } = req.body;
     const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 5);
-    const randCountries = shuffle(dataset.attributes.genres.options).slice(0, 5);
+    const randCountries = shuffle(dataset.attributes.country.options).slice(0, 5);
     itemsDescription.attributes.genres.topValues = randGenres;
     itemsDescription.attributes.country.topValues = randCountries;
     return res(ctx.delay(1000), ctx.json(itemsDescription));

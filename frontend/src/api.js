@@ -62,7 +62,7 @@ export const repsysApi = createApi({
       query: () => '/models/metrics',
     }),
     describeItems: builder.mutation({
-      query: (items) => ({
+      query: ({ items }) => ({
         url: '/items/describe',
         method: 'POST',
         body: {

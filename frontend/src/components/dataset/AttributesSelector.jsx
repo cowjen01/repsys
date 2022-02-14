@@ -5,7 +5,7 @@ import { Stack, TextField } from '@mui/material';
 import { CategoryFilter } from '../filters';
 import { capitalize } from '../../utils';
 
-function AttributeFilter({
+function AttributesSelector({
   attributes,
   displayThreshold,
   onFilterApply,
@@ -127,13 +127,13 @@ function AttributeFilter({
   );
 }
 
-AttributeFilter.defaultProps = {
+AttributesSelector.defaultProps = {
   displayThreshold: false,
   resetIndex: 0,
   disabled: false,
 };
 
-AttributeFilter.propTypes = {
+AttributesSelector.propTypes = {
   onFilterApply: pt.func.isRequired,
   onChange: pt.func.isRequired,
   displayThreshold: pt.bool,
@@ -143,4 +143,4 @@ AttributeFilter.propTypes = {
   attributes: pt.any.isRequired,
 };
 
-export default AttributeFilter;
+export default AttributesSelector;
