@@ -22,7 +22,7 @@ function ScatterPlot({
 
   const finalColor = useMemo(() => {
     if (!highlighted.length) {
-      return color;
+      return null;
     }
 
     const colors = [];
@@ -103,7 +103,7 @@ ScatterPlot.propTypes = {
 
 ScatterPlot.defaultProps = {
   height: '100%',
-  color: plotColors.selectedMarker,
+  color: [],
   label: [],
   meta: [],
   innerRef: null,

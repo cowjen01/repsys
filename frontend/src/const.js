@@ -1,5 +1,5 @@
 const plotColors = {
-  selectedMarker: '#ef553b',
+  selectedMarker: '#1f76b4',
   unselectedMarker: '#dcdcdc',
 };
 

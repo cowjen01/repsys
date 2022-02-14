@@ -35,7 +35,7 @@ function UsersDescription({ users }) {
   return (
     <Stack spacing={2}>
       <Box>
-        <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
+        <Typography variant="h6" sx={{ fontSize: '1rem' }}>
           Interacted Items
         </Typography>
         <Typography gutterBottom variant="body2">
@@ -48,11 +48,11 @@ function UsersDescription({ users }) {
         </List>
       </Box>
       <Box>
-        <Typography variant="h6" sx={{ fontSize: '1.1rem' }}>
+        <Typography variant="h6" sx={{ fontSize: '1rem' }}>
           Interactions Distribution
         </Typography>
         <Typography gutterBottom variant="body2">
-          A distribution of total interactions made by users
+          A distribution of the total number of interactions
         </Typography>
         <BarPlotHistogram bins={distribution.bins} hist={distribution.hist} />
       </Box>
