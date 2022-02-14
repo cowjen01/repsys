@@ -8,7 +8,7 @@ import { capitalize } from '../../utils';
 import { useDescribeItemsMutation } from '../../api';
 import ErrorAlert from '../ErrorAlert';
 
-function ItemsDescriptionPanel({ attributes, items }) {
+function ItemsDescription({ attributes, items }) {
   const [describeItems, { data, error, isError, isLoading, isUninitialized }] =
     useDescribeItemsMutation();
 
@@ -65,10 +65,10 @@ function ItemsDescriptionPanel({ attributes, items }) {
   );
 }
 
-ItemsDescriptionPanel.propTypes = {
+ItemsDescription.propTypes = {
   items: pt.arrayOf(pt.number).isRequired,
   // eslint-disable-next-line react/forbid-prop-types
   attributes: pt.any.isRequired,
 };
 
-export default ItemsDescriptionPanel;
+export default ItemsDescription;

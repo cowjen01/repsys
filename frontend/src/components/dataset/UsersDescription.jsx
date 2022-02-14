@@ -8,7 +8,7 @@ import { ItemListView } from '../items';
 import ErrorAlert from '../ErrorAlert';
 import { useDescribeUsersMutation } from '../../api';
 
-function UsersDescriptionPanel({ users }) {
+function UsersDescription({ users }) {
   const [describeUsers, { data, error, isError, isLoading, isUninitialized }] =
     useDescribeUsersMutation();
 
@@ -62,8 +62,8 @@ function UsersDescriptionPanel({ users }) {
   );
 }
 
-UsersDescriptionPanel.propTypes = {
+UsersDescription.propTypes = {
   users: pt.arrayOf(pt.number).isRequired,
 };
 
-export default UsersDescriptionPanel;
+export default UsersDescription;

@@ -18,7 +18,7 @@ export const repsysApi = createApi({
       }),
     }),
     searchItemsByAttribute: builder.mutation({
-      query: (query) => ({
+      query: ({ query }) => ({
         url: `/items/search`,
         method: 'POST',
         body: {

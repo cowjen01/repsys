@@ -19,18 +19,14 @@ import {
 } from '../../reducers/settings';
 import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
 import { SelectField, CheckboxField } from '../fields';
-
 import { useGetDatasetQuery } from '../../api';
-
-function capitalize(str) {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-}
+import { capitalize } from '../../utils';
 
 function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
   const dialogOpen = useSelector(settingsDialogSelector);
-  const dispatch = useDispatch();
   const itemView = useSelector(itemViewSelector);
+  const dispatch = useDispatch();
 
   const dataset = useGetDatasetQuery();
 
@@ -99,7 +95,7 @@ function SettingsDialog() {
                       <Field
                         key={field}
                         name={`itemView.${field}`}
-                        label={`${capitalize(field)} field column`}
+                        label={`${capitalize(field)} attribute`}
                         fullWidth
                         component={SelectField}
                         options={itemColumnOptions}

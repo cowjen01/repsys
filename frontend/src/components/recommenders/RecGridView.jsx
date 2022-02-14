@@ -31,19 +31,20 @@ function RecGridView({ recommender }) {
     usePredictItemsByModelMutation();
 
   useEffect(() => {
-    getRecoms({
+    const query = {
       model,
-      ...(selectedUser
-        ? {
-            user: selectedUser,
-          }
-        : {
-            interactions: customInteractions.map((x) => x.id),
-          }),
       params: modelParams[model],
       limit: itemsLimit,
-    });
-  }, []);
+    };
+
+    if (selectedUser) {
+      query.user = selectedUser;
+    } else {
+      query.interactions = customInteractions.map(({ id }) => id);
+    }
+
+    getRecoms(query);
+  }, [selectedUser, customInteractions]);
 
   const handleItemClick = (item) => {
     if (sessionRecording) {

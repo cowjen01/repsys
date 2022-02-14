@@ -11,11 +11,10 @@ function IndicatorPlot({ title, value, min, max, height, delta }) {
       data={[
         {
           value,
-          number: { suffix: '%' },
           title: { text: title, font: { size: 16 } },
           delta: { reference: delta },
           type: 'indicator',
-          mode: 'gauge+delta',
+          mode: 'gauge+number+delta',
           gauge: { axis: { range: [min, max] } },
         },
       ]}

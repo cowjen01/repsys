@@ -13,13 +13,17 @@ import {
   Alert,
   ListSubheader,
   ListItemText,
+  LinearProgress,
 } from '@mui/material';
 
 import { IndicatorPlot, ScatterPlot, BarPlot } from '../plots';
 import { ItemListView } from '../items';
 import TabPanel from '../TabPanel';
-import MetricsHistogramPlot from './MetricsHistogramPlot';
+import MetricsHistogram from './MetricsHistogram';
 import { plotColors } from '../../const';
+import MetricsSummary from './MetricsSummary';
+import ErrorAlert from '../ErrorAlert';
+import { useGetModelsMetricsQuery } from '../../api';
 
 const scatterData = [
   { x: 0.379, y: 0.289, z: 0.529, c: 7 },
@@ -124,68 +128,15 @@ const scatterData = [
   { x: 0.705, y: 0.285, z: 0.659, c: 7 },
 ];
 
-const summaryData = [
-  {
-    name: 'KNN',
-    metrics: {
-      'Recall@20': 0.3,
-      'Recall@50': 0.4,
-      'NDCG@100': 0.1,
-      'Coverage@20': 0.3,
-      'Coverage@50': 0.8,
-      'Coverage@100': 0.2,
-      'Novelty@10': 0.65,
-      'Recall@100': 0.32,
-    },
-    metricsPrev: {
-      'Recall@20': 0.2,
-      'Recall@50': 0.5,
-      'NDCG@100': 0.3,
-      'Coverage@20': 0.1,
-      'Coverage@50': 0.7,
-      'Coverage@100': 0.15,
-    },
-  },
-  {
-    name: 'SVD',
-    metrics: {
-      'Recall@20': 0.2,
-      'Recall@50': 0.5,
-      'NDCG@100': 0.23,
-      'Coverage@20': 0.36,
-      'Coverage@50': 0.78,
-      'Coverage@100': 0.23,
-      'Novelty@10': 0.32,
-      'Recall@100': 0.42,
-    },
-  },
-  {
-    name: 'VASP',
-    metrics: {
-      'Recall@20': 0.2,
-      'Recall@50': 0.5,
-      'NDCG@100': 0.23,
-      'Coverage@20': 0.36,
-      'Coverage@50': 0.78,
-      'Coverage@100': 0.23,
-      'Novelty@10': 0.43,
-      'Recall@100': 0.12,
-    },
-  },
-];
-
 function ModelsEvaluation() {
   const [selectedUsers, setSelectedUsers] = useState([]);
 
   const [histTab, setHistTab] = useState(0);
-  const [modelTab, setModelTab] = useState(0);
+
+  const metricsSummary = useGetModelsMetricsQuery();
 
   const handleHistTabChange = (event, newValue) => {
     setHistTab(newValue);
-  };
-
-  const handleModelTabChange = (e, modelIndex) => {
-    setModelTab(modelIndex);
   };
 
   const scatterColors = useMemo(() => {
@@ -211,66 +162,18 @@ function ModelsEvaluation() {
     []
   );
 
+  if (metricsSummary.isLoading) {
+    return <LinearProgress />;
+  }
+
+  if (metricsSummary.isError) {
+    return <ErrorAlert error={metricsSummary.error} />;
+  }
+
   return (
     <Grid container spacing={3}>
       <Grid item xs={12}>
-        <Box pl={1}>
-          <Typography component="div" variant="h6">
-            Models Performance
-          </Typography>
-          <Typography variant="subtitle1" gutterBottom>
-            A performance in the individual metrics with comparasion to the previous evaluation
-          </Typography>
-        </Box>
-        <Grid container spacing={2}>
-          <Grid item xs={7}>
-            <Paper sx={{ height: '100%' }}>
-              <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
-                <Tabs value={modelTab} onChange={handleModelTabChange} variant="fullWidth">
-                  {summaryData.map((m) => (
-                    <Tab label={m.name} key={m.name} />
-                  ))}
-                </Tabs>
-              </Box>
-              <Box sx={{ p: 2 }}>
-                <Grid container>
-                  {Object.entries(summaryData[modelTab].metrics).map(([metric, value]) => (
-                    <Grid item xs={3} key={metric}>
-                      <IndicatorPlot
-                        title={metric}
-                        height={150}
-                        value={value}
-                        delta={
-                          summaryData[0].metricsPrev && summaryData[0].metricsPrev[metric]
-                            ? summaryData[0].metricsPrev[metric]
-                            : 0
-                        }
-                      />
-                    </Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </Paper>
-          </Grid>
-          {summaryData.length > 1 && (
-            <Grid item xs={5}>
-              <Paper>
-                <BarPlot
-                  orientation="h"
-                  data={summaryData.map((model) => ({
-                    y: Object.keys(model.metrics),
-                    x: Object.values(model.metrics),
-                    name: model.name,
-                  }))}
-                  layoutProps={{
-                    margin: { t: 30, b: 40, l: 120, r: 40 },
-                  }}
-                  height={400}
-                />
-              </Paper>
-            </Grid>
-          )}
-        </Grid>
+        <MetricsSummary summaryData={metricsSummary.data} />
       </Grid>
       <Grid item xs={12}>
         <Box pl={1}>
@@ -283,7 +186,10 @@ function ModelsEvaluation() {
         </Box>
         <Grid container spacing={2}>
           <Grid item xs={8}>
-            <MetricsHistogramPlot onSelect={(users) => setSelectedUsers(users.points)} />
+            <MetricsHistogram
+              summaryData={metricsSummary.data}
+              onSelect={(users) => setSelectedUsers(users.points)}
+            />
           </Grid>
           <Grid item xs={4}>
             {selectedUsers.length > 0 && (
