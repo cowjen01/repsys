@@ -5,7 +5,7 @@ import { Box, Grid, Paper } from '@mui/material';
 import ErrorAlert from '../ErrorAlert';
 import EmbeddingsPlot from './EmbeddingsPlot';
 import { useGetItemsEmbeddingsQuery, useSearchItemsByAttributeMutation } from '../../api';
-import PlotLoader from '../PlotLoader';
+import { PlotLoader } from '../loaders';
 import AttributesSelector from './AttributesSelector';
 import ItemsDescription from './ItemsDescription';
 

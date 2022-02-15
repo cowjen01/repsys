@@ -6,7 +6,7 @@ import UsersDescription from '../dataset/UsersDescription';
 import { useGetMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
 import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
-import PlotLoader from '../PlotLoader';
+import { PlotLoader } from '../loaders';
 
 function MetricsEmbeddings({ metricsData }) {
   const models = Object.keys(metricsData.results);

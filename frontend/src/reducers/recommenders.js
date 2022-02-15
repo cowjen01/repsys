@@ -40,4 +40,6 @@ export const {
 
 export const recommendersSelector = (state) => state.recommenders;
 
+export const recommenderByIndexSelector = (index) => (state) => state.recommenders[index];
+
 export default slice.reducer;

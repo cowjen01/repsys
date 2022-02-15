@@ -9,54 +9,65 @@ import {
   ListItemIcon,
   ListItemText,
   Paper,
+  Skeleton,
+  Typography,
 } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RadioButtonCheckedIcon from '@mui/icons-material/RadioButtonChecked';
 import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 import BuildIcon from '@mui/icons-material/Build';
+import { FixedSizeList } from 'react-window';
 
 import {
-  sessionRecordingSelector,
+  interactiveModeSelector,
   customInteractionsSelector,
   selectedUserSelector,
   setCustomInteractions,
-  toggleSessionRecording,
+  toggleInteractiveMode,
   buildModeSelector,
   toggleBuildMode,
   setSelectedUser,
 } from '../../reducers/app';
-import InteractionsList from './InteractionsList';
+import { ItemListView } from '../items';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
 
 import { useGetUserByIDQuery } from '../../api';
 
+const listHeight = 360;
+
+function renderRow({ index, style, data }) {
+  const item = data[index];
+  return <ItemListView style={style} key={item.id} item={item} />;
+}
+
 function UserPanel() {
   const dispatch = useDispatch();
-  const sessionRecord = useSelector(sessionRecordingSelector);
+  const interactiveMode = useSelector(interactiveModeSelector);
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
   const buildMode = useSelector(buildModeSelector);
 
-  // FIXME
-  const user = useGetUserByIDQuery(selectedUser);
+  const user = useGetUserByIDQuery(selectedUser, {
+    skip: !selectedUser,
+  });
 
   const handleDelete = () => {
     dispatch(setCustomInteractions([]));
     dispatch(setSelectedUser(null));
   };
 
-  const handleRecordBtnClick = () => {
+  const handleInteractiveModeChange = () => {
     if (selectedUser) {
-      dispatch(toggleSessionRecording(user.data.interactions));
+      dispatch(toggleInteractiveMode(user.data.interactions));
     } else {
-      dispatch(toggleSessionRecording());
+      dispatch(toggleInteractiveMode());
     }
-    if (!sessionRecord) {
+    if (!interactiveMode) {
       dispatch(
         openSnackbar({
-          message: 'Recording started - click on items to interact.',
-          severity: 'warning',
+          message: 'Interactive mode - click on the items to interact.',
+          severity: 'info',
         })
       );
     }
@@ -66,11 +77,13 @@ function UserPanel() {
     dispatch(openUserSelectDialog());
   };
 
+  const interactions = selectedUser && user.data ? user.data.interactions : customInteractions;
+
   return (
     <Box sx={{ position: 'sticky', top: '4rem' }}>
       <Paper>
         <List>
-          <ListItem disabled={sessionRecord}>
+          <ListItem disabled={interactiveMode}>
             <ListItemIcon>
               <BuildIcon />
             </ListItemIcon>
@@ -82,25 +95,29 @@ function UserPanel() {
               checked={buildMode}
             />
           </ListItem>
+          <ListItem disabled={buildMode}>
+            <ListItemIcon>
+              <RadioButtonCheckedIcon />
+            </ListItemIcon>
+            <ListItemText primary="Interactive Mode" />
+            <Switch
+              color="secondary"
+              edge="end"
+              onChange={handleInteractiveModeChange}
+              checked={interactiveMode}
+            />
+          </ListItem>
           <ListItem disablePadding>
-            <ListItemButton disabled={sessionRecord || buildMode} onClick={handleSelectBtnClick}>
+            <ListItemButton disabled={interactiveMode || buildMode} onClick={handleSelectBtnClick}>
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
               <ListItemText primary="User Selection" />
             </ListItemButton>
           </ListItem>
-          <ListItem disablePadding>
-            <ListItemButton disabled={buildMode} onClick={handleRecordBtnClick}>
-              <ListItemIcon>
-                <RadioButtonCheckedIcon color={sessionRecord ? 'secondary' : 'inherit'} />
-              </ListItemIcon>
-              <ListItemText primary={sessionRecord ? 'Stop Recording' : 'Session Record'} />
-            </ListItemButton>
-          </ListItem>
         </List>
       </Paper>
-      {(selectedUser || customInteractions.length > 0) && (
+      {(customInteractions.length > 0 || selectedUser) && (
         <Box sx={{ marginTop: 2 }}>
           {customInteractions.length > 0 ? (
             <Chip
@@ -117,7 +134,31 @@ function UserPanel() {
               label={`User ${selectedUser}`}
             />
           )}
-          <InteractionsList />
+          {!user.isFetching ? (
+            <Paper>
+              <Typography
+                sx={{
+                  lineHeight: '48px',
+                  color: 'text.secondary',
+                  pl: '16px',
+                }}
+                variant="subtitle2"
+                component="div"
+              >
+                Interactions ({interactions.length})
+              </Typography>
+              <FixedSizeList
+                height={listHeight}
+                itemData={interactions}
+                itemSize={60}
+                itemCount={interactions.length}
+              >
+                {renderRow}
+              </FixedSizeList>
+            </Paper>
+          ) : (
+            <Skeleton variant="rectangular" height={listHeight + 48} width="100%" />
+          )}
         </Box>
       )}
     </Box>

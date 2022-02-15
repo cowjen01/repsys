@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -30,7 +30,9 @@ function UserSelectDialog() {
   const [activeTab, setActiveTab] = useState(0);
   const [queryString, setQueryString] = useState('');
 
-  const users = useGetUsersQuery();
+  const users = useGetUsersQuery({
+    split: 'validation',
+  });
   const items = useGetItemsByTitleQuery(queryString, {
     skip: queryString.length < 3,
   });

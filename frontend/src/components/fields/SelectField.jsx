@@ -27,11 +27,20 @@ function SelectField({
       {...props}
     >
       {displayEmpty && <option value="">{null}</option>}
-      {options.map((option) => (
-        <option key={option.value || 'empty'} value={option.value}>
-          {option.label}
-        </option>
-      ))}
+      {options.map((option) => {
+        if (typeof option === 'string' || option instanceof String) {
+          return (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          );
+        }
+        return (
+          <option key={option.value} value={option.value}>
+            {option.label}
+          </option>
+        );
+      })}
     </TextField>
   );
 }

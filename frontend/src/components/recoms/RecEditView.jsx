@@ -76,7 +76,7 @@ function RecEditView({ index, name }) {
     dispatch(
       openConfirmDialog({
         title: 'Delete this recommender?',
-        content: 'Deleting this recommender all settings will be lost.',
+        content: 'By deleting this recommender, all settings will be lost.',
         params: {
           index,
         },

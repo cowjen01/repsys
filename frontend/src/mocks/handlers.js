@@ -51,12 +51,13 @@ export const handlers = [
   rest.get('/api/users/:userID', (req, res, ctx) => {
     const randItems = shuffle(items).slice(0, randomInt(5, 50));
     return res(
+      ctx.delay(1000),
       ctx.json({
         interactions: randItems,
       })
     );
   }),
-  rest.get('/api/dataset', (req, res, ctx) => res(ctx.json(dataset))),
+  rest.get('/api/dataset', (req, res, ctx) => res(ctx.delay(500), ctx.json(dataset))),
   rest.get('/api/models', (req, res, ctx) => res(ctx.json(models))),
   rest.get('/api/models/metrics', (req, res, ctx) =>
     // summary of the current and previous metrics

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import {
   Button,
   Dialog,
@@ -7,6 +7,7 @@ import {
   DialogTitle,
   Typography,
   Grid,
+  LinearProgress,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik, Field } from 'formik';
@@ -21,6 +22,7 @@ import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../..
 import { SelectField, CheckboxField } from '../fields';
 import { useGetDatasetQuery } from '../../api';
 import { capitalize } from '../../utils';
+import ErrorAlert from '../ErrorAlert';
 
 function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
@@ -34,58 +36,53 @@ function SettingsDialog() {
     dispatch(closeSettingsDialog());
   };
 
-  const handleSubmit = useCallback(
-    (values) => {
-      dispatch(setDarkMode(values.darkMode));
-      dispatch(setItemView(values.itemView));
-      dispatch(
-        openSnackbar({
-          message: 'All settings successfully applied!',
-        })
-      );
-      handleClose();
-    },
-    [dispatch]
-  );
+  const handleSubmit = (values) => {
+    dispatch(setDarkMode(values.darkMode));
+    dispatch(setItemView(values.itemView));
+    dispatch(
+      openSnackbar({
+        message: 'All settings successfully applied!',
+      })
+    );
+    handleClose();
+  };
 
-  const itemColumnOptions = useMemo(() => {
-    if (!dataset.isSuccess) {
+  const columnOptions = useMemo(() => {
+    if (!dataset.data) {
       return [];
     }
 
-    const options = Object.keys(dataset.data.attributes).map((attr) => ({
-      label: attr,
-      value: attr,
-    }));
+    const options = Object.keys(dataset.data.attributes);
 
     return ['', ...options];
-  }, [dataset.isLoading]);
+  }, [dataset.data]);
 
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Application Settings</DialogTitle>
-      {!dataset.isLoading ? (
-        <Formik
-          initialValues={{
-            darkMode,
-            itemView,
-          }}
-          validate={(values) => {
-            const errors = {};
-            const requiredMessage = 'This field is required.';
-            if (!values.itemView.title) {
-              errors['itemView.title'] = requiredMessage;
-            }
-            return errors;
-          }}
-          onSubmit={(values, { setSubmitting }) => {
-            handleSubmit(values);
-            setSubmitting(false);
-          }}
-        >
-          {({ submitForm, isSubmitting }) => (
-            <>
-              <DialogContent>
+
+      <Formik
+        initialValues={{
+          darkMode,
+          itemView,
+        }}
+        validate={(values) => {
+          const errors = {};
+          const requiredMessage = 'This field is required.';
+          if (!values.itemView.title) {
+            errors['itemView.title'] = requiredMessage;
+          }
+          return errors;
+        }}
+        onSubmit={(values, { setSubmitting }) => {
+          handleSubmit(values);
+          setSubmitting(false);
+        }}
+      >
+        {({ submitForm, isSubmitting }) => (
+          <>
+            <DialogContent>
+              {dataset.isSuccess && (
                 <Grid container direction="column" spacing={2}>
                   <Grid item>
                     <Typography variant="subtitle2" component="div">
@@ -98,7 +95,7 @@ function SettingsDialog() {
                         label={`${capitalize(field)} attribute`}
                         fullWidth
                         component={SelectField}
-                        options={itemColumnOptions}
+                        options={columnOptions}
                       />
                     ))}
                   </Grid>
@@ -109,19 +106,23 @@ function SettingsDialog() {
                     <Field name="darkMode" label="Nightshift Mode" component={CheckboxField} />
                   </Grid>
                 </Grid>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleClose}>Close</Button>
-                <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
-                  Save
-                </Button>
-              </DialogActions>
-            </>
-          )}
-        </Formik>
-      ) : (
-        <DialogContent>Loading ...</DialogContent>
-      )}
+              )}
+              {dataset.isLoading && <LinearProgress />}
+              {dataset.isError && <ErrorAlert error={dataset.error} />}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Close</Button>
+              <Button
+                onClick={submitForm}
+                disabled={isSubmitting || dataset.isLoading || dataset.isError}
+                autoFocus
+              >
+                Save
+              </Button>
+            </DialogActions>
+          </>
+        )}
+      </Formik>
     </Dialog>
   );
 }

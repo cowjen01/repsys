@@ -3,7 +3,7 @@ import pt from 'prop-types';
 import { Typography, Stack, Box, List } from '@mui/material';
 
 import BarPlotHistogram from './BarPlotHistogram';
-import PanelLoader from '../PanelLoader';
+import { PanelLoader } from '../loaders';
 import { ItemListView } from '../items';
 import ErrorAlert from '../ErrorAlert';
 import { useDescribeUsersMutation } from '../../api';

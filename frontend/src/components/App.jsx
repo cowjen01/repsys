@@ -7,9 +7,9 @@ import CssBaseline from '@mui/material/CssBaseline';
 
 import Layout from './Layout';
 import { ModelsEvaluation } from './models';
-import RecomsPreview from './recommenders/RecomsPreview';
+import { RecPreviews } from './recoms';
 import { DatasetEvaluation } from './dataset';
-import SettingsDialog from './settings/SettingsDialog';
+import { SettingsDialog } from './settings';
 import Snackbar from './Snackbar';
 import { darkModeSelector } from '../reducers/settings';
 
@@ -46,7 +46,7 @@ function App() {
       <CssBaseline />
       <Layout>
         <Routes>
-          <Route path="/" element={<RecomsPreview />} />
+          <Route path="/" element={<RecPreviews />} />
           <Route path="/models" element={<ModelsEvaluation />} />
           <Route path="/dataset" element={<DatasetEvaluation />} />
         </Routes>

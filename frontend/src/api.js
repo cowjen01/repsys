@@ -5,7 +5,7 @@ export const repsysApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
   endpoints: (builder) => ({
     getUsers: builder.query({
-      query: (split = 'train') => `/users?split=${split}`,
+      query: ({ split = 'train' }) => `/users?split=${split}`,
     }),
     searchUsersByInteractions: builder.mutation({
       query: ({ split = 'train', query }) => ({

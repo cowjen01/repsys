@@ -7,15 +7,15 @@ export const slice = createSlice({
     buildMode: false,
     selectedUser: null,
     favouriteUsers: [],
-    sessionRecording: false,
+    interactiveMode: false,
     customInteractions: [],
   },
   reducers: {
     toggleBuildMode: (state) => {
       state.buildMode = !state.buildMode;
     },
-    toggleSessionRecording: (state, { payload }) => {
-      state.sessionRecording = !state.sessionRecording;
+    toggleInteractiveMode: (state, { payload }) => {
+      state.interactiveMode = !state.interactiveMode;
       state.selectedUser = null;
       if (payload) {
         state.customInteractions = payload;
@@ -44,7 +44,7 @@ export const {
   setSelectedUser,
   addUserToFavourites,
   removeUserFromFavourites,
-  toggleSessionRecording,
+  toggleInteractiveMode,
   addCustomInteraction,
   setCustomInteractions,
 } = slice.actions;
@@ -55,7 +55,7 @@ export const selectedUserSelector = (state) => state.app.selectedUser;
 
 export const favouriteUsersSelector = (state) => state.app.favouriteUsers;
 
-export const sessionRecordingSelector = (state) => state.app.sessionRecording;
+export const interactiveModeSelector = (state) => state.app.interactiveMode;
 
 export const customInteractionsSelector = (state) => state.app.customInteractions;
 

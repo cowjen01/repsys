@@ -8,7 +8,7 @@ import UsersDescription from '../dataset/UsersDescription';
 import { useGetMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
 import { CategoryFilter } from '../filters';
 import TabPanel from '../TabPanel';
-import PlotLoader from '../PlotLoader';
+import { PlotLoader } from '../loaders';
 
 function MetricsDistribution({ metricsData }) {
   const models = Object.keys(metricsData.results);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { Grid, Fab, Container, Alert, AlertTitle } from '@mui/material';
+import { Grid, Fab, Alert, AlertTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
@@ -14,18 +14,25 @@ import {
   removeUserFromFavourites,
 } from '../../reducers/app';
 import { openRecEditDialog } from '../../reducers/dialogs';
-import { UserPanel, UserSelectDialog } from '../users';
-import { ItemDetailDialog } from '../items';
+import ControlPanel from './ControlPanel';
+import SelectorDialog from './SelectorDialog';
+import ItemDetailDialog from './ItemDetailDialog';
 import RecEditView from './RecEditView';
 import RecGridView from './RecGridView';
 import RecEditDialog from './RecEditDialog';
 import ConfirmDialog from '../ConfirmDialog';
 import { itemViewSelector } from '../../reducers/settings';
 
-function RecomsPreview() {
+const fabStyles = {
+  position: 'absolute',
+  bottom: 32,
+  left: 32,
+};
+
+function RecPreviews() {
+  const dispatch = useDispatch();
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
-  const dispatch = useDispatch();
   const itemView = useSelector(itemViewSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
   const selectedUser = useSelector(selectedUserSelector);
@@ -53,8 +60,8 @@ function RecomsPreview() {
           <Grid item xs={12}>
             <Alert severity="warning">
               <AlertTitle>Views not configured</AlertTitle>
-              It is not configured how the data should be mapped to the view fields. Please open the
-              settings in the top-right menu and finish setup.
+              It is not configured how the data should be mapped to the views. Please open the
+              settings in the top-right menu and finish the setup.
             </Alert>
           </Grid>
         )}
@@ -62,18 +69,19 @@ function RecomsPreview() {
           <>
             <Grid item xs={12} lg={9}>
               <Grid container spacing={3}>
-                {recommenders.length === 0 && (
+                {!recommenders.length && (
                   <Grid item xs={12}>
                     <Alert severity="info">
                       <AlertTitle>Recommenders not configured</AlertTitle>
-                      There are no recommenders, switch to the build mode to create one.
+                      There have been no recommenders created yet. Please switch to the build mode
+                      and create one.
                     </Alert>
                   </Grid>
                 )}
                 {recommenders.map((recommender, index) =>
                   !buildMode ? (
                     <Grid item xs={12} key={recommender.name}>
-                      <RecGridView recommender={recommender} />
+                      <RecGridView index={index} />
                     </Grid>
                   ) : (
                     <Grid item xs={12} key={recommender.name}>
@@ -84,7 +92,7 @@ function RecomsPreview() {
               </Grid>
             </Grid>
             <Grid item xs={12} lg={3}>
-              <UserPanel />
+              <ControlPanel />
             </Grid>
           </>
         )}
@@ -92,33 +100,15 @@ function RecomsPreview() {
       <ConfirmDialog onConfirm={handleRecDeleteConfirm} />
       <RecEditDialog />
       <ItemDetailDialog />
-      <UserSelectDialog />
-      {itemView.title && buildMode && (
-        <Fab
-          sx={{
-            position: 'absolute',
-            bottom: 32,
-            left: 32,
-          }}
-          variant="extended"
-          onClick={handleRecommenderAdd}
-          color="secondary"
-        >
+      <SelectorDialog />
+      {buildMode && (
+        <Fab sx={fabStyles} variant="extended" onClick={handleRecommenderAdd} color="secondary">
           <AddIcon sx={{ mr: 1 }} />
           Add recommender
         </Fab>
       )}
-      {itemView.title && selectedUser && !buildMode && (
-        <Fab
-          onClick={handleFavouriteToggle}
-          variant="extended"
-          color="secondary"
-          sx={{
-            position: 'absolute',
-            bottom: 32,
-            left: 32,
-          }}
-        >
+      {selectedUser && !buildMode && (
+        <Fab onClick={handleFavouriteToggle} variant="extended" color="secondary" sx={fabStyles}>
           {!favouriteUsers.includes(selectedUser) ? (
             <FavoriteBorderIcon sx={{ mr: 1 }} />
           ) : (
@@ -131,4 +121,4 @@ function RecomsPreview() {
   );
 }
 
-export default RecomsPreview;
+export default RecPreviews;

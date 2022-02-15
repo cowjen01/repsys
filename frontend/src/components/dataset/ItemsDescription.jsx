@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import pt from 'prop-types';
 import { Typography, Stack, Box, Chip } from '@mui/material';
 
-import PanelLoader from '../PanelLoader';
+import { PanelLoader } from '../loaders';
 import BarPlotHistogram from './BarPlotHistogram';
 import { capitalize } from '../../utils';
 import { useDescribeItemsMutation } from '../../api';

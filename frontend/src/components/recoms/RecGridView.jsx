@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import pt from 'prop-types';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
@@ -10,27 +10,31 @@ import { openItemDetailDialog } from '../../reducers/dialogs';
 import {
   customInteractionsSelector,
   selectedUserSelector,
-  sessionRecordingSelector,
+  interactiveModeSelector,
   addCustomInteraction,
 } from '../../reducers/app';
+import { recommenderByIndexSelector } from '../../reducers/recommenders';
 import { itemViewSelector } from '../../reducers/settings';
 import { usePredictItemsByModelMutation } from '../../api';
+import ErrorAlert from '../ErrorAlert';
 
-function RecGridView({ recommender }) {
+function RecGridView({ index }) {
   const dispatch = useDispatch();
   const customInteractions = useSelector(customInteractionsSelector);
   const selectedUser = useSelector(selectedUserSelector);
-  const sessionRecording = useSelector(sessionRecordingSelector);
+  const interactiveMode = useSelector(interactiveModeSelector);
   const itemView = useSelector(itemViewSelector);
+  const recommender = useSelector(recommenderByIndexSelector(index));
 
-  const [page, setPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const { name, model, itemsLimit, modelParams, itemsPerPage } = recommender;
 
-  const [getRecoms, { isLoading, isSuccess, data, error, isError }] =
-    usePredictItemsByModelMutation();
+  const [getRecomendations, recommendations] = usePredictItemsByModelMutation();
 
   useEffect(() => {
+    setCurrentPage(0);
+
     const query = {
       model,
       params: modelParams[model],
@@ -43,11 +47,21 @@ function RecGridView({ recommender }) {
       query.interactions = customInteractions.map(({ id }) => id);
     }
 
-    getRecoms(query);
+    getRecomendations(query);
   }, [selectedUser, customInteractions]);
 
+  const currentBatch = useMemo(() => {
+    if (recommendations.data) {
+      return recommendations.data.slice(
+        itemsPerPage * currentPage,
+        itemsPerPage * (currentPage + 1)
+      );
+    }
+    return [];
+  }, [currentPage, recommendations.data]);
+
   const handleItemClick = (item) => {
-    if (sessionRecording) {
+    if (interactiveMode) {
       dispatch(addCustomInteraction(item));
     } else {
       dispatch(
@@ -58,10 +72,6 @@ function RecGridView({ recommender }) {
       );
     }
   };
-
-  useEffect(() => {
-    setPage(0);
-  }, [selectedUser, customInteractions.length]);
 
   return (
     <Grid container spacing={1}>
@@ -77,15 +87,20 @@ function RecGridView({ recommender }) {
               {name}
             </Typography>
           </Grid>
-          {isSuccess && (
+          {recommendations.isSuccess && (
             <Grid item>
               <Stack direction="row">
-                <IconButton disabled={page === 0} onClick={() => setPage(page - 1)}>
+                <IconButton
+                  disabled={currentPage === 0}
+                  onClick={() => setCurrentPage(currentPage - 1)}
+                >
                   <KeyboardArrowLeftIcon />
                 </IconButton>
                 <IconButton
-                  disabled={page === Math.ceil(data.length / itemsPerPage) - 1}
-                  onClick={() => setPage(page + 1)}
+                  disabled={
+                    currentPage === Math.ceil(recommendations.data.length / itemsPerPage) - 1
+                  }
+                  onClick={() => setCurrentPage(currentPage + 1)}
                 >
                   <KeyboardArrowRightIcon />
                 </IconButton>
@@ -96,8 +111,8 @@ function RecGridView({ recommender }) {
       </Grid>
       <Grid item xs={12}>
         <Grid container spacing={2}>
-          {isSuccess &&
-            data.slice(itemsPerPage * page, itemsPerPage * (page + 1)).map((item) => (
+          {recommendations.isSuccess &&
+            currentBatch.map((item) => (
               <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
                 <ItemCardView
                   item={item}
@@ -106,7 +121,7 @@ function RecGridView({ recommender }) {
                 />
               </Grid>
             ))}
-          {isLoading &&
+          {recommendations.isLoading &&
             [...Array(itemsPerPage).keys()].map((i) => (
               <Grid key={i} item display="flex" md={12 / itemsPerPage}>
                 <Skeleton
@@ -116,7 +131,7 @@ function RecGridView({ recommender }) {
                 />
               </Grid>
             ))}
-          {isSuccess && data.length === 0 && (
+          {recommendations.isSuccess && !recommendations.data.length && (
             <Grid item xs={12}>
               <Alert severity="warning">
                 <AlertTitle>No recommended items</AlertTitle>
@@ -124,12 +139,9 @@ function RecGridView({ recommender }) {
               </Alert>
             </Grid>
           )}
-          {isError && (
+          {recommendations.isError && (
             <Grid item xs={12}>
-              <Alert severity="error">
-                <AlertTitle>API Error</AlertTitle>
-                {error}
-              </Alert>
+              <ErrorAlert error={recommendations.error} />
             </Grid>
           )}
         </Grid>
@@ -139,14 +151,7 @@ function RecGridView({ recommender }) {
 }
 
 RecGridView.propTypes = {
-  recommender: pt.shape({
-    name: pt.string,
-    itemsPerPage: pt.number,
-    itemsLimit: pt.number,
-    model: pt.string,
-    // eslint-disable-next-line react/forbid-prop-types
-    modelParams: pt.any,
-  }).isRequired,
+  index: pt.number.isRequired,
 };
 
 export default RecGridView;

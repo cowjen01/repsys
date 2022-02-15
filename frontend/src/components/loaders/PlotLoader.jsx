@@ -12,7 +12,6 @@ function PlotLoader() {
         color: theme.palette.text.primary,
         backgroundColor:
           theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.6)' : 'rgba(255,255,255,0.6)',
-        opacity: 0.6,
         zIndex: 100,
       }}
       open

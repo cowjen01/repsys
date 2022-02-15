@@ -6,6 +6,8 @@ import { useTheme } from '@mui/material/styles';
 function BarPlot({ data, height, width, orientation, layoutProps, ...props }) {
   const theme = useTheme();
 
+  const gridcolor = theme.palette.mode === 'dark' ? theme.palette.divider : null;
+
   return (
     <Plot
       data={data.map((bar) => ({ ...bar, type: 'bar', orientation }))}
@@ -19,8 +21,8 @@ function BarPlot({ data, height, width, orientation, layoutProps, ...props }) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { color: theme.palette.text.primary },
-        xaxis: { gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null },
-        yaxis: { gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null },
+        xaxis: { gridcolor },
+        yaxis: { gridcolor },
         margin: { t: 20, b: 20, l: 20, r: 20 },
         ...layoutProps,
       }}

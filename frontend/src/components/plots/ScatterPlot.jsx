@@ -3,7 +3,10 @@ import pt from 'prop-types';
 import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
 
-import { plotColors } from '../../const';
+const plotColors = {
+  selectedMarker: '#cd4c3b',
+  unselectedMarker: '#dcdcdc',
+};
 
 function ScatterPlot({
   x,
@@ -20,6 +23,8 @@ function ScatterPlot({
   ...props
 }) {
   const theme = useTheme();
+
+  const gridcolor = theme.palette.mode === 'dark' ? theme.palette.divider : null;
 
   const finalColor = useMemo(() => {
     if (!highlighted.length && !color.length) {
@@ -74,15 +79,6 @@ function ScatterPlot({
           marker: {
             size: 4,
             color: finalColor,
-            // colorscale: 'Blues',
-            // reversescale: true,
-            colorscale: [
-              ['0.0', '#f0f921'],
-              ['0.3', '#f2874a'],
-              ['0.5', '#a82395'],
-              ['0.7', '#5f02a4'],
-              ['1.0', '#150789'],
-            ],
             showscale: showScale,
           },
         },
@@ -96,11 +92,11 @@ function ScatterPlot({
         uirevision: true,
         xaxis: {
           zeroline: false,
-          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+          gridcolor,
         },
         yaxis: {
           zeroline: false,
-          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+          gridcolor,
         },
         margin: { t: 20, b: 20, l: 30, r: 20 },
         ...layoutProps,

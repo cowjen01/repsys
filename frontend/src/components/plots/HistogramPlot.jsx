@@ -6,6 +6,8 @@ import { useTheme } from '@mui/material/styles';
 function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) {
   const theme = useTheme();
 
+  const gridcolor = theme.palette.mode === 'dark' ? theme.palette.divider : null;
+
   return (
     <Plot
       data={[
@@ -29,11 +31,11 @@ function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) 
         autosize: true,
         xaxis: {
           zeroline: false,
-          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+          gridcolor,
         },
         yaxis: {
           zeroline: false,
-          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+          gridcolor,
         },
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
