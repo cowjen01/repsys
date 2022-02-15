@@ -141,7 +141,7 @@ function MetricsDistribution({ metricsData }) {
                 <TabPanel
                   value={activeTab}
                   index={1}
-                  sx={{ p: 2, overflow: 'auto', height: 'calc(100% - 48px)' }}
+                  sx={{ p: 3, overflow: 'auto', height: 'calc(100% - 48px)' }}
                 >
                   <UsersDescription users={selectedData.users} />
                 </TabPanel>

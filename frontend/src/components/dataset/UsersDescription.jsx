@@ -33,12 +33,12 @@ function UsersDescription({ users }) {
   const { distribution, topItems } = data.interactions;
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={1}>
       <Box>
         <Typography variant="h6" sx={{ fontSize: '1rem' }}>
           Interacted Items
         </Typography>
-        <Typography gutterBottom variant="body2">
+        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
           A list of the most interacted items
         </Typography>
         <List dense>
@@ -51,7 +51,7 @@ function UsersDescription({ users }) {
         <Typography variant="h6" sx={{ fontSize: '1rem' }}>
           Interactions Distribution
         </Typography>
-        <Typography gutterBottom variant="body2">
+        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
           A distribution of the total number of interactions
         </Typography>
         <BarPlotHistogram bins={distribution.bins} hist={distribution.hist} />

@@ -45,7 +45,7 @@ export const handlers = [
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
     const { users: userIDs, split } = req.body;
-    usersDescription.interactions.topItems = shuffle(items).slice(0, 5);
+    usersDescription.interactions.topItems = shuffle(items).slice(0, 4);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {
@@ -87,8 +87,8 @@ export const handlers = [
   }),
   rest.post('/api/items/describe', (req, res, ctx) => {
     const { items: itemIDs } = req.body;
-    const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 5);
-    const randCountries = shuffle(dataset.attributes.country.options).slice(0, 5);
+    const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 4);
+    const randCountries = shuffle(dataset.attributes.country.options).slice(0, 4);
     itemsDescription.attributes.genres.topValues = randGenres;
     itemsDescription.attributes.country.topValues = randCountries;
     return res(ctx.delay(1000), ctx.json(itemsDescription));

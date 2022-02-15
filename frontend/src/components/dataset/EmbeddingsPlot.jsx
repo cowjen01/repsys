@@ -4,7 +4,15 @@ import Plotly from 'plotly.js';
 
 import ScatterPlot from '../plots/ScatterPlot';
 
-function EmbeddingsPlot({ onSelect, filterResults, embeddings, onUnselect, resetIndex }) {
+function EmbeddingsPlot({
+  onSelect,
+  filterResults,
+  embeddings,
+  onUnselect,
+  color,
+  resetIndex,
+  showScale,
+}) {
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
 
@@ -60,19 +68,26 @@ function EmbeddingsPlot({ onSelect, filterResults, embeddings, onUnselect, reset
       x={scatterPoints.x}
       y={scatterPoints.y}
       meta={scatterPoints.meta}
+      color={color}
       highlighted={highlightedPoints}
       label={scatterPoints.label}
       innerRef={scatterRef}
       onDeselect={handleUnselect}
       onSelected={handleSelect}
+      showScale={highlightedPoints.length > 0 ? false : showScale}
+      layoutProps={{
+        margin: { t: 20, b: 20, l: 30, r: showScale ? 100 : 20 },
+      }}
     />
   );
 }
 
 EmbeddingsPlot.defaultProps = {
+  color: [],
   filterResults: [],
   embeddings: [],
   resetIndex: 0,
+  showScale: false,
   onSelect: () => {},
   onUnselect: () => {},
 };
@@ -80,9 +95,11 @@ EmbeddingsPlot.defaultProps = {
 EmbeddingsPlot.propTypes = {
   onSelect: pt.func,
   onUnselect: pt.func,
+  showScale: pt.bool,
   resetIndex: pt.number,
   // eslint-disable-next-line react/forbid-prop-types
   filterResults: pt.arrayOf(pt.number),
+  color: pt.arrayOf(pt.number),
   embeddings: pt.arrayOf(
     pt.shape({
       title: pt.string,

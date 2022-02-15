@@ -15,14 +15,19 @@ function ScatterPlot({
   height,
   highlighted,
   dragMode,
+  showScale,
+  layoutProps,
   ...props
 }) {
   const theme = useTheme();
-  const { text } = theme.palette;
 
   const finalColor = useMemo(() => {
-    if (!highlighted.length) {
-      return null;
+    if (!highlighted.length && !color.length) {
+      return plotColors.selectedMarker;
+    }
+
+    if (!highlighted.length && color.length) {
+      return color;
     }
 
     const colors = [];
@@ -69,6 +74,16 @@ function ScatterPlot({
           marker: {
             size: 4,
             color: finalColor,
+            // colorscale: 'Blues',
+            // reversescale: true,
+            colorscale: [
+              ['0.0', '#f0f921'],
+              ['0.3', '#f2874a'],
+              ['0.5', '#a82395'],
+              ['0.7', '#5f02a4'],
+              ['1.0', '#150789'],
+            ],
+            showscale: showScale,
           },
         },
       ]}
@@ -77,11 +92,18 @@ function ScatterPlot({
         dragmode: dragMode,
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: text.primary },
+        font: { color: theme.palette.text.primary },
         uirevision: true,
-        xaxis: { zeroline: false },
-        yaxis: { zeroline: false },
+        xaxis: {
+          zeroline: false,
+          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+        },
+        yaxis: {
+          zeroline: false,
+          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+        },
         margin: { t: 20, b: 20, l: 30, r: 20 },
+        ...layoutProps,
       }}
       {...props}
     />
@@ -99,6 +121,9 @@ ScatterPlot.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
   dragMode: pt.string,
+  showScale: pt.bool,
+  // eslint-disable-next-line react/forbid-prop-types
+  layoutProps: pt.any,
 };
 
 ScatterPlot.defaultProps = {
@@ -106,9 +131,11 @@ ScatterPlot.defaultProps = {
   color: [],
   label: [],
   meta: [],
+  showScale: false,
   innerRef: null,
   highlighted: [],
   dragMode: 'lasso',
+  layoutProps: {},
 };
 
 export default ScatterPlot;

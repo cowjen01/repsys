@@ -39,7 +39,7 @@ function ItemsDescription({ attributes, items }) {
           </Typography>
           {(attributes[key].dtype === 'tags' || attributes[key].dtype === 'category') && (
             <>
-              <Typography gutterBottom variant="body2">
+              <Typography variant="body2" sx={{ fontSize: '0.8rem' }} mb={1}>
                 The most frequent values
               </Typography>
               <Stack direction="row" spacing={1}>
@@ -51,7 +51,7 @@ function ItemsDescription({ attributes, items }) {
           )}
           {attributes[key].dtype === 'number' && (
             <>
-              <Typography gutterBottom variant="body2">
+              <Typography sx={{ fontSize: '0.8rem' }} variant="body2">
                 Attribute values distribution
               </Typography>
               <BarPlotHistogram bins={bins} hist={hist} />

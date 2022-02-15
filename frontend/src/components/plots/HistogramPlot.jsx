@@ -5,7 +5,7 @@ import { useTheme } from '@mui/material/styles';
 
 function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) {
   const theme = useTheme();
-  const { text } = theme.palette;
+
   return (
     <Plot
       data={[
@@ -27,11 +27,17 @@ function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) 
         dragmode: 'select',
         selectdirection: 'h',
         autosize: true,
-        xaxis: { zeroline: false },
-        yaxis: { zeroline: false },
+        xaxis: {
+          zeroline: false,
+          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+        },
+        yaxis: {
+          zeroline: false,
+          gridcolor: theme.palette.mode === 'dark' ? theme.palette.divider : null,
+        },
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: text.primary },
+        font: { color: theme.palette.text.primary },
         uirevision: true,
         margin: { t: 20, b: 20, l: 20, r: 20 },
         ...layoutProps,

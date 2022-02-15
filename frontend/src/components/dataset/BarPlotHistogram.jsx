@@ -3,16 +3,20 @@ import pt from 'prop-types';
 
 import { BarPlot } from '../plots';
 
-function BarPlotHistogram({ hist, bins, height }) {
+function BarPlotHistogram({ hist, bins }) {
   return (
     <BarPlot
-      height={height}
+      height={150}
+      width={300}
       layoutProps={{
         bargap: 0,
         xaxis: {
           tickfont: { size: 10 },
         },
-        margin: { t: 20, b: 20, l: 30, r: 20 },
+        yaxis: {
+          visible: false,
+        },
+        margin: { t: 20, b: 20, l: 0, r: 0 },
       }}
       data={[
         {
@@ -24,14 +28,9 @@ function BarPlotHistogram({ hist, bins, height }) {
   );
 }
 
-BarPlotHistogram.defaultProps = {
-  height: 150,
-};
-
 BarPlotHistogram.propTypes = {
   hist: pt.arrayOf(pt.number).isRequired,
   bins: pt.arrayOf(pt.number).isRequired,
-  height: pt.number,
 };
 
 export default BarPlotHistogram;
