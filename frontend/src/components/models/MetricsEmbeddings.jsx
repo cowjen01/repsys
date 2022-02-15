@@ -56,20 +56,14 @@ function MetricsEmbeddings({ metricsData }) {
             label="Model"
             value={selectedModel}
             onChange={handleModelChange}
-            options={models.map((model) => ({
-              value: model,
-              label: model,
-            }))}
+            options={models}
           />
           <CategoryFilter
             label="Metric"
             disabled={modelMetrics.isFetching}
             value={selectedMetric}
             onChange={handleMetricChange}
-            options={metrics.map((metric) => ({
-              value: metric,
-              label: metric,
-            }))}
+            options={metrics}
           />
         </Stack>
       </Grid>

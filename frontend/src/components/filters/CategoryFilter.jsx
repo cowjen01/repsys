@@ -22,11 +22,24 @@ function CategoryFilter({ onChange, value, options, label, displayEmpty, ...rest
             <em>None</em>
           </MenuItem>
         )}
-        {options.map((option) => (
-          <MenuItem key={option.value} value={option.value}>
-            {option.label}
-          </MenuItem>
-        ))}
+        {options.map((option) => {
+          if (
+            typeof option === 'string' ||
+            option instanceof String ||
+            typeof option === 'number'
+          ) {
+            return (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            );
+          }
+          return (
+            <MenuItem key={option.value} value={option.value}>
+              {option.label}
+            </MenuItem>
+          );
+        })}
       </Select>
     </FormControl>
   );
@@ -42,12 +55,15 @@ CategoryFilter.propTypes = {
   label: pt.string.isRequired,
   value: pt.oneOfType([pt.string, pt.number, pt.arrayOf(pt.string)]),
   displayEmpty: pt.bool,
-  options: pt.arrayOf(
-    pt.shape({
-      value: pt.oneOfType([pt.string, pt.number]),
-      label: pt.string,
-    })
-  ).isRequired,
+  options: pt.oneOfType([
+    pt.arrayOf(pt.oneOfType(pt.string, pt.number)),
+    pt.arrayOf(
+      pt.shape({
+        value: pt.oneOfType([pt.string, pt.number]),
+        label: pt.string,
+      })
+    ),
+  ]).isRequired,
 };
 
 export default CategoryFilter;

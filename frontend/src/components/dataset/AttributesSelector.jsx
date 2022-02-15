@@ -38,10 +38,7 @@ function AttributesSelector({
           label: `${col.bins[index]} - ${bin}`,
         }));
       }
-      return col.options.map((option) => ({
-        value: option,
-        label: option,
-      }));
+      return col.options;
     }
     return [];
   }, [selectedAttribute]);

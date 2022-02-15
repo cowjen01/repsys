@@ -52,7 +52,7 @@ function RecEditDialog() {
       }
       dispatch(
         openSnackbar({
-          message: 'All settings applied!',
+          message: 'All settings successfully applied!',
         })
       );
       handleClose();
@@ -147,7 +147,7 @@ function RecEditDialog() {
                             name="itemsPerPage"
                             label="Items per page"
                             component={SelectField}
-                            options={[1, 3, 4].map((i) => ({ label: i, value: i }))}
+                            options={[1, 3, 4]}
                           />
                         </Grid>
                         <Grid item xs={6}>
@@ -168,7 +168,7 @@ function RecEditDialog() {
                         name="model"
                         label="Model"
                         component={SelectField}
-                        options={Object.keys(models.data).map((m) => ({ label: m, value: m }))}
+                        options={Object.keys(models.data)}
                         displayEmpty
                       />
                       {model &&
@@ -184,7 +184,7 @@ function RecEditDialog() {
                               <Field
                                 key={paramName}
                                 component={SelectField}
-                                options={paramData.options.map((b) => ({ label: b, value: b }))}
+                                options={paramData.options}
                                 {...props}
                               />
                             );

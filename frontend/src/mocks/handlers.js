@@ -45,7 +45,7 @@ export const handlers = [
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
     const { users: userIDs, split } = req.body;
-    usersDescription.interactions.topItems = shuffle(items).slice(0, 4);
+    usersDescription.interactions.topItems = shuffle(items).slice(0, 5);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {

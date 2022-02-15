@@ -28,7 +28,7 @@ function SelectField({
     >
       {displayEmpty && <option value="">{null}</option>}
       {options.map((option) => {
-        if (typeof option === 'string' || option instanceof String) {
+        if (typeof option === 'string' || option instanceof String || typeof option === 'number') {
           return (
             <option key={option} value={option}>
               {option}
