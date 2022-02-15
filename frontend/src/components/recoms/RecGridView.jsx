@@ -73,6 +73,10 @@ function RecGridView({ index }) {
     }
   };
 
+  const isLastPage =
+    recommendations.data &&
+    currentPage === Math.ceil(recommendations.data.length / itemsPerPage) - 1;
+
   return (
     <Grid container spacing={1}>
       <Grid item xs={12}>
@@ -96,12 +100,7 @@ function RecGridView({ index }) {
                 >
                   <KeyboardArrowLeftIcon />
                 </IconButton>
-                <IconButton
-                  disabled={
-                    currentPage === Math.ceil(recommendations.data.length / itemsPerPage) - 1
-                  }
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                >
+                <IconButton disabled={isLastPage} onClick={() => setCurrentPage(currentPage + 1)}>
                   <KeyboardArrowRightIcon />
                 </IconButton>
               </Stack>

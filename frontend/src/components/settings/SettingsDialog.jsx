@@ -60,7 +60,6 @@ function SettingsDialog() {
   return (
     <Dialog open={dialogOpen} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Application Settings</DialogTitle>
-
       <Formik
         initialValues={{
           darkMode,

@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo } from 'react';
 import { Formik, Field } from 'formik';
 import {
   Button,
@@ -8,6 +8,7 @@ import {
   DialogTitle,
   Grid,
   Typography,
+  LinearProgress,
 } from '@mui/material';
 import { useDispatch, useSelector } from 'react-redux';
 
@@ -20,11 +21,14 @@ import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../r
 import { TextField, SelectField, CheckboxField } from '../fields';
 import { useGetModelsQuery } from '../../api';
 import { capitalize } from '../../utils';
+import ErrorAlert from '../ErrorAlert';
 
 function RecEditDialog() {
-  const dialog = useSelector(recEditDialogSelector);
   const dispatch = useDispatch();
+  const dialog = useSelector(recEditDialogSelector);
   const recommenders = useSelector(recommendersSelector);
+
+  const { index, open } = dialog;
 
   const models = useGetModelsQuery();
 
@@ -32,109 +36,101 @@ function RecEditDialog() {
     dispatch(closeRecEditDialog());
   };
 
-  const handleSubmit = useCallback(
-    (values) => {
-      const data = {
-        ...values,
-        itemsPerPage: parseInt(values.itemsPerPage, 10),
-      };
+  const handleSubmit = (values) => {
+    const data = {
+      ...values,
+      itemsPerPage: parseInt(values.itemsPerPage, 10),
+    };
 
-      // the index can be 0, so !dialog.index is not enough
-      if (dialog.index === null) {
-        dispatch(addRecommender(data));
-      } else {
-        dispatch(
-          updateRecommender({
-            index: dialog.index,
-            data,
-          })
-        );
-      }
+    // the index can be 0, so !dialog.index is not enough
+    if (index === null) {
+      dispatch(addRecommender(data));
+    } else {
       dispatch(
-        openSnackbar({
-          message: 'All settings successfully applied!',
+        updateRecommender({
+          index,
+          data,
         })
       );
-      handleClose();
-    },
-    [dispatch, dialog]
-  );
+    }
+
+    dispatch(
+      openSnackbar({
+        message: 'All settings successfully applied!',
+      })
+    );
+
+    handleClose();
+  };
 
   const initialValues = useMemo(() => {
-    if (!models.isSuccess) {
+    if (!models.data) {
       return null;
     }
 
+    if (index !== null) {
+      const data = recommenders[index];
+
+      // clear the model field if it does not exist anymore
+      if (!models.data[data.model]) {
+        data.model = '';
+      }
+
+      return data;
+    }
+
     const defaultParams = Object.fromEntries(
-      Object.entries(models.data).map(([modelName, modelData]) => [
-        modelName,
+      Object.entries(models.data).map(([modelKey, model]) => [
+        modelKey,
         Object.fromEntries(
-          Object.entries(modelData.params).map(([paramName, paramData]) => [
-            paramName,
-            paramData.default,
-          ])
+          Object.entries(model.params).map(([paramKey, param]) => [paramKey, param.default])
         ),
       ])
     );
 
-    if (dialog.index === null) {
-      return {
-        name: 'New Recommender',
-        itemsPerPage: 4,
-        itemsLimit: 20,
-        model: Object.keys(models.data)[0],
-        modelParams: defaultParams,
-      };
-    }
-
-    const data = recommenders[dialog.index];
-
-    if (!defaultParams[data.model]) {
-      return {
-        ...data,
-        model: '',
-      };
-    }
-
-    return data;
-  }, [dialog, models.isLoading]);
+    return {
+      name: 'New Recommender',
+      itemsPerPage: 4,
+      itemsLimit: 20,
+      model: Object.keys(models.data)[0],
+      modelParams: defaultParams,
+    };
+  }, [index, models.data]);
 
   return (
-    <Dialog open={dialog.open} fullWidth maxWidth="sm" onClose={handleClose}>
+    <Dialog open={open} transitionDuration={0} fullWidth maxWidth="sm" onClose={handleClose}>
       <DialogTitle>Recommender settings</DialogTitle>
-      {!models.isLoading ? (
-        <Formik
-          initialValues={initialValues}
-          validate={(values) => {
-            const errors = {};
-            const requiredMessage = 'This field is required.';
-            if (!values.name) {
-              errors.name = requiredMessage;
-            }
-            if (
-              dialog.index === null &&
-              recommenders.map(({ name }) => name).includes(values.name)
-            ) {
-              errors.name = 'The name must be unique.';
-            }
-            if (!values.itemsLimit) {
-              errors.itemsLimit = requiredMessage;
-            }
-            if (!values.model) {
-              errors.model = requiredMessage;
-            }
-            return errors;
-          }}
-          onSubmit={(values, { setSubmitting }) => {
-            handleSubmit(values);
-            setSubmitting(false);
-          }}
-        >
-          {({ submitForm, isSubmitting, values }) => {
-            const model = useMemo(() => models.data[values.model], [values.model]);
-            return (
-              <>
-                <DialogContent>
+      <Formik
+        initialValues={initialValues}
+        enableReinitialize
+        validate={(values) => {
+          const errors = {};
+          const requiredMessage = 'This field is required.';
+          if (!values.name) {
+            errors.name = requiredMessage;
+          }
+          if (index === null && recommenders.map(({ name }) => name).includes(values.name)) {
+            errors.name = 'The name must be unique.';
+          }
+          if (!values.itemsLimit) {
+            errors.itemsLimit = requiredMessage;
+          }
+          if (!values.model) {
+            errors.model = requiredMessage;
+          }
+          return errors;
+        }}
+        onSubmit={(values, { setSubmitting }) => {
+          handleSubmit(values);
+          setSubmitting(false);
+        }}
+      >
+        {({ submitForm, isSubmitting, values }) => {
+          const modelData = values.model ? models.data[values.model] : null;
+          return (
+            <>
+              <DialogContent>
+                {models.isSuccess && (
                   <Grid container direction="column" spacing={2}>
                     <Grid item>
                       <Typography variant="subtitle2" component="div">
@@ -171,52 +167,51 @@ function RecEditDialog() {
                         options={Object.keys(models.data)}
                         displayEmpty
                       />
-                      {model &&
-                        model.params &&
-                        Object.entries(model.params).map(([paramName, paramData]) => {
-                          const name = `modelParams.${values.model}.${paramName}`;
+                      {modelData &&
+                        modelData.params &&
+                        Object.entries(modelData.params).map(([paramKey, param]) => {
                           const props = {
-                            name,
-                            label: capitalize(paramName),
+                            name: `modelParams.${values.model}.${paramKey}`,
+                            label: capitalize(paramKey),
                           };
-                          if (paramData.field === 'select') {
+                          if (param.field === 'select') {
                             return (
                               <Field
-                                key={paramName}
+                                key={paramKey}
                                 component={SelectField}
-                                options={paramData.options}
+                                options={param.options}
                                 {...props}
                               />
                             );
                           }
-                          if (paramData.field === 'checkbox') {
-                            return <Field key={paramName} component={CheckboxField} {...props} />;
+                          if (param.field === 'checkbox') {
+                            return <Field key={paramKey} component={CheckboxField} {...props} />;
                           }
                           return (
                             <Field
-                              key={paramName}
+                              key={paramKey}
                               component={TextField}
-                              type={paramData.field}
+                              type={param.field}
                               {...props}
                             />
                           );
                         })}
                     </Grid>
                   </Grid>
-                </DialogContent>
-                <DialogActions>
-                  <Button onClick={handleClose}>Close</Button>
-                  <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
-                    Save
-                  </Button>
-                </DialogActions>
-              </>
-            );
-          }}
-        </Formik>
-      ) : (
-        <DialogContent>Loading ...</DialogContent>
-      )}
+                )}
+                {models.isLoading && <LinearProgress />}
+                {models.isError && <ErrorAlert error={models.error} />}
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={handleClose}>Close</Button>
+                <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
+                  Save
+                </Button>
+              </DialogActions>
+            </>
+          );
+        }}
+      </Formik>
     </Dialog>
   );
 }

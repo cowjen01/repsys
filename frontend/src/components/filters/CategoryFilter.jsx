@@ -56,7 +56,7 @@ CategoryFilter.propTypes = {
   value: pt.oneOfType([pt.string, pt.number, pt.arrayOf(pt.string)]),
   displayEmpty: pt.bool,
   options: pt.oneOfType([
-    pt.arrayOf(pt.oneOfType(pt.string, pt.number)),
+    pt.arrayOf(pt.oneOfType([pt.string, pt.number])),
     pt.arrayOf(
       pt.shape({
         value: pt.oneOfType([pt.string, pt.number]),

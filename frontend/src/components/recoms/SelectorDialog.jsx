@@ -33,6 +33,7 @@ function UserSelectDialog() {
   const users = useGetUsersQuery({
     split: 'validation',
   });
+
   const items = useGetItemsByTitleQuery(queryString, {
     skip: queryString.length < 3,
   });
@@ -70,11 +71,7 @@ function UserSelectDialog() {
 
   return (
     <Drawer anchor="right" open={dialogOpen} onClose={handleDialogClose}>
-      <Box
-        sx={{
-          width: 450,
-        }}
-      >
+      <Box sx={{ width: 450 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange} centered>
             <Tab label="Users" />
