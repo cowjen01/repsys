@@ -10,6 +10,7 @@ import {
   REGISTER,
 } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
+import stateReconciler from 'redux-persist/lib/stateReconciler/autoMergeLevel2';
 
 import rootReducer from './reducers';
 import { repsysApi } from './api';
@@ -17,6 +18,7 @@ import { repsysApi } from './api';
 const persistConfig = {
   key: 'repsys',
   storage,
+  stateReconciler,
   whitelist: ['app', 'recommenders', 'settings'],
 };
 
