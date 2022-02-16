@@ -1,7 +1,7 @@
+import glob
 import os
 import shutil
 import time
-import glob
 from typing import Text, Optional
 
 

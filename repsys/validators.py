@@ -1,7 +1,8 @@
-from typing import Dict, Text, List
-from pandas import DataFrame
-import numpy as np
 import logging
+from typing import Dict, Text, List
+
+import numpy as np
+from pandas import DataFrame
 
 from repsys.dtypes import (
     DataType,

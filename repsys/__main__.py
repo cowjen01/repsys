@@ -1,7 +1,8 @@
-import sys
-import os
-import coloredlogs
 import logging
+import os
+import sys
+
+import coloredlogs
 
 from repsys.cli import repsys
 

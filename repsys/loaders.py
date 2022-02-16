@@ -1,12 +1,12 @@
 import importlib
 import inspect
-import pkgutil
 import logging
+import pkgutil
 import sys
-from typing import Dict, List, Text
+from typing import List
 
-from repsys.model import Model
 from repsys.dataset import Dataset
+from repsys.model import Model
 from repsys.utils import get_subclasses
 
 logger = logging.getLogger(__name__)
@@ -61,6 +61,8 @@ def load_models_pkg(models_pkg) -> List[Model]:
         raise Exception("At least one model must be defined.")
 
     models = model_loader.instances.values()
+
+    # TODO validate the name of a model
 
     return models
 

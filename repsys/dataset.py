@@ -1,22 +1,16 @@
 # credits: https://github.com/dawenl/vae_cf/blob/master/VAE_ML20M_WWW2018.ipynb
 
+import functools
 import logging
 import os
 from abc import ABC, abstractmethod
-from typing import List, Text, Dict, Optional, Tuple
-from pandas import DataFrame
-from scipy import sparse
+from typing import Text, Dict, Tuple
+
 import numpy as np
 import pandas as pd
-import functools
+from pandas import DataFrame
+from scipy import sparse
 
-from repsys.utils import (
-    create_tmp_dir,
-    tmp_dir_path,
-    remove_tmp_dir,
-    unzip_dir,
-    zip_dir,
-)
 from repsys.dtypes import (
     DataType,
     ItemID,
@@ -27,6 +21,13 @@ from repsys.dtypes import (
     Rating,
     find_column,
     filter_columns,
+)
+from repsys.utils import (
+    create_tmp_dir,
+    tmp_dir_path,
+    remove_tmp_dir,
+    unzip_dir,
+    zip_dir,
 )
 from repsys.validators import (
     validate_dataset,
@@ -211,11 +212,11 @@ class Dataset(ABC):
             tags: Tags = item_dtypes[tags_col]
             self.tags[tags_col] = (
                 items[tags_col]
-                .dropna()
-                .str.split(tags.sep, expand=True)
-                .stack()
-                .unique()
-                .tolist()
+                    .dropna()
+                    .str.split(tags.sep, expand=True)
+                    .stack()
+                    .unique()
+                    .tolist()
             )
             items[tags_col] = items[tags_col].fillna("")
             items[tags_col] = items[tags_col].str.split(tags.sep)
@@ -533,9 +534,9 @@ class DatasetSplitter:
         # and the rest of the users for training
         tr_users = user_index[: (n_users - n_heldout_users * 2)]
         vad_users = user_index[
-            (n_users - n_heldout_users * 2) : (n_users - n_heldout_users)
-        ]
-        test_users = user_index[(n_users - n_heldout_users) :]
+                    (n_users - n_heldout_users * 2): (n_users - n_heldout_users)
+                    ]
+        test_users = user_index[(n_users - n_heldout_users):]
 
         # Select only interactions made by users from the training set
         train_interacts = interact_data.loc[

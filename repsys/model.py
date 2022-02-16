@@ -1,15 +1,17 @@
-import logging
-from typing import Text, List
-from abc import ABC, abstractmethod
 import functools
+import logging
+from abc import ABC, abstractmethod
+from typing import Text, List
 
-from repsys.web import WebParam
+import numpy as np
+
 from repsys.dataset import Dataset
+from repsys.web import WebParam
 
 logger = logging.getLogger(__name__)
 
 
-def enforcedataset(func):
+def enforce_dataset(func):
     @functools.wraps(func)
     def wrapper(self, *args, **kwargs):
         if not hasattr(self, "dataset") or self.dataset is None:
@@ -20,13 +22,16 @@ def enforcedataset(func):
 
 
 class Model(ABC):
+    def __init__(self):
+        self.dataset = None
+
     @abstractmethod
     def name(self) -> Text:
         """Get a unique name of the model."""
         pass
 
     @abstractmethod
-    @enforcedataset
+    @enforce_dataset
     def fit(self, training: bool = False) -> None:
         """Train the model using the training interactions.
         If the model is already trained, load it from a file."""
@@ -55,12 +60,14 @@ class Model(ABC):
 
         self.dataset = dataset
 
-    @enforcedataset
-    def recommend_top_items(self, X, limit=20, **kwargs):
-        """Make a prediction, but return directly a list of items."""
+    @enforce_dataset
+    def predict_top_n(self, X, n=20, **kwargs):
+        """Make a prediction, but return directly a list of top ids."""
         prediction = self.predict(X, **kwargs)
-        idxs = (-prediction[0]).argsort()[:limit]
-        return self.dataset.indices_to_items(idxs)
+        indexes = (-prediction).argsort()[:, :n]
+        ids = np.vectorize(self.dataset.get_item_id)(indexes)
+
+        return ids
 
     def to_dict(self):
         """Serialize details about the model to the dictionary."""

@@ -1,10 +1,11 @@
 import logging
 import os
 from typing import List
-from sanic import Sanic
-from sanic.response import json, file
+
 import numpy as np
+from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
+from sanic.response import json, file
 
 from repsys.dataset import Dataset
 from repsys.model import Model
@@ -22,14 +23,15 @@ def create_app(models: List[Model], dataset: Dataset):
     async def index(request):
         return await file(f"{static_folder}/index.html")
 
-    @app.route("/api/config")
+    @app.route("/api/models")
+    def get_config(request):
+        return json([m.to_dict() for m in models])
+
+    @app.route("/api/dataset")
     def get_config(request):
         return json({
-            "models": [m.to_dict() for m in models],
-            "dataset": {
-                "items": int(dataset.n_items),
-                "columns": dataset.items.columns.tolist(),
-            }
+            "items": int(dataset.n_items),
+            "columns": dataset.items.columns.tolist(),
         })
 
     @app.route("/api/users")
@@ -105,13 +107,13 @@ def create_app(models: List[Model], dataset: Dataset):
             interactions = np.array(interactions)
             X = dataset.input_from_interactions(interactions)
 
-        items = model.recommend_top_items(X, limit, **predict_params)
+        items = model.predict_top_n(X, limit, **predict_params)
         data = json(dataset.serialize_items(items))
 
         return data
 
     @app.listener("after_server_stop")
-    def on_shutdown(app, loop):
+    def on_shutdown():
         logger.info("Server has been shut down.")
 
     return app

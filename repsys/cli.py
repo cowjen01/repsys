@@ -1,15 +1,16 @@
-import os
-from typing import Dict, List, Text
-import click
-import logging
 import functools
+import logging
+import os
+from typing import List, Text
+
+import click
+
+from repsys.constants import DEFAULT_SERVER_PORT
 from repsys.dataset import Dataset
 from repsys.evaluators import ModelEvaluator
-
-from repsys.server import run_server
-from repsys.model import Model
 from repsys.loaders import load_dataset_pkg, load_models_pkg
-from repsys.constants import DEFAULT_SERVER_PORT
+from repsys.model import Model
+from repsys.server import run_server
 from repsys.utils import (
     create_dir,
     create_tmp_dir,
@@ -19,7 +20,6 @@ from repsys.utils import (
     new_eval_checkpoint,
     remove_tmp_dir,
     tmp_dir_path,
-    unzip_dir,
     zip_dir,
 )
 
@@ -47,7 +47,7 @@ def eval_input_callback(ctx, param, value):
 
         if not path:
             raise click.ClickException(
-                "No evealuation were found in the default directory '.repsys_checkpoints'. "
+                "No evaluation found in the default directory '.repsys_checkpoints'. "
                 "Please provide a path to the evaluation or run 'repsys eval' command."
             )
 
@@ -76,7 +76,7 @@ def dataset_callback(ctx, param, value):
     return load_dataset_pkg(value)
 
 
-def datasetoption(func):
+def dataset_option(func):
     @click.option(
         "-d",
         "--dataset-pkg",
@@ -92,7 +92,7 @@ def datasetoption(func):
     return wrapper
 
 
-def modelsoption(func):
+def models_option(func):
     @click.option(
         "-m",
         "--models-pkg",
@@ -108,7 +108,7 @@ def modelsoption(func):
     return wrapper
 
 
-def splitoption(func):
+def split_option(func):
     @click.option(
         "-s",
         "--split-path",
@@ -165,9 +165,9 @@ def repsys():
 
 
 @repsys.command()
-@modelsoption
-@datasetoption
-@splitoption
+@models_option
+@dataset_option
+@split_option
 @click.option(
     "-t",
     "--data-type",
@@ -176,7 +176,7 @@ def repsys():
     show_default=True,
 )
 @click.option("-o", "--output-path", callback=eval_output_callback)
-def eval(
+def evaluate(
     models: List[Model],
     dataset: Dataset,
     split_path: Text,
@@ -190,9 +190,9 @@ def eval(
 
 
 @repsys.command()
-@modelsoption
-@datasetoption
-@splitoption
+@models_option
+@dataset_option
+@split_option
 @click.option(
     "-e",
     "--eval-path",
@@ -226,9 +226,9 @@ def server(
 
 
 @repsys.command()
-@datasetoption
-@modelsoption
-@splitoption
+@dataset_option
+@models_option
+@split_option
 def train(models: List[Model], dataset: Dataset, split_path: Text):
     """Train models by providing dataset split."""
     dataset.load(split_path)
@@ -236,7 +236,7 @@ def train(models: List[Model], dataset: Dataset, split_path: Text):
 
 
 @repsys.command()
-@datasetoption
+@dataset_option
 @click.option("-o", "--output-path", callback=split_output_callback)
 def split(dataset: Dataset, output_path: Text):
     """Create a train/validation/test split."""

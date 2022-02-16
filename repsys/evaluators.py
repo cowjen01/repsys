@@ -1,11 +1,12 @@
-from typing import Text
-import numpy as np
-import os
-import glob
-from jax import jit, vmap, default_backend
-import jax.numpy as jnp
-import pandas as pd
 import functools
+import glob
+import os
+from typing import Text
+
+import jax.numpy as jnp
+import numpy as np
+import pandas as pd
+from jax import jit, vmap, default_backend
 from pandas import DataFrame
 
 from repsys.dataset import Dataset
