@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import pt from 'prop-types';
 import { Formik, Field } from 'formik';
 import {
   Button,
@@ -20,8 +21,41 @@ import {
 import { recEditDialogSelector, closeRecEditDialog, openSnackbar } from '../../reducers/dialogs';
 import { TextField, SelectField, CheckboxField } from '../fields';
 import { useGetModelsQuery } from '../../api';
-import { capitalize } from '../../utils';
+import { capitalize, mergeDeep } from '../../utils';
 import ErrorAlert from '../ErrorAlert';
+
+function ModelParams({ modelsData, model }) {
+  const { params } = modelsData[model];
+
+  if (!params) {
+    return null;
+  }
+
+  return (
+    <>
+      {Object.entries(params).map(([key, { field, options }]) => {
+        const props = {
+          name: `modelParams.${model}.${key}`,
+          label: capitalize(key),
+        };
+        if (field === 'select') {
+          return (
+            <Field key={key} displayEmpty component={SelectField} options={options} {...props} />
+          );
+        }
+        if (field === 'checkbox') {
+          return <Field key={key} component={CheckboxField} {...props} />;
+        }
+        return <Field key={key} component={TextField} type={field} {...props} />;
+      })}
+    </>
+  );
+}
+
+ModelParams.propTypes = {
+  modelsData: pt.any.isRequired,
+  model: pt.string.isRequired,
+};
 
 function RecEditDialog() {
   const dispatch = useDispatch();
@@ -40,6 +74,11 @@ function RecEditDialog() {
     const data = {
       ...values,
       itemsPerPage: parseInt(values.itemsPerPage, 10),
+      modelParams: Object.keys(models.data[values.model].params).reduce((obj, key) => {
+        // eslint-disable-next-line no-param-reassign
+        obj[key] = values.modelParams[values.model][key];
+        return obj;
+      }, {}),
     };
 
     // the index can be 0, so !dialog.index is not enough
@@ -68,25 +107,37 @@ function RecEditDialog() {
       return null;
     }
 
-    if (index !== null) {
-      const data = recommenders[index];
-
-      // clear the model field if it does not exist anymore
-      if (!models.data[data.model]) {
-        data.model = '';
-      }
-
-      return data;
-    }
-
     const defaultParams = Object.fromEntries(
       Object.entries(models.data).map(([modelKey, model]) => [
         modelKey,
         Object.fromEntries(
-          Object.entries(model.params).map(([paramKey, param]) => [paramKey, param.default])
+          Object.entries(model.params).map(([paramKey, param]) => [
+            paramKey,
+            param.default || (param.field !== 'checkbox' ? '' : false),
+          ])
         ),
       ])
     );
+
+    if (index !== null) {
+      const data = recommenders[index];
+
+      const mergedParams = mergeDeep(defaultParams, {
+        [data.model]: data.modelParams,
+      });
+
+      const values = {
+        ...data,
+        modelParams: mergedParams,
+      };
+
+      // clear the model field if it does not exist anymore
+      if (!models.data[data.model]) {
+        values.model = '';
+      }
+
+      return values;
+    }
 
     return {
       name: 'New Recommender',
@@ -125,92 +176,63 @@ function RecEditDialog() {
           setSubmitting(false);
         }}
       >
-        {({ submitForm, isSubmitting, values }) => {
-          const modelData = values.model ? models.data[values.model] : null;
-          return (
-            <>
-              <DialogContent>
-                {models.isSuccess && (
-                  <Grid container direction="column" spacing={2}>
-                    <Grid item>
-                      <Typography variant="subtitle2" component="div">
-                        Appearance
-                      </Typography>
-                      <Field name="name" label="Name" fullWidth component={TextField} />
-                      <Grid container spacing={2}>
-                        <Grid item xs={6}>
-                          <Field
-                            name="itemsPerPage"
-                            label="Items per page"
-                            component={SelectField}
-                            options={[1, 3, 4]}
-                          />
-                        </Grid>
-                        <Grid item xs={6}>
-                          <Field
-                            name="itemsLimit"
-                            label="Max number of items"
-                            component={TextField}
-                            type="number"
-                          />
-                        </Grid>
+        {({ submitForm, isSubmitting, values }) => (
+          <>
+            <DialogContent>
+              {models.isSuccess && (
+                <Grid container direction="column" spacing={2}>
+                  <Grid item>
+                    <Typography variant="subtitle2" component="div">
+                      Appearance
+                    </Typography>
+                    <Field name="name" label="Name" fullWidth component={TextField} />
+                    <Grid container spacing={2}>
+                      <Grid item xs={6}>
+                        <Field
+                          name="itemsPerPage"
+                          label="Items per page"
+                          component={SelectField}
+                          options={[1, 3, 4]}
+                        />
+                      </Grid>
+                      <Grid item xs={6}>
+                        <Field
+                          name="itemsLimit"
+                          label="Max number of items"
+                          component={TextField}
+                          type="number"
+                        />
                       </Grid>
                     </Grid>
-                    <Grid item>
-                      <Typography variant="subtitle2" component="div">
-                        Model configuration
-                      </Typography>
-                      <Field
-                        name="model"
-                        label="Model"
-                        component={SelectField}
-                        options={Object.keys(models.data)}
-                        displayEmpty
-                      />
-                      {modelData &&
-                        modelData.params &&
-                        Object.entries(modelData.params).map(([paramKey, param]) => {
-                          const props = {
-                            name: `modelParams.${values.model}.${paramKey}`,
-                            label: capitalize(paramKey),
-                          };
-                          if (param.field === 'select') {
-                            return (
-                              <Field
-                                key={paramKey}
-                                component={SelectField}
-                                options={param.options}
-                                {...props}
-                              />
-                            );
-                          }
-                          if (param.field === 'checkbox') {
-                            return <Field key={paramKey} component={CheckboxField} {...props} />;
-                          }
-                          return (
-                            <Field
-                              key={paramKey}
-                              component={TextField}
-                              type={param.field}
-                              {...props}
-                            />
-                          );
-                        })}
-                    </Grid>
                   </Grid>
-                )}
-                {models.isLoading && <LinearProgress />}
-                {models.isError && <ErrorAlert error={models.error} />}
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={handleClose}>Close</Button>
-                <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
-                  Save
-                </Button>
-              </DialogActions>
-            </>
-          );
-        }}
+                  <Grid item>
+                    <Typography variant="subtitle2" component="div">
+                      Model configuration
+                    </Typography>
+                    <Field
+                      name="model"
+                      label="Model"
+                      component={SelectField}
+                      options={Object.keys(models.data)}
+                      displayEmpty
+                    />
+                    {values.model && models.data && (
+                      <ModelParams modelsData={models.data} model={values.model} />
+                    )}
+                  </Grid>
+                </Grid>
+              )}
+              {models.isLoading && <LinearProgress />}
+              {models.isError && <ErrorAlert error={models.error} />}
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={handleClose}>Close</Button>
+              <Button onClick={submitForm} disabled={isSubmitting} autoFocus>
+                Save
+              </Button>
+            </DialogActions>
+          </>
+        )}
       </Formik>
     </Dialog>
   );

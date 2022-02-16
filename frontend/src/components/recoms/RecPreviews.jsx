@@ -55,7 +55,7 @@ function RecPreviews() {
 
   return (
     <>
-      <Grid container spacing={4}>
+      <Grid container spacing={3}>
         {!itemView.title && (
           <Grid item xs={12}>
             <Alert severity="warning">

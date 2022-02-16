@@ -10,7 +10,7 @@ import { CategoryFilter } from '../filters';
 import TabPanel from '../TabPanel';
 import { PlotLoader } from '../loaders';
 
-function MetricsDistribution({ metricsData }) {
+function UsersDistribution({ metricsData }) {
   const models = Object.keys(metricsData.results);
   const metrics = metricsData.metrics.distributed.users;
 
@@ -148,9 +148,9 @@ function MetricsDistribution({ metricsData }) {
   );
 }
 
-MetricsDistribution.propTypes = {
+UsersDistribution.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   metricsData: pt.any.isRequired,
 };
 
-export default MetricsDistribution;
+export default UsersDistribution;

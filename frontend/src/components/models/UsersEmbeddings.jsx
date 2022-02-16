@@ -8,7 +8,7 @@ import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
 import { PlotLoader } from '../loaders';
 
-function MetricsEmbeddings({ metricsData }) {
+function UsersEmbeddings({ metricsData }) {
   const models = Object.keys(metricsData.results);
   const metrics = metricsData.metrics.distributed.users;
 
@@ -97,9 +97,9 @@ function MetricsEmbeddings({ metricsData }) {
   );
 }
 
-MetricsEmbeddings.propTypes = {
+UsersEmbeddings.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   metricsData: pt.any.isRequired,
 };
 
-export default MetricsEmbeddings;
+export default UsersEmbeddings;

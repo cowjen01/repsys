@@ -1,10 +1,10 @@
 import React from 'react';
 import { Grid, Typography, LinearProgress } from '@mui/material';
 
-import MetricsDistribution from './MetricsDistribution';
+import UsersDistribution from './UsersDistribution';
 import MetricsSummary from './MetricsSummary';
 import ErrorAlert from '../ErrorAlert';
-import MetricsEmbeddings from './MetricsEmbeddings';
+import UsersEmbeddings from './UsersEmbeddings';
 import { useGetModelsMetricsQuery } from '../../api';
 
 function ModelsEvaluation() {
@@ -35,7 +35,7 @@ function ModelsEvaluation() {
         <Typography variant="subtitle1" marginBottom={1}>
           A distribution of the metrics for each validation user
         </Typography>
-        <MetricsDistribution metricsData={metrics.data} />
+        <UsersDistribution metricsData={metrics.data} />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6">
@@ -44,7 +44,7 @@ function ModelsEvaluation() {
         <Typography variant="subtitle1" marginBottom={1}>
           A distribution of the metrics for each validation user
         </Typography>
-        <MetricsEmbeddings metricsData={metrics.data} />
+        <UsersEmbeddings metricsData={metrics.data} />
       </Grid>
     </Grid>
   );

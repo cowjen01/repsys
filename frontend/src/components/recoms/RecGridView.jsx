@@ -37,7 +37,7 @@ function RecGridView({ index }) {
 
     const query = {
       model,
-      params: modelParams[model],
+      params: modelParams,
       limit: itemsLimit,
     };
 

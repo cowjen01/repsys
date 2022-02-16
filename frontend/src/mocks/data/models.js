@@ -17,9 +17,11 @@ export const models = {
   },
   svd: {
     params: {
-      param: {
-        field: 'text',
-        default: '',
+      factor: {
+        field: 'number',
+      },
+      foo: {
+        field: 'checkbox',
       },
     },
   },
