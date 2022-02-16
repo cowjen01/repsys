@@ -11,7 +11,7 @@ class MovieLens(Dataset):
     def get_genres(self):
         return self.tags["genres"]
 
-    def item_dtypes(self):
+    def item_columns(self):
         return {
             "movieId": dtypes.ItemID(),
             "title": dtypes.Title(),
@@ -19,11 +19,11 @@ class MovieLens(Dataset):
             "year": dtypes.Number(),
         }
 
-    def interact_dtypes(self):
+    def activity_columns(self):
         return {
             "movieId": dtypes.ItemID(),
             "userId": dtypes.UserID(),
-            "rating": dtypes.Rating(min=0.5, step=0.5),
+            "rating": dtypes.Interaction(),
         }
 
     def load_items(self):
@@ -33,5 +33,5 @@ class MovieLens(Dataset):
         df["year"] = df["year"].astype(int)
         return df
 
-    def load_interacts(self):
+    def load_activities(self):
         return pd.read_csv("./ml-sm/ratings.csv")

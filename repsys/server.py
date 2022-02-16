@@ -6,11 +6,19 @@ import numpy as np
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
 from sanic.response import json, file
+from pandas import DataFrame
 
 from repsys.dataset import Dataset
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
+
+
+def serialize_items(items: DataFrame):
+    serialized_items = items.copy()
+    serialized_items["id"] = serialized_items.index
+
+    return serialized_items.to_dict("records")
 
 
 def create_app(models: List[Model], dataset: Dataset):
@@ -36,6 +44,11 @@ def create_app(models: List[Model], dataset: Dataset):
 
     @app.route("/api/users")
     def get_users(request):
+        split = request.args.get("split")
+
+        if not split:
+            raise InvalidUsage("The dataset's split must be specified.")
+
         return json(dataset.vad_users)
 
     @app.route("/api/items")
@@ -47,7 +60,7 @@ def create_app(models: List[Model], dataset: Dataset):
 
         title_col = dataset.item_title_col()
         items = dataset.filter_items(title_col, query_str)
-        data = json(dataset.serialize_items(items))
+        data = json(serialize_items(items))
 
         return data
 
@@ -64,7 +77,7 @@ def create_app(models: List[Model], dataset: Dataset):
             raise NotFound(f"User '{user_id}' was not found.")
 
         items = dataset.get_interacted_items(user_id)
-        data = json(dataset.serialize_items(items))
+        data = json(serialize_items(items))
 
         return data
 
@@ -108,7 +121,7 @@ def create_app(models: List[Model], dataset: Dataset):
             X = dataset.input_from_interactions(interactions)
 
         items = model.predict_top_n(X, limit, **predict_params)
-        data = json(dataset.serialize_items(items))
+        data = json(serialize_items(items))
 
         return data
 
