@@ -33,7 +33,6 @@ export const modelsMetrics = {
       users: ['Recall@20', 'Recall@50', 'Recall@100'],
       items: [],
     },
-    aggregated: ['Coverage@20', 'Coverage@50', 'Coverage@100', 'Novelty@10'],
   },
   results: {
     knn: {

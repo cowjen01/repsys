@@ -216,7 +216,7 @@ function RecEditDialog() {
                       options={Object.keys(models.data)}
                       displayEmpty
                     />
-                    {values.model && models.data && (
+                    {values.model && (
                       <ModelParams modelsData={models.data} model={values.model} />
                     )}
                   </Grid>
