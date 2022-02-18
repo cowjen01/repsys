@@ -11,15 +11,15 @@ class MovieLens(Dataset):
     def get_genres(self):
         return self.tags.get('genres')
 
-    def item_columns(self):
+    def item_cols(self):
         return {
             "movieId": dtypes.ItemID(),
             "title": dtypes.Title(),
-            "genres": dtypes.Tags(sep="|"),
+            "genres": dtypes.Tag(sep="|"),
             "year": dtypes.Number(),
         }
 
-    def interaction_columns(self):
+    def interaction_cols(self):
         return {
             "movieId": dtypes.ItemID(),
             "userId": dtypes.UserID(),

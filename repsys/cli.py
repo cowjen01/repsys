@@ -1,7 +1,7 @@
 import functools
 import logging
 import os
-from typing import List, Text
+from typing import List, Text, Dict
 
 import click
 
@@ -11,7 +11,7 @@ from repsys.evaluators import ModelEvaluator
 from repsys.loaders import load_dataset_pkg, load_models_pkg
 from repsys.model import Model
 from repsys.server import run_server
-from repsys.utils import (
+from repsys.helpers import (
     create_dir,
     create_tmp_dir,
     latest_split_checkpoint,
@@ -43,15 +43,7 @@ def split_input_callback(ctx, param, value):
 
 def eval_input_callback(ctx, param, value):
     if not value:
-        path = latest_eval_checkpoint()
-
-        if not path:
-            raise click.ClickException(
-                "No evaluation found in the default directory '.repsys_checkpoints'. "
-                "Please provide a path to the evaluation or run 'repsys eval' command."
-            )
-
-        return path
+        return latest_eval_checkpoint()
 
     return value
 
@@ -122,8 +114,8 @@ def split_option(func):
     return wrapper
 
 
-def fit_models(models: List[Model], dataset: Dataset, training: bool):
-    for model in models:
+def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
+    for model in models.values():
         if training:
             logger.info(f"Training model '{model.name()}' ...")
         else:
@@ -134,13 +126,13 @@ def fit_models(models: List[Model], dataset: Dataset, training: bool):
 
 
 def evaluate_models(
-    models: List[Model], dataset: Dataset, data_type: Text, output_path: Text
+    models: Dict[str, Model], dataset: Dataset, data_type: Text, output_path: Text
 ):
     create_tmp_dir()
 
     evaluator = ModelEvaluator()
     evaluator.update_dataset(dataset)
-    for model in models:
+    for model in models.values():
         logger.info(f"Evaluating model '{model.name()}' ...")
 
         if data_type == "test":
@@ -177,7 +169,7 @@ def repsys():
 )
 @click.option("-o", "--output-path", callback=eval_output_callback)
 def evaluate(
-    models: List[Model],
+    models: Dict[str, Model],
     dataset: Dataset,
     split_path: Text,
     data_type: Text,
@@ -203,7 +195,7 @@ def evaluate(
     "-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True
 )
 def server(
-    models: List[Model],
+    models: Dict[str, Model],
     dataset: Dataset,
     split_path: Text,
     eval_path: Text,
@@ -229,7 +221,7 @@ def server(
 @dataset_option
 @models_option
 @split_option
-def train(models: List[Model], dataset: Dataset, split_path: Text):
+def train(models: Dict[str, Model], dataset: Dataset, split_path: Text):
     """Train models by providing dataset split."""
     dataset.load(split_path)
     fit_models(models, dataset, training=True)

@@ -2,18 +2,18 @@ import configparser
 import os
 
 import repsys.constants as const
-from repsys.utils import get_default_config_path
+from repsys.helpers import get_default_config_path
 
 
 class DatasetConfig:
     def __init__(self, test_holdout_prop: float, train_split_prop: float,
-                 user_interactions_threshold: int,
-                 item_interactions_threshold: int, interaction_value_threshold: float):
+                 min_user_interacts: int,
+                 min_item_interacts: int, interaction_threshold: float):
         self.test_holdout_prop = test_holdout_prop
         self.train_split_prop = train_split_prop
-        self.user_interactions_threshold = user_interactions_threshold
-        self.item_interactions_threshold = item_interactions_threshold
-        self.interaction_value_threshold = interaction_value_threshold
+        self.min_user_interacts = min_user_interacts
+        self.min_item_interacts = min_item_interacts
+        self.interaction_threshold = interaction_threshold
 
 
 class Config:
@@ -48,11 +48,11 @@ def read_config(config_path: str = None):
                             fallback=const.DEFAULT_TEST_HOLDOUT_PROP),
             config.getfloat('dataset', 'TRAIN_SPLIT_PROP',
                             fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
-            config.getint('dataset', 'USER_INTERACTIONS_THRESHOLD',
+            config.getint('dataset', 'min_user_interacts',
                           fallback=const.DEFAULT_USER_INTERACTIONS_THRESHOLD),
-            config.getint('dataset', 'ITEM_INTERACTIONS_THRESHOLD',
+            config.getint('dataset', 'min_item_interacts',
                           fallback=const.DEFAULT_ITEM_INTERACTIONS_THRESHOLD),
-            config.getfloat('dataset', 'INTERACTION_VALUE_THRESHOLD',
+            config.getfloat('dataset', 'interaction_threshold',
                             fallback=const.DEFAULT_INTERACTION_VALUE_THRESHOLD)
         )
 

@@ -33,9 +33,9 @@ class Select(WebParam):
         return data
 
 
-class Boolean(WebParam):
+class Checkbox(WebParam):
     def __init__(self, name, default=False) -> None:
-        super().__init__("bool", name, default)
+        super().__init__("checkbox", name, default)
 
 
 class Number(WebParam):

@@ -5,7 +5,7 @@ class DataType:
     pass
 
 
-class Tags(DataType):
+class Tag(DataType):
     def __init__(self, sep: str = ",") -> None:
         self.sep = sep
 
@@ -38,9 +38,10 @@ class Interaction(DataType):
     pass
 
 
-def filter_columns_by_type(
-    columns: Dict[str, Type[DataType]], dtype: Type[DataType]
-) -> List[str]:
+ColumnDict = Dict[str, Type[DataType]]
+
+
+def filter_columns_by_type(columns: ColumnDict, dtype: Type[DataType]) -> List[str]:
     results = []
     for [col, dt] in columns.items():
         if type(dt) == dtype:
@@ -49,7 +50,6 @@ def filter_columns_by_type(
     return results
 
 
-def find_column_by_type(columns: Dict[str, Type[DataType]],
-                        dtype: Type[DataType]) -> Optional[str]:
+def find_column_by_type(columns: ColumnDict, dtype: Type[DataType]) -> Optional[str]:
     cols = filter_columns_by_type(columns, dtype)
     return cols[0] if cols else None

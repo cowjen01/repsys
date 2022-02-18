@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List
+from typing import List, Dict
 
 import numpy as np
 from pandas import DataFrame
@@ -21,7 +21,7 @@ def serialize_items(items: DataFrame):
     return serialized_items.to_dict("records")
 
 
-def create_app(models: List[Model], dataset: Dataset):
+def create_app(models: Dict[str, Model], dataset: Dataset):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -33,7 +33,9 @@ def create_app(models: List[Model], dataset: Dataset):
 
     @app.route("/api/models")
     def get_config(request):
-        return json([m.to_dict() for m in models])
+        return json({
+            model.name(): model.to_dict() for model in models.values()
+        })
 
     @app.route("/api/dataset")
     def get_config(request):
@@ -126,12 +128,12 @@ def create_app(models: List[Model], dataset: Dataset):
         return data
 
     @app.listener("after_server_stop")
-    def on_shutdown():
+    def on_shutdown(current_app, loop):
         logger.info("Server has been shut down.")
 
     return app
 
 
-def run_server(port: int, models: List[Model], dataset: Dataset) -> None:
+def run_server(port: int, models: Dict[str, Model], dataset: Dataset) -> None:
     app = create_app(models, dataset)
     app.run(host="localhost", port=port, debug=False, access_log=False)

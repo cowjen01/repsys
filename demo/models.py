@@ -6,7 +6,7 @@ import scipy.sparse as sp
 from sklearn.neighbors import NearestNeighbors
 
 from repsys import Model
-from repsys.web import Select
+import repsys.web as web
 
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
@@ -27,12 +27,12 @@ class KNN(Model):
     def _serialize(self):
         return self.model
 
-    def _unserialize(self, checkpoint):
+    def _deserialize(self, checkpoint):
         self.model = checkpoint
 
     def _load_model(self):
         checkpoint = pickle.load(open(self._checkpoint_path(), "rb"))
-        self._unserialize(checkpoint)
+        self._deserialize(checkpoint)
 
     def _save_model(self):
         checkpoint = open(self._checkpoint_path(), "wb")
@@ -40,7 +40,7 @@ class KNN(Model):
 
     def fit(self, training=False):
         if training:
-            self.model.fit(self.dataset.get_train_data())
+            self.model.fit(self.dataset.get_training_data())
             self._save_model()
         else:
             self._load_model()
@@ -59,7 +59,7 @@ class KNN(Model):
         n_distances = n_distances / sums[:, np.newaxis]
 
         def f(dist, idx):
-            A = self.dataset.train_data[idx]
+            A = self.dataset.get_training_data()[idx]
             D = sp.diags(dist)
             return D.dot(A).sum(axis=0)
 
@@ -74,16 +74,18 @@ class KNN(Model):
             genre = kwargs.get("genre")
             items = self.dataset.items
 
-            # get ids of the items not contain the genre
-            ids = items.index[items["genres"].apply(lambda x: genre not in x)]
-            idxs = ids.map(self.dataset.get_item_index)
+            # get ids of the items don't contain the genre
+            exclude_ids = items.index[items["genres"].apply(lambda x: genre not in x)]
+            exclude_indexes = exclude_ids.map(self.dataset.iid_to_index)
 
             # keep just the items with the genre
-            predictions[:, idxs] = 0
+            predictions[:, exclude_indexes] = 0
 
         return predictions
 
     def web_params(self):
         return [
-            Select("genre", options=self.dataset.get_genres())
+            web.Select("genre", options=self.dataset.get_genres()),
+            web.Checkbox("exclude", default=True),
+            web.Number("neighbors", default=10)
         ]

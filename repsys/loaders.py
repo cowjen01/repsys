@@ -3,11 +3,11 @@ import inspect
 import logging
 import pkgutil
 import sys
-from typing import List
+from typing import Dict
 
 from repsys.dataset import Dataset
+from repsys.helpers import get_subclasses
 from repsys.model import Model
-from repsys.utils import get_subclasses
 
 logger = logging.getLogger(__name__)
 
@@ -21,11 +21,11 @@ class ClassLoader:
         if inspect.isclass(x):
             instance = x()
 
-        if isinstance(instance, self.cls):
-            name = instance.name()
-            self.instances[name] = instance
-        else:
-            raise Exception("Invalid class instance.")
+            if isinstance(instance, self.cls):
+                name = instance.name()
+                self.instances[name] = instance
+            else:
+                raise Exception("Invalid class instance.")
 
     def _import_submodules(self, package_path) -> None:
         package = importlib.import_module(package_path)
@@ -52,7 +52,7 @@ class ClassLoader:
                 self._create_instance(x)
 
 
-def load_models_pkg(models_pkg) -> List[Model]:
+def load_models_pkg(models_pkg) -> Dict[str, Model]:
     logger.debug("Loading models package ...")
     model_loader = ClassLoader(Model)
     model_loader.register_package(models_pkg)
@@ -60,9 +60,7 @@ def load_models_pkg(models_pkg) -> List[Model]:
     if len(model_loader.instances) == 0:
         raise Exception("At least one model must be defined.")
 
-    models = model_loader.instances.values()
-
-    # TODO validate the name of a model
+    models = model_loader.instances
 
     return models
 

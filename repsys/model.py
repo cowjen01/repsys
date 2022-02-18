@@ -1,7 +1,7 @@
 import functools
 import logging
 from abc import ABC, abstractmethod
-from typing import Text, List
+from typing import Text, List, Optional
 
 import numpy as np
 
@@ -23,7 +23,7 @@ def enforce_dataset(func):
 
 class Model(ABC):
     def __init__(self):
-        self.dataset = None
+        self.dataset: Optional[Dataset] = None
 
     @abstractmethod
     def name(self) -> Text:
@@ -72,7 +72,6 @@ class Model(ABC):
     def to_dict(self):
         """Serialize details about the model to the dictionary."""
         return {
-            "name": self.name(),
             "params": [p.to_dict() for p in self.web_params()],
         }
 
