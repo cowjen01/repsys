@@ -1,7 +1,7 @@
 import pandas as pd
 
-from repsys.dataset import Dataset
 import repsys.dtypes as dtypes
+from repsys.dataset import Dataset
 
 
 class MovieLens(Dataset):
@@ -9,7 +9,7 @@ class MovieLens(Dataset):
         return "movielens"
 
     def get_genres(self):
-        return self.tags["genres"]
+        return self.tags.get('genres')
 
     def item_columns(self):
         return {
@@ -19,7 +19,7 @@ class MovieLens(Dataset):
             "year": dtypes.Number(),
         }
 
-    def activity_columns(self):
+    def interaction_columns(self):
         return {
             "movieId": dtypes.ItemID(),
             "userId": dtypes.UserID(),
@@ -33,5 +33,5 @@ class MovieLens(Dataset):
         df["year"] = df["year"].astype(int)
         return df
 
-    def load_activities(self):
+    def load_interactions(self):
         return pd.read_csv("./ml-sm/ratings.csv")

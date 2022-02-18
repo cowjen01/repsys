@@ -30,6 +30,7 @@ setuptools.setup(
         "pandas==1.3.5",
         "jax[cpu]==0.2.26",
         "pymde==0.1.14",
+        "bidict==0.21.4"
     ],
     extras_require={
         "dev": ["black", "tox", "flake8", "wheel", "setuptools", "pytest"],

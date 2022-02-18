@@ -241,7 +241,7 @@ def train(models: List[Model], dataset: Dataset, split_path: Text):
 def split(dataset: Dataset, output_path: Text):
     """Create a train/validation/test split."""
     logger.info("Creating splits of the input data ...")
-    dataset.fit()
+    dataset.prepare()
 
     logger.info(f"Saving the split into '{output_path}'")
     dataset.save(output_path)

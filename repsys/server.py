@@ -3,10 +3,10 @@ import os
 from typing import List
 
 import numpy as np
+from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
 from sanic.response import json, file
-from pandas import DataFrame
 
 from repsys.dataset import Dataset
 from repsys.model import Model

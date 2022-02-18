@@ -1,4 +1,4 @@
-from typing import Dict, List, Type
+from typing import Dict, List, Type, Optional
 
 
 class DataType:
@@ -8,6 +8,10 @@ class DataType:
 class Tags(DataType):
     def __init__(self, sep: str = ",") -> None:
         self.sep = sep
+
+
+class Category(DataType):
+    pass
 
 
 class String(DataType):
@@ -46,6 +50,6 @@ def filter_columns_by_type(
 
 
 def find_column_by_type(columns: Dict[str, Type[DataType]],
-                        dtype: Type[DataType]) -> str:
+                        dtype: Type[DataType]) -> Optional[str]:
     cols = filter_columns_by_type(columns, dtype)
-    return cols[0]
+    return cols[0] if cols else None

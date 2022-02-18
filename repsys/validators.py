@@ -7,13 +7,11 @@ from pandas import DataFrame
 from repsys.dtypes import (
     DataType,
     Number,
-    Rating,
     String,
     UserID,
     ItemID,
     Tags,
     Title,
-    find_column,
 )
 
 logger = logging.getLogger(__name__)

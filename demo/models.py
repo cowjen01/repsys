@@ -40,7 +40,7 @@ class KNN(Model):
 
     def fit(self, training=False):
         if training:
-            self.model.fit(self.dataset.train_data)
+            self.model.fit(self.dataset.get_train_data())
             self._save_model()
         else:
             self._load_model()

@@ -14,8 +14,16 @@ def create_dir(path: Text):
         os.makedirs(path)
 
 
+def get_current_dir():
+    return os.getcwd()
+
+
+def get_default_config_path():
+    return os.path.join(get_current_dir(), 'repsys.ini')
+
+
 def tmp_dir_path():
-    return os.path.join(os.getcwd(), "tmp")
+    return os.path.join(get_current_dir(), "tmp")
 
 
 def create_tmp_dir():
