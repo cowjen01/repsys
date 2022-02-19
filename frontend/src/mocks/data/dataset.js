@@ -1,4 +1,5 @@
 export const dataset = {
+  totalItems: 100,
   attributes: {
     title: {
       dtype: 'title',
@@ -14,7 +15,7 @@ export const dataset = {
       bins: [0, 1990, 2000, 2010, 2015, 2020],
     },
     genres: {
-      dtype: 'tags',
+      dtype: 'tag',
       options: ['Adventure', 'Animation', 'Children', 'Comedy', 'Musical', 'Crime', 'Thriller'],
     },
     country: {

@@ -1,10 +1,11 @@
 import glob
 import os
+import random
 import shutil
 import time
-import numpy as np
-import random
 from typing import Text, Optional
+
+import numpy as np
 
 
 def remove_dir(path: Text):

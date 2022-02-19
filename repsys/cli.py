@@ -1,16 +1,13 @@
 import functools
 import logging
 import os
-from typing import List, Text, Dict
+from typing import Text, Dict
 
 import click
 
 from repsys.constants import DEFAULT_SERVER_PORT
 from repsys.dataset import Dataset
 from repsys.evaluators import ModelEvaluator
-from repsys.loaders import load_dataset_pkg, load_models_pkg
-from repsys.model import Model
-from repsys.server import run_server
 from repsys.helpers import (
     create_dir,
     create_tmp_dir,
@@ -22,6 +19,9 @@ from repsys.helpers import (
     tmp_dir_path,
     zip_dir,
 )
+from repsys.loaders import load_dataset_pkg, load_models_pkg
+from repsys.model import Model
+from repsys.server import run_server
 
 logger = logging.getLogger(__name__)
 

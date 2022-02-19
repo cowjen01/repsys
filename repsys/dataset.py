@@ -2,7 +2,6 @@
 
 import logging
 import os
-import random
 import typing
 from abc import ABC, abstractmethod
 from typing import Dict, Tuple, List, Optional
@@ -155,6 +154,7 @@ class Dataset(ABC):
         self.items: Optional[DataFrame] = None
         self.item_index: Optional[frozenbidict] = None
         self.tags = {}
+        self.histograms = {}
         self.categories = {}
         self.splits: Dict[str, Optional[Split]] = {
             'train': None,
@@ -182,22 +182,29 @@ class Dataset(ABC):
     def load_interactions(self) -> DataFrame:
         pass
 
-    def get_split(self, split: str = 'train') -> Optional[Split]:
+    def get_split(self, split: str) -> Optional[Split]:
         return self.splits.get(split)
+
+    def get_split_by_user(self, uid: str) -> Optional[Split]:
+        for split in self.splits.values():
+            if split.user_index.get(uid):
+                return split
+
+        return None
 
     def _get_title_col(self) -> str:
         return find_column_by_type(self.item_cols(), dtypes.Title)
 
-    def iid_to_index(self, iid: str) -> int:
+    def item_id_to_index(self, iid: str) -> int:
         return self.item_index.get(iid)
 
-    def index_to_iid(self, index: int) -> int:
+    def item_index_to_id(self, index: int) -> str:
         return self.item_index.inverse.get(index)
 
-    def uid_to_index(self, uid: int, split: str = 'train') -> int:
+    def user_id_to_index(self, uid: str, split: str) -> int:
         return self.splits.get(split).user_index.get(uid)
 
-    def index_to_uid(self, index: int, split: str = 'train') -> int:
+    def user_index_to_id(self, index: int, split: str) -> str:
         return self.splits.get(split).user_index.inverse.get(index)
 
     def get_train_data(self) -> csr_matrix:
@@ -214,20 +221,23 @@ class Dataset(ABC):
     def get_total_items(self):
         return self.items.shape[0]
 
+    def get_users_by_split(self, split: str) -> List[str]:
+        return list(self.splits.get(split).user_index.keys())
+
     def get_items_by_title(self, query: str) -> DataFrame:
         col = self._get_title_col()
         item_filter = self.items[col].str.contains(query, case=False)
         return self.items[item_filter]
 
-    def get_interactions_by_user(self, uid: int, split: str = 'train') -> csr_matrix:
-        index = self.index_to_uid(uid, split)
+    def get_interactions_by_user(self, uid: str, split: str) -> csr_matrix:
+        index = self.user_id_to_index(uid, split)
         matrix = self.get_split(split).complete_matrix
         return matrix[index]
 
-    def get_interacted_items_by_user(self, user_id: int, split: str = 'train') -> DataFrame:
-        interactions = self.get_interactions_by_user(user_id, split)
+    def get_interacted_items_by_user(self, uid: str, split: str) -> DataFrame:
+        interactions = self.get_interactions_by_user(uid, split)
         indexes = (interactions > 0).indices
-        ids = list(map(self.index_to_iid, indexes))
+        ids = list(map(self.item_index_to_id, indexes))
         return self.items.loc[ids]
 
     def interactions_to_matrix(self, interactions: List[int]) -> csr_matrix:
@@ -246,6 +256,18 @@ class Dataset(ABC):
         cols = filter_columns_by_type(self.item_cols(), dtypes.Category)
         for col in cols:
             self.categories[col] = items[col].unique().tolist()
+
+    def _update_histograms(self, items: DataFrame) -> None:
+        cols = filter_columns_by_type(self.item_cols(), dtypes.Number)
+        for col in cols:
+            params = typing.cast(dtypes.Number, self.item_cols()[col])
+
+            if params.bins_range:
+                hist_range = params.bins_range
+            else:
+                hist_range = (items[col].quantile(.1), items[col].quantile(.9))
+
+            self.histograms[col] = np.histogram(items[col], range=hist_range)
 
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]
@@ -267,6 +289,7 @@ class Dataset(ABC):
 
         self._update_tags(items)
         self._update_categories(items)
+        self._update_histograms(items)
 
         self.items = items
         self.item_index = item_index

@@ -2,8 +2,8 @@ import configparser
 import os
 
 import repsys.constants as const
-from repsys.helpers import get_default_config_path
 from repsys.errors import InvalidConfigError
+from repsys.helpers import get_default_config_path
 
 
 class DatasetConfig:

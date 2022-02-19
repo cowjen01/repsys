@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import List, Dict
+from typing import Dict
 
 import numpy as np
 from pandas import DataFrame
@@ -8,17 +8,12 @@ from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
 from sanic.response import json, file
 
+import repsys.dtypes as dtypes
 from repsys.dataset import Dataset
+from repsys.dtypes import filter_columns_by_type
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
-
-
-def serialize_items(items: DataFrame):
-    serialized_items = items.copy()
-    serialized_items["id"] = serialized_items.index
-
-    return serialized_items.to_dict("records")
 
 
 def create_app(models: Dict[str, Model], dataset: Dataset):
@@ -26,6 +21,33 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
     app.static("/", static_folder)
+
+    def serialize_items(items: DataFrame):
+        items_copy = items.copy()
+        items_copy["id"] = items_copy.index
+
+        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
+        for col in tag_cols:
+            items_copy[col] = items_copy[col].str.join(', ')
+
+        return items_copy.to_dict("records")
+
+    def get_item_attributes() -> Dict[str, any]:
+        attributes = {}
+        for col, datatype in dataset.item_cols().items():
+            attributes[col] = {'dtype': str(datatype)}
+
+            if type(datatype) == dtypes.Tag:
+                attributes[col]['options'] = dataset.tags.get(col)
+
+            if type(datatype) == dtypes.Category:
+                attributes[col]['options'] = dataset.categories.get(col)
+
+            if type(datatype) == dtypes.Number:
+                hist = dataset.histograms.get(col)
+                attributes[col]['bins'] = hist[1].astype(int).tolist()
+
+        return attributes
 
     @app.route("/")
     async def index(request):
@@ -40,8 +62,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
     @app.route("/api/dataset")
     def get_config(request):
         return json({
-            "items": int(dataset.n_items),
-            "columns": dataset.items.columns.tolist(),
+            "totalItems": dataset.get_total_items(),
+            "attributes": get_item_attributes()
         })
 
     @app.route("/api/users")
@@ -51,35 +73,38 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         if not split:
             raise InvalidUsage("The dataset's split must be specified.")
 
-        return json(dataset.vad_users)
+        if split not in ['train', 'validation', 'test']:
+            raise InvalidUsage("The split must be one of: train, validation or test.")
+
+        users = dataset.get_users_by_split(split)
+        return json(users)
 
     @app.route("/api/items")
     def get_items(request):
-        query_str = request.args.get("query")
+        query = request.args.get("query")
 
-        if not query_str or len(query_str) == 0:
+        if not query:
             raise InvalidUsage("The query string must be specified.")
 
-        title_col = dataset.item_title_col()
-        items = dataset.filter_items(title_col, query_str)
+        if len(query) < 3:
+            raise InvalidUsage("The query must have at least 3 characters.")
+
+        items = dataset.get_items_by_title(query)
         data = json(serialize_items(items))
 
         return data
 
-    @app.route("/api/interactions")
-    def get_interactions(request):
-        user_id: str = request.args.get("user")
+    @app.route("/api/users/<uid>")
+    def get_interactions(request, uid: str):
+        split = dataset.get_split_by_user(uid)
 
-        if user_id is None or not user_id.isdigit():
-            raise InvalidUsage("A valid user ID must be specified.")
+        if not split:
+            raise NotFound(f"User '{uid}' not found.")
 
-        user_id = int(user_id)
-
-        if user_id not in dataset.vad_users:
-            raise NotFound(f"User '{user_id}' was not found.")
-
-        items = dataset.get_interacted_items(user_id)
-        data = json(serialize_items(items))
+        items = dataset.get_interacted_items_by_user(uid, split.name)
+        data = json({
+            'interactions': serialize_items(items)
+        })
 
         return data
 
@@ -136,4 +161,5 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
 def run_server(port: int, models: Dict[str, Model], dataset: Dataset) -> None:
     app = create_app(models, dataset)
+    app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=port, debug=False, access_log=False)

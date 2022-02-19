@@ -1,4 +1,4 @@
-from typing import Dict, List, Type, Optional
+from typing import Dict, List, Type, Optional, Tuple
 
 
 class DataType:
@@ -9,33 +9,46 @@ class Tag(DataType):
     def __init__(self, sep: str = ",") -> None:
         self.sep = sep
 
+    def __str__(self):
+        return 'tag'
+
 
 class Category(DataType):
-    pass
+    def __str__(self):
+        return 'category'
 
 
 class String(DataType):
-    pass
+    def __str__(self):
+        return 'string'
 
 
 class Title(DataType):
-    pass
+    def __str__(self):
+        return 'title'
 
 
 class Number(DataType):
-    pass
+    def __init__(self, bins_range: Optional[Tuple[int, int]] = None):
+        self.bins_range = bins_range
+
+    def __str__(self):
+        return 'number'
 
 
 class UserID(DataType):
-    pass
+    def __str__(self):
+        return 'id'
 
 
 class ItemID(DataType):
-    pass
+    def __str__(self):
+        return 'id'
 
 
 class Interaction(DataType):
-    pass
+    def __str__(self):
+        return 'interaction'
 
 
 ColumnDict = Dict[str, Type[DataType]]
