@@ -2,6 +2,8 @@ import glob
 import os
 import shutil
 import time
+import numpy as np
+import random
 from typing import Text, Optional
 
 
@@ -52,12 +54,12 @@ def get_subclasses(cls):
     ]
 
 
-def fill_timestamp(str: Text):
-    if "{ts}" in str:
+def fill_timestamp(file_name: Text):
+    if "{ts}" in file_name:
         ts = int(time.time())
-        return str.format(ts=ts)
+        return file_name.format(ts=ts)
 
-    return str
+    return file_name
 
 
 def checkpoints_dir_path():
@@ -98,3 +100,8 @@ def new_split_checkpoint():
 def new_eval_checkpoint():
     create_checkpoints_dir()
     return os.path.join(checkpoints_dir_path(), fill_timestamp("eval-{ts}.zip"))
+
+
+def set_seed(seed: int) -> None:
+    np.random.seed(seed)
+    random.seed(seed)

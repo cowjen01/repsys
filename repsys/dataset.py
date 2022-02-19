@@ -10,7 +10,7 @@ from typing import Dict, Tuple, List, Optional
 import numpy as np
 import pandas as pd
 from bidict import frozenbidict
-from pandas import DataFrame
+from pandas import DataFrame, Series, Index
 from scipy.sparse import csr_matrix
 
 import repsys.dtypes as dtypes
@@ -26,23 +26,24 @@ from repsys.helpers import (
     remove_tmp_dir,
     unzip_dir,
     zip_dir,
+    set_seed
 )
 
 logger = logging.getLogger(__name__)
 
 
 class Split:
-    def __init__(self, name: str, training_matrix: csr_matrix, user_index: frozenbidict,
+    def __init__(self, name: str, train_matrix: csr_matrix, user_index: frozenbidict,
                  holdout_matrix: csr_matrix = None) -> None:
         self.name = name
-        self.training_matrix = training_matrix
+        self.train_matrix = train_matrix
         self.holdout_matrix = holdout_matrix
         self.user_index = user_index
 
         if holdout_matrix is None:
-            self.complete_matrix = training_matrix
+            self.complete_matrix = train_matrix
         else:
-            self.complete_matrix = training_matrix + holdout_matrix
+            self.complete_matrix = train_matrix + holdout_matrix
 
 
 def reindex_data(df: DataFrame, user_index: frozenbidict, item_index: frozenbidict) -> None:
@@ -73,11 +74,6 @@ def build_index(ids) -> frozenbidict:
     return frozenbidict((uid, i) for (i, uid) in enumerate(ids))
 
 
-def set_seed(seed: int) -> None:
-    np.random.seed(seed)
-    random.seed(seed)
-
-
 def load_index(file_path: str) -> frozenbidict:
     with open(file_path, "r") as f:
         return frozenbidict({
@@ -92,12 +88,12 @@ def save_index(index_dict: frozenbidict, file_path: str) -> None:
 
 
 def save_split(split: Split, output_dir: str) -> None:
-    training_data_path = os.path.join(output_dir, f"{split.name}_train.csv")
+    train_data_path = os.path.join(output_dir, f"{split.name}_train.csv")
     holdout_data_path = os.path.join(output_dir, f"{split.name}_holdout.csv")
     user_index_path = os.path.join(output_dir, f"{split.name}_users.txt")
 
-    training_data = matrix_to_df(split.training_matrix)
-    training_data.to_csv(training_data_path, index=False)
+    train_data = matrix_to_df(split.train_matrix)
+    train_data.to_csv(train_data_path, index=False)
 
     if split.holdout_matrix is not None:
         holdout_data = matrix_to_df(split.holdout_matrix)
@@ -106,20 +102,19 @@ def save_split(split: Split, output_dir: str) -> None:
     save_index(split.user_index, user_index_path)
 
 
-def load_split(split_name: str, input_dir: str) -> Tuple[
-    frozenbidict, DataFrame, Optional[DataFrame]]:
-    training_data_path = os.path.join(input_dir, f"{split_name}_train.csv")
+def load_split(split_name: str, input_dir: str) -> Tuple[frozenbidict, DataFrame, Optional[DataFrame]]:
+    train_data_path = os.path.join(input_dir, f"{split_name}_train.csv")
     holdout_data_path = os.path.join(input_dir, f"{split_name}_holdout.csv")
     user_index_path = os.path.join(input_dir, f"{split_name}_users.txt")
 
-    training_data = pd.read_csv(training_data_path)
+    train_data = pd.read_csv(train_data_path)
     user_index = load_index(user_index_path)
 
     holdout_data = None
     if os.path.isfile(holdout_data_path):
         holdout_data = pd.read_csv(holdout_data_path)
 
-    return user_index, training_data, holdout_data
+    return user_index, train_data, holdout_data
 
 
 def save_items(items: DataFrame, columns: ColumnDict, item_index: frozenbidict,
@@ -205,22 +200,16 @@ class Dataset(ABC):
     def index_to_uid(self, index: int, split: str = 'train') -> int:
         return self.splits.get(split).user_index.inverse.get(index)
 
-    # def _indexes_to_iids(self, indexes: List[int]) -> List[int]:
-    #     return [self.item_index_to_id(item_index) for item_index in item_indexes]
-    #
-    # def _item_ids_to_indexes(self, item_ids: List[int]) -> List[int]:
-    #     return [self.item_id_to_index(item_id) for item_id in item_ids]
-
-    def get_training_data(self) -> csr_matrix:
-        return self.splits.get('train').training_matrix
+    def get_train_data(self) -> csr_matrix:
+        return self.splits.get('train').train_matrix
 
     def get_vad_data(self) -> Tuple[csr_matrix, csr_matrix]:
         split = self.splits.get('validation')
-        return split.training_matrix, split.holdout_matrix
+        return split.train_matrix, split.holdout_matrix
 
     def get_test_data(self) -> Tuple[csr_matrix, csr_matrix]:
         split = self.splits.get('test')
-        return split.training_matrix, split.holdout_matrix
+        return split.train_matrix, split.holdout_matrix
 
     def get_total_items(self):
         return self.items.shape[0]
@@ -263,16 +252,16 @@ class Dataset(ABC):
 
         self.splits['train'] = Split(
             name='train',
-            training_matrix=df_to_matrix(splits[0][1], n_items),
+            train_matrix=df_to_matrix(splits[0][1], n_items),
             user_index=splits[0][0])
         self.splits['validation'] = Split(
             name='validation',
-            training_matrix=df_to_matrix(splits[1][1], n_items),
+            train_matrix=df_to_matrix(splits[1][1], n_items),
             holdout_matrix=df_to_matrix(splits[1][2], n_items),
             user_index=splits[1][0])
         self.splits['test'] = Split(
             name='test',
-            training_matrix=df_to_matrix(splits[2][1], n_items),
+            train_matrix=df_to_matrix(splits[2][1], n_items),
             holdout_matrix=df_to_matrix(splits[2][2], n_items),
             user_index=splits[2][0])
 
@@ -282,7 +271,7 @@ class Dataset(ABC):
         self.items = items
         self.item_index = item_index
 
-    def prepare(self):
+    def prepare(self) -> None:
         logger.debug("Loading dataset ...")
 
         items = self.load_items()
@@ -309,8 +298,7 @@ class Dataset(ABC):
 
         interactions = interacts[interaction_cols.keys()]
         interactions = interactions.rename(
-            columns={interacts_item_col: 'item', interacts_user_col: 'user',
-                     interacts_value_col: 'value'})
+            columns={interacts_item_col: 'item', interacts_user_col: 'user', interacts_value_col: 'value'})
 
         config = read_config()
 
@@ -319,7 +307,7 @@ class Dataset(ABC):
             config.dataset.test_holdout_prop,
             config.dataset.min_user_interacts,
             config.dataset.min_item_interacts,
-            config.dataset.interaction_threshold,
+            config.dataset.min_interact_value,
             config.seed
         )
 
@@ -347,12 +335,12 @@ class Dataset(ABC):
         # keep only columns defined in the dtypes
         items = items[item_cols.keys()]
 
-        # filter only items included in the training data
-        items = items[items.index.isin(item_ids)]
-
         items_id_col = find_column_by_type(item_cols, dtypes.ItemID)
         items[items_id_col] = items[items_id_col].astype(str)
         items = items.set_index(items_id_col)
+
+        # filter only items included in the training data
+        items = items[items.index.isin(item_ids)]
 
         tag_cols = filter_columns_by_type(item_cols, dtypes.Tag)
         for col in tag_cols:
@@ -368,7 +356,7 @@ class Dataset(ABC):
 
         self._update_data(splits, items, item_index)
 
-    def load(self, path: str):
+    def load(self, path: str) -> None:
         logger.info(f"Loading dataset from '{path}'")
         create_tmp_dir()
         try:
@@ -379,11 +367,14 @@ class Dataset(ABC):
             train_split = load_split('train', tmp_dir_path())
             vad_split = load_split('validation', tmp_dir_path())
             test_split = load_split('test', tmp_dir_path())
-            self._update_data((train_split, vad_split, test_split), items, item_index)
+
+            splits = train_split, vad_split, test_split
+
+            self._update_data(splits, items, item_index)
         finally:
             remove_tmp_dir()
 
-    def save(self, path: str):
+    def save(self, path: str) -> None:
         create_tmp_dir()
         try:
             for split in self.splits.values():
@@ -405,7 +396,7 @@ class DatasetSplitter:
         test_holdout_prop=0.2,
         min_user_interacts=5,
         min_item_interacts=0,
-        interaction_threshold=0,
+        min_interact_value=0,
         seed=1234,
         user_col='user',
         item_col='item',
@@ -415,132 +406,119 @@ class DatasetSplitter:
         self.test_holdout_prop = test_holdout_prop
         self.min_user_interacts = min_user_interacts
         self.min_item_interacts = min_item_interacts
-        self.interaction_threshold = interaction_threshold
+        self.min_interact_value = min_interact_value
         self.seed = seed
         self.user_col = user_col
         self.item_col = item_col
         self.value_col = value_col
 
     @classmethod
-    def get_count(cls, df, col):
+    def get_count(cls, df: DataFrame, col: str) -> Series:
         grouped_df = df[[col]].groupby(col, as_index=True)
         count = grouped_df.size()
         return count
 
     # filter interactions by two conditions (minimal interactions
     # for movie, minimal interactions by user)
-    def _filter_triplets(self, tp):
+    def _filter_triplets(self, df: DataFrame) -> Tuple[DataFrame, Series, Series]:
+        if self.min_interact_value > 0:
+            df = df[df[self.value_col] >= self.min_interact_value]
+
         # Only keep the triplets for items which
         # were clicked on by at least min_sc users.
         if self.min_item_interacts > 0:
-            item_count = self.get_count(tp, self.item_col)
-            tp = tp[
-                tp[self.item_col].isin(
-                    item_count.index[item_count >= self.min_item_interacts])]
+            item_popularity = self.get_count(df, self.item_col)
+            item_filter = item_popularity.index[item_popularity >= self.min_item_interacts]
+            df = df[df[self.item_col].isin(item_filter)]
 
         # Only keep the triplets for users who clicked on at least min_uc items
         # After doing this, some items will have less than min_uc users,
         # but should only be a small proportion
         if self.min_user_interacts > 0:
-            user_count = self.get_count(tp, self.user_col)
-            tp = tp[
-                tp[self.user_col].isin(
-                    user_count.index[user_count >= self.min_user_interacts])]
+            user_activity = self.get_count(df, self.user_col)
+            user_filter = user_activity.index[user_activity >= self.min_user_interacts]
+            df = df[df[self.user_col].isin(user_filter)]
 
         # Update both user count and item count after filtering
-        user_count = self.get_count(tp, self.user_col)
-        item_count = self.get_count(tp, self.item_col)
+        user_activity = self.get_count(df, self.user_col)
+        item_popularity = self.get_count(df, self.item_col)
 
-        return tp, user_count, item_count
+        return df, user_activity, item_popularity
 
-    def _split_train_test(self, data):
-        grouped_by_user = data.groupby(self.user_col)
-        tr_list, te_list = list(), list()
+    def _split_holdout(self, df: DataFrame) -> Tuple[DataFrame, DataFrame]:
+        grouped_by_user = df.groupby(self.user_col)
+        train_list, holdout_list = list(), list()
 
         for i, (_, group) in enumerate(grouped_by_user):
             n_items = len(group)
 
             # randomly choose 20% of all items user interacted with
             # these interactions goes to test list, other goes to training list
-            idx = np.zeros(n_items, dtype="bool")
+            indexes = np.zeros(n_items, dtype="bool")
             holdout_size = int(self.test_holdout_prop * n_items)
 
             set_seed(self.seed)
+            rand_items = np.random.choice(n_items, size=holdout_size, replace=False).astype("int64")
+            indexes[rand_items] = True
 
-            idx[np.random.choice(n_items, size=holdout_size, replace=False).astype("int64")] = True
+            train_list.append(group[np.logical_not(indexes)])
+            holdout_list.append(group[indexes])
 
-            tr_list.append(group[np.logical_not(idx)])
-            te_list.append(group[idx])
+        train_data = pd.concat(train_list)
+        holdout_data = pd.concat(holdout_list)
 
-        data_tr = pd.concat(tr_list)
-        data_te = pd.concat(te_list)
-
-        return data_tr, data_te
+        return train_data, holdout_data
 
     # we will only be working with movies that has been seen by the model, so we need
     # to remove all interactions to movies out of the training scope
-    def _filter_interact_data(self, interact_data, users, item_index):
+    def _filter_interact_data(self, df: DataFrame, user_index: Index, item_index: Index) -> Tuple[DataFrame, Index]:
         # filter only interactions made by users
-        interacts = interact_data.loc[interact_data[self.user_col].isin(users)]
+        df = df.loc[df[self.user_col].isin(user_index)]
         # filter only interactions with items included in the item index
-        interacts = interacts.loc[interacts[self.item_col].isin(item_index)]
+        df = df.loc[df[self.item_col].isin(item_index)]
         # filter only interactions meet the main criteria
         # this way we ensure there will be no vad/test user with less
         # than x interactions (this could cause some user gets into the vad-tr set
         # but not into the vad-te set because of not enough interactions)
-        interacts, activity, _ = self._filter_triplets(interacts)
+        df, user_activity, _ = self._filter_triplets(df)
 
-        return interacts, activity.index
+        return df, user_activity.index
 
-    def split(self, interact_data) -> Tuple[
-        Tuple[List[int], DataFrame], Tuple[List[int], DataFrame, DataFrame], Tuple[
-            List[int], DataFrame, DataFrame]]:
-        interact_data, user_activity, item_popularity = self._filter_triplets(
-            interact_data
-        )
+    def split(self, df: DataFrame) -> Tuple[
+        Tuple[Index, DataFrame], Tuple[Index, DataFrame, DataFrame], Tuple[Index, DataFrame, DataFrame]]:
 
-        holdout_users_portion = (1 - self.train_split_prop) / 2
-
-        # Shuffle users using permutation
+        df, user_activity, item_popularity = self._filter_triplets(df)
         user_index = user_activity.index
 
+        # shuffle users using permutation
         set_seed(self.seed)
-
-        idx_perm = np.random.permutation(user_index.size)
+        index_perm = np.random.permutation(user_index.size)
         # user_index is an array of shuffled users ids
-        user_index = user_index[idx_perm]
+        user_index = user_index[index_perm]
 
         n_users = user_index.size
-        n_holdout_users = round(n_users * holdout_users_portion)
+        n_holdout_users = round(n_users * (1 - self.train_split_prop) / 2)
 
-        # Select 10K users as holdout users, 10K users as validation users
+        # select 10K users as holdout users, 10K users as validation users
         # and the rest of the users for training
-        tr_users = user_index[: (n_users - n_holdout_users * 2)]
-        vad_users = user_index[
-                    (n_users - n_holdout_users * 2): (n_users - n_holdout_users)]
+        train_users = user_index[: (n_users - n_holdout_users * 2)]
+        vad_users = user_index[(n_users - n_holdout_users * 2): (n_users - n_holdout_users)]
         test_users = user_index[(n_users - n_holdout_users):]
 
-        # Select only interactions made by users from the training set
-        train_data = interact_data.loc[interact_data[self.user_col].isin(tr_users)]
-
-        # Get all movies interacted by the train users
-        # we will only be working with movies that has been seen by model
+        # select only interactions made by users from the training set
+        train_data = df.loc[df[self.user_col].isin(train_users)]
         item_index = pd.unique(train_data[self.item_col])
 
-        # Select only interactions made by the validation users
+        # select only interactions made by the validation users
         # and also those whose movie is included in the training interactions
-        vad_interactions, vad_users = self._filter_interact_data(interact_data,
-                                                                 vad_users,
-                                                                 item_index)
-        vad_train_data, vad_holdout_data = self._split_train_test(vad_interactions)
+        vad_data, vad_users = self._filter_interact_data(df, vad_users, item_index)
+        vad_train_data, vad_holdout_data = self._split_holdout(vad_data)
 
-        test_interactions, test_users = self._filter_interact_data(interact_data,
-                                                                   test_users,
-                                                                   item_index)
-        test_train_data, test_holdout_data = self._split_train_test(test_interactions)
+        test_data, test_users = self._filter_interact_data(df, test_users, item_index)
+        test_train_data, test_holdout_data = self._split_holdout(test_data)
 
         return (
-            (tr_users, train_data),
+            (train_users, train_data),
             (vad_users, vad_train_data, vad_holdout_data),
             (test_users, test_train_data, test_holdout_data)
         )

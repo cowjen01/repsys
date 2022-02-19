@@ -40,7 +40,7 @@ class KNN(Model):
 
     def fit(self, training=False):
         if training:
-            self.model.fit(self.dataset.get_training_data())
+            self.model.fit(self.dataset.get_train_data())
             self._save_model()
         else:
             self._load_model()
@@ -59,7 +59,7 @@ class KNN(Model):
         n_distances = n_distances / sums[:, np.newaxis]
 
         def f(dist, idx):
-            A = self.dataset.get_training_data()[idx]
+            A = self.dataset.get_train_data()[idx]
             D = sp.diags(dist)
             return D.dot(A).sum(axis=0)
 
