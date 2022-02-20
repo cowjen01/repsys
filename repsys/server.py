@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Dict
 
+import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -19,7 +20,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
-    app.static("/", static_folder)
+    app.static("/", static_folder, pattern=r"/^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/")
 
     def serialize_items(items: DataFrame):
         items_copy = items.copy()
@@ -48,18 +49,20 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         return attributes
 
-    @app.route("/")
-    async def index(request):
-        return await file(f"{static_folder}/index.html")
+    @app.route('/')
+    @app.route('/dataset')
+    @app.route('/models')
+    def index(request):
+        return file(f"{static_folder}/index.html")
 
     @app.route("/api/models")
-    def get_config(request):
+    def get_models(request):
         return json({
             model.name(): model.to_dict() for model in models.values()
         })
 
     @app.route("/api/dataset")
-    def get_config(request):
+    def get_dataset(request):
         return json({
             "totalItems": dataset.get_total_items(),
             "attributes": get_item_attributes()
@@ -94,7 +97,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         return data
 
     @app.route("/api/users/<uid>")
-    def get_interactions(request, uid: str):
+    def get_user_detail(request, uid: str):
         split = dataset.get_split_by_user(uid)
 
         if not split:
@@ -108,7 +111,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         return data
 
     @app.route("/api/models/<model_name>/predict", methods=["POST"])
-    def post_prediction(request, model_name: str):
+    def predict_items(request, model_name: str):
         if not models.get(model_name):
             raise NotFound(f"Model '{model_name}' not implemented.")
 
@@ -144,6 +147,80 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         data = json(serialize_items(items))
 
         return data
+
+    @app.route("/api/items/search", methods=["POST"])
+    def search_items(request):
+        query = request.json.get("query")
+
+        if not query:
+            raise InvalidUsage("Search query must be specified.")
+
+        col = query.get('attribute')
+
+        if not col:
+            raise InvalidUsage("Searched attribute must be specified.")
+
+        if col not in dataset.item_cols().keys():
+            raise InvalidUsage(f"Attribute '{col}' not found.'")
+
+        col_type = type(dataset.item_cols().get(col))
+
+        items = dataset.items
+        if col_type == dtypes.Number:
+            range_filter = query.get('range')
+
+            if not range_filter or len(range_filter) != 2:
+                raise InvalidUsage(f"Range must be specified for '{col}' attribute.")
+
+            items = items[(items[col] >= range_filter[0]) & (items[col] <= range_filter[1])]
+
+        if col_type == dtypes.Category or col_type == dtypes.Tag:
+            values_filter = query.get('values')
+
+            if not values_filter or len(values_filter) == 0:
+                raise InvalidUsage(f"Values must be specified for '{col}' attribute.")
+
+            if col_type == dtypes.Category:
+                items = items[items[col] == values_filter[0]]
+            else:
+                items = items[items[col].apply(lambda x: set(values_filter).issubset(set(x)))]
+
+        return json(items.index.tolist())
+
+    @app.route("/api/items/describe", methods=["POST"])
+    def describe_items(request):
+        item_ids = request.json
+        items = dataset.items.loc[item_ids]
+
+        attributes = {}
+
+        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
+        for col in tag_cols:
+            tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
+            sort_indexes = (-counts).argsort()
+            sorted_tags = tags[sort_indexes]
+            attributes[col] = {
+                'topValues': sorted_tags[:5].tolist()
+            }
+
+        category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
+        for col in category_cols:
+            sorted_categories = items[col].value_counts()
+            attributes[col] = {
+                'topValues': sorted_categories[:5].index.tolist()
+            }
+
+        number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
+        for col in number_cols:
+            hist = dataset.compute_attr_histogram(col)
+            attributes[col] = {
+                'values': hist[0].tolist(),
+                'bins': hist[1].tolist()
+            }
+
+        return json({
+            'attributes': attributes
+        })
 
     @app.listener("after_server_stop")
     def on_shutdown(current_app, loop):

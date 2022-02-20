@@ -17,10 +17,10 @@ function AttributesSelector({
   const [selectedValues, setSelectedValues] = useState([]);
   const [selectedThreshold, setSelectedThreshold] = useState(5);
 
-  const isMultipleSelect = !!(selectedAttribute && attributes[selectedAttribute].dtype === 'tags');
+  const isMultipleSelect = !!(selectedAttribute && attributes[selectedAttribute].dtype === 'tag');
 
   const attributeOptions = useMemo(() => {
-    const allowedTypes = ['number', 'category', 'tags'];
+    const allowedTypes = ['number', 'category', 'tag'];
     return Object.entries(attributes)
       .filter((attribute) => allowedTypes.includes(attribute[1].dtype))
       .map((attribute) => ({

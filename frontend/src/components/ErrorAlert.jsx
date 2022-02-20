@@ -5,8 +5,8 @@ import { Alert, AlertTitle } from '@mui/material';
 function ErrorAlert({ error }) {
   return (
     <Alert severity="error">
-      <AlertTitle>API Error</AlertTitle>
-      {error.status} {JSON.stringify(error.data)}
+      <AlertTitle>API Error ({error.status})</AlertTitle>
+      {error.data.message || JSON.stringify(error.data)}
     </Alert>
   );
 }

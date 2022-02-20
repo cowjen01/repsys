@@ -9,6 +9,7 @@ from typing import Dict, Tuple, List, Optional
 import numpy as np
 import pandas as pd
 from bidict import frozenbidict
+from numpy import ndarray
 from pandas import DataFrame, Series, Index
 from scipy.sparse import csr_matrix
 
@@ -243,27 +244,32 @@ class Dataset(ABC):
             shape=(1, self.get_total_items()),
         )
 
-    def _update_tags(self, items: DataFrame) -> None:
+    def _update_tag_attrs(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
         for col in cols:
-            self.tags[col] = np.unique(np.concatenate(items[col].values)).tolist()
+            self.tags[col] = np.unique(np.concatenate(self.items[col].values)).tolist()
 
-    def _update_categories(self, items: DataFrame) -> None:
+    def _update_category_attrs(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Category)
         for col in cols:
-            self.categories[col] = items[col].unique().tolist()
+            self.categories[col] = self.items[col].unique().tolist()
 
-    def _update_histograms(self, items: DataFrame) -> None:
+    def compute_attr_histogram(self, col: str) -> Tuple[ndarray, ndarray]:
+        params = typing.cast(dtypes.Number, self.item_cols()[col])
+
+        if params.bins_range:
+            hist_range = params.bins_range
+        else:
+            hist_range = (self.items[col].quantile(.1), self.items[col].quantile(.9))
+
+        hist = np.histogram(self.items[col], range=hist_range)
+
+        return hist
+
+    def _update_number_attrs(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)
         for col in cols:
-            params = typing.cast(dtypes.Number, self.item_cols()[col])
-
-            if params.bins_range:
-                hist_range = params.bins_range
-            else:
-                hist_range = (items[col].quantile(.1), items[col].quantile(.9))
-
-            self.histograms[col] = np.histogram(items[col], range=hist_range)
+            self.histograms[col] = self.compute_attr_histogram(col)
 
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]
@@ -280,12 +286,12 @@ class Dataset(ABC):
             holdout_matrix=df_to_matrix(splits[2][2], n_items),
             user_index=splits[2][0])
 
-        self._update_tags(items)
-        self._update_categories(items)
-        self._update_histograms(items)
-
         self.items = items
         self.item_index = item_index
+
+        self._update_tag_attrs()
+        self._update_category_attrs()
+        self._update_number_attrs()
 
     def prepare(self) -> None:
         logger.debug("Loading dataset ...")

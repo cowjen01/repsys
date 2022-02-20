@@ -32,12 +32,12 @@ function ItemsDescription({ attributes, items }) {
 
   return (
     <Stack spacing={2}>
-      {Object.entries(data.attributes).map(([key, { topValues, bins, hist }]) => (
+      {Object.entries(data.attributes).map(([key, { topValues, bins, values }]) => (
         <Box key={key}>
           <Typography variant="h6" sx={{ fontSize: '1rem' }}>
             {capitalize(key)}
           </Typography>
-          {(attributes[key].dtype === 'tags' || attributes[key].dtype === 'category') && (
+          {(attributes[key].dtype === 'tag' || attributes[key].dtype === 'category') && (
             <>
               <Typography variant="body2" sx={{ fontSize: '0.8rem' }} mb={1}>
                 The most frequent values
@@ -54,7 +54,7 @@ function ItemsDescription({ attributes, items }) {
               <Typography sx={{ fontSize: '0.8rem' }} variant="body2">
                 Attribute values distribution
               </Typography>
-              <BarPlotHistogram bins={bins} hist={hist} />
+              <BarPlotHistogram bins={bins} values={values} />
             </>
           )}
         </Box>

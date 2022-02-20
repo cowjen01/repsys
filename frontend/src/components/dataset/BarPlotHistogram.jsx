@@ -3,7 +3,7 @@ import pt from 'prop-types';
 
 import { BarPlot } from '../plots';
 
-function BarPlotHistogram({ hist, bins }) {
+function BarPlotHistogram({ values, bins }) {
   return (
     <BarPlot
       height={150}
@@ -20,8 +20,8 @@ function BarPlotHistogram({ hist, bins }) {
       }}
       data={[
         {
-          x: hist.map((_, index) => `${bins[index]}-${bins[index + 1]}`),
-          y: hist,
+          x: values.map((_, index) => `${bins[index]}-${bins[index + 1]}`),
+          y: values,
         },
       ]}
     />
@@ -29,7 +29,7 @@ function BarPlotHistogram({ hist, bins }) {
 }
 
 BarPlotHistogram.propTypes = {
-  hist: pt.arrayOf(pt.number).isRequired,
+  values: pt.arrayOf(pt.number).isRequired,
   bins: pt.arrayOf(pt.number).isRequired,
 };
 

@@ -7,7 +7,7 @@ export const itemsDescription = {
       topValues: [],
     },
     year: {
-      hist: [30, 20, 10, 20, 20],
+      values: [30, 20, 10, 20, 20],
       bins: [0, 1990, 2000, 2010, 2015, 2020],
     },
   },

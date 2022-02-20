@@ -7,7 +7,7 @@ export const repsysApi = createApi({
     getUsers: builder.query({
       query: ({ split = 'train' }) => `/users?split=${split}`,
     }),
-    searchUsersByInteractions: builder.mutation({
+    searchUsers: builder.mutation({
       query: ({ split = 'train', query }) => ({
         url: `/users/search`,
         method: 'POST',
@@ -17,7 +17,7 @@ export const repsysApi = createApi({
         },
       }),
     }),
-    searchItemsByAttribute: builder.mutation({
+    searchItems: builder.mutation({
       query: ({ query }) => ({
         url: `/items/search`,
         method: 'POST',
@@ -91,7 +91,7 @@ export const {
   useGetUsersQuery,
   useDescribeItemsMutation,
   useDescribeUsersMutation,
-  useSearchItemsByAttributeMutation,
-  useSearchUsersByInteractionsMutation,
+  useSearchItemsMutation,
+  useSearchUsersMutation,
   usePredictItemsByModelMutation,
 } = repsysApi;

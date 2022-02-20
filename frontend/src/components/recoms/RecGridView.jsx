@@ -77,6 +77,9 @@ function RecGridView({ index }) {
     recommendations.data &&
     currentPage === Math.ceil(recommendations.data.length / itemsPerPage) - 1;
 
+  const itemWidth = 12 / itemsPerPage;
+  const imageHeight = Math.ceil(500 / itemsPerPage);
+
   return (
     <Grid container spacing={1}>
       <Grid item xs={12}>
@@ -112,20 +115,20 @@ function RecGridView({ index }) {
         <Grid container spacing={2}>
           {recommendations.isSuccess &&
             currentBatch.map((item) => (
-              <Grid key={item.id} item xs={12} md={12 / itemsPerPage}>
+              <Grid key={item.id} item xs={itemWidth}>
                 <ItemCardView
                   item={item}
-                  imageHeight={Math.ceil(600 / itemsPerPage)}
+                  imageHeight={imageHeight}
                   onClick={() => handleItemClick(item)}
                 />
               </Grid>
             ))}
-          {recommendations.isLoading &&
+          {(recommendations.isLoading || recommendations.isUninitialized) &&
             [...Array(itemsPerPage).keys()].map((i) => (
-              <Grid key={i} item display="flex" md={12 / itemsPerPage}>
+              <Grid key={i} item display="flex" xs={itemWidth}>
                 <Skeleton
                   variant="rectangular"
-                  height={Math.ceil(600 / itemsPerPage) + 50}
+                  height={itemView.image ? imageHeight + 100 : 100}
                   width="100%"
                 />
               </Grid>
