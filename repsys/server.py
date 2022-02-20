@@ -2,7 +2,6 @@ import logging
 import os
 from typing import Dict
 
-import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -101,53 +100,47 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         if not split:
             raise NotFound(f"User '{uid}' not found.")
 
-        items = dataset.get_interacted_items_by_user(uid, split.name)
+        items = dataset.get_interacted_items_by_user(uid, split)
         data = json({
             'interactions': serialize_items(items)
         })
 
         return data
 
-    @app.route("/api/predict", methods=["POST"])
-    def post_prediction(request):
+    @app.route("/api/models/<model_name>/predict", methods=["POST"])
+    def post_prediction(request, model_name: str):
+        if not models.get(model_name):
+            raise NotFound(f"Model '{model_name}' not implemented.")
+
         user_id = request.json.get("user")
-        interactions = request.json.get("interactions")
+        item_ids = request.json.get("items")
         limit = request.json.get("limit", 20)
         params = request.json.get("params", {})
-        model_name = request.json.get("model")
 
-        if (user_id is None and interactions is None) or (
-            user_id is not None and interactions is not None
-        ):
-            raise InvalidUsage(
-                "Either the user or his interactions must be specified."
-            )
-
-        if not model_name:
-            raise InvalidUsage("Model name must be specified.")
-
-        model = [m for m in models if m.name() == model_name][0]
-
-        if not model:
-            raise NotFound(f"Model '{model_name}' was not found.")
-
-        default_params = {p.name: p.default for p in model.web_params()}
-        cleaned_params = {
-            k: v for k, v in params.items() if k in default_params
-        }
-        predict_params = {**default_params, **cleaned_params}
+        if (user_id is None and item_ids is None) or (user_id is not None and item_ids is not None):
+            raise InvalidUsage("Either the user or his interactions must be specified.")
 
         if user_id is not None:
-            try:
-                user_id = int(user_id)
-                X = dataset.get_user_history(user_id)
-            except Exception:
-                raise NotFound(f"User '{user_id}' was not found.")
-        else:
-            interactions = np.array(interactions)
-            X = dataset.input_from_interactions(interactions)
+            split = dataset.get_split_by_user(user_id)
 
-        items = model.predict_top_n(X, limit, **predict_params)
+            if not split:
+                raise InvalidUsage(f"User '{user_id}' not found.")
+
+            input_data = dataset.get_interactions_by_user(user_id, split)
+        else:
+            item_indexes = list(map(dataset.item_id_to_index, item_ids))
+
+            if None in item_indexes:
+                raise InvalidUsage(f"Some of the input items not found.")
+
+            input_data = dataset.item_indexes_to_matrix(item_indexes)
+
+        model = models.get(model_name)
+
+        params = {k: v for k, v in params.items() if k in model.web_params().keys()}
+
+        ids = model.predict_top_n(input_data, limit, **params)
+        items = dataset.items.loc[ids[0]]
         data = json(serialize_items(items))
 
         return data

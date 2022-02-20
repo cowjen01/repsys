@@ -44,7 +44,7 @@ function RecGridView({ index }) {
     if (selectedUser) {
       query.user = selectedUser;
     } else {
-      query.interactions = customInteractions.map(({ id }) => id);
+      query.items = customInteractions.map(({ id }) => id);
     }
 
     getRecomendations(query);

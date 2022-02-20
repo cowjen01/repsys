@@ -2,29 +2,26 @@ class WebParam:
     def __init__(
         self,
         field,
-        name,
         default="",
     ) -> None:
-        self.name = name
         self.field = field
         self.default = default
 
     def to_dict(self):
         return {
-            "name": self.name,
             "field": self.field,
             "default": self.default,
         }
 
 
 class Text(WebParam):
-    def __init__(self, name, default="") -> None:
-        super().__init__("text", name, default)
+    def __init__(self, default="") -> None:
+        super().__init__("text", default)
 
 
 class Select(WebParam):
-    def __init__(self, name, options, default="") -> None:
-        super().__init__("select", name, default)
+    def __init__(self, options, default="") -> None:
+        super().__init__("select", default)
         self.options = options
 
     def to_dict(self):
@@ -34,10 +31,10 @@ class Select(WebParam):
 
 
 class Checkbox(WebParam):
-    def __init__(self, name, default=False) -> None:
-        super().__init__("checkbox", name, default)
+    def __init__(self, default=False) -> None:
+        super().__init__("checkbox", default)
 
 
 class Number(WebParam):
-    def __init__(self, name, default="") -> None:
-        super().__init__("number", name, default)
+    def __init__(self, default="") -> None:
+        super().__init__("number", default)

@@ -32,9 +32,8 @@ logger = logging.getLogger(__name__)
 
 
 class Split:
-    def __init__(self, name: str, train_matrix: csr_matrix, user_index: frozenbidict,
+    def __init__(self, train_matrix: csr_matrix, user_index: frozenbidict,
                  holdout_matrix: csr_matrix = None) -> None:
-        self.name = name
         self.train_matrix = train_matrix
         self.holdout_matrix = holdout_matrix
         self.user_index = user_index
@@ -86,10 +85,10 @@ def save_index(index_dict: frozenbidict, file_path: str) -> None:
             f.write("%s\n" % sid)
 
 
-def save_split(split: Split, output_dir: str) -> None:
-    train_data_path = os.path.join(output_dir, f"{split.name}_train.csv")
-    holdout_data_path = os.path.join(output_dir, f"{split.name}_holdout.csv")
-    user_index_path = os.path.join(output_dir, f"{split.name}_users.txt")
+def save_split(split_name: str, split: Split, output_dir: str) -> None:
+    train_data_path = os.path.join(output_dir, f"{split_name}_train.csv")
+    holdout_data_path = os.path.join(output_dir, f"{split_name}_holdout.csv")
+    user_index_path = os.path.join(output_dir, f"{split_name}_users.txt")
 
     train_data = matrix_to_df(split.train_matrix)
     train_data.to_csv(train_data_path, index=False)
@@ -182,13 +181,10 @@ class Dataset(ABC):
     def load_interactions(self) -> DataFrame:
         pass
 
-    def get_split(self, split: str) -> Optional[Split]:
-        return self.splits.get(split)
-
-    def get_split_by_user(self, uid: str) -> Optional[Split]:
-        for split in self.splits.values():
-            if split.user_index.get(uid):
-                return split
+    def get_split_by_user(self, uid: str) -> Optional[str]:
+        for key, split in self.splits.items():
+            if split.user_index.get(uid) is not None:
+                return key
 
         return None
 
@@ -231,7 +227,7 @@ class Dataset(ABC):
 
     def get_interactions_by_user(self, uid: str, split: str) -> csr_matrix:
         index = self.user_id_to_index(uid, split)
-        matrix = self.get_split(split).complete_matrix
+        matrix = self.splits.get(split).complete_matrix
         return matrix[index]
 
     def get_interacted_items_by_user(self, uid: str, split: str) -> DataFrame:
@@ -240,9 +236,9 @@ class Dataset(ABC):
         ids = list(map(self.item_index_to_id, indexes))
         return self.items.loc[ids]
 
-    def interactions_to_matrix(self, interactions: List[int]) -> csr_matrix:
+    def item_indexes_to_matrix(self, indexes: List[int]) -> csr_matrix:
         return csr_matrix(
-            (np.ones_like(interactions), (np.zeros_like(interactions), interactions)),
+            (np.ones_like(indexes), (np.zeros_like(indexes), indexes)),
             dtype="float64",
             shape=(1, self.get_total_items()),
         )
@@ -273,16 +269,13 @@ class Dataset(ABC):
         n_items = items.shape[0]
 
         self.splits['train'] = Split(
-            name='train',
             train_matrix=df_to_matrix(splits[0][1], n_items),
             user_index=splits[0][0])
         self.splits['validation'] = Split(
-            name='validation',
             train_matrix=df_to_matrix(splits[1][1], n_items),
             holdout_matrix=df_to_matrix(splits[1][2], n_items),
             user_index=splits[1][0])
         self.splits['test'] = Split(
-            name='test',
             train_matrix=df_to_matrix(splits[2][1], n_items),
             holdout_matrix=df_to_matrix(splits[2][2], n_items),
             user_index=splits[2][0])
@@ -400,8 +393,8 @@ class Dataset(ABC):
     def save(self, path: str) -> None:
         create_tmp_dir()
         try:
-            for split in self.splits.values():
-                save_split(split, tmp_dir_path())
+            for key, split in self.splits.items():
+                save_split(key, split, tmp_dir_path())
 
             save_items(self.items, self.item_cols(), self.item_index, tmp_dir_path())
             zip_dir(path, tmp_dir_path())

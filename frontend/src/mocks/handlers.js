@@ -36,15 +36,13 @@ export const handlers = [
     return res(ctx.delay(1500), ctx.json(data));
   }),
   rest.post('/api/users/search', (req, res, ctx) => {
-    const { query, split } = req.body;
-    const { attribute, values, range, threshold } = query;
+    const { split } = req.body;
     if (!split) return res(ctx.status(400));
     const shuffledArray = shuffle(split === 'validation' ? vadUsers : trainUsers);
     const randIds = shuffledArray.slice(0, randomInt(3, 20));
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
-    const { users: userIDs, split } = req.body;
     usersDescription.interactions.topItems = shuffle(items).slice(0, 5);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
@@ -68,8 +66,7 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(modelsMetricsFull[modelName]));
   }),
   rest.post('/api/models/:modelName/predict', (req, res, ctx) => {
-    const { modelName } = req.params;
-    const { limit, params, user, interactions } = req.body;
+    const { limit } = req.body;
     const randItems = shuffle(items).slice(5, limit);
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
@@ -80,14 +77,12 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randItems));
   }),
   rest.post('/api/items/search', (req, res, ctx) => {
-    const { attribute, values, range } = req.body.query;
     const randIds = shuffle(items)
       .slice(0, randomInt(3, 20))
       .map(({ id }) => id);
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/items/describe', (req, res, ctx) => {
-    const { items: itemIDs } = req.body;
     const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 4);
     const randCountries = shuffle(dataset.attributes.country.options).slice(0, 4);
     itemsDescription.attributes.genres.topValues = randGenres;

@@ -5,8 +5,8 @@ import numpy as np
 import scipy.sparse as sp
 from sklearn.neighbors import NearestNeighbors
 
-from repsys import Model
 import repsys.web as web
+from repsys import Model
 
 
 # https://gist.github.com/mskl/fcc3c432e00e417cec670c6c3a45d6ab
@@ -84,8 +84,8 @@ class KNN(Model):
         return predictions
 
     def web_params(self):
-        return [
-            web.Select("genre", options=self.dataset.get_genres()),
-            web.Checkbox("exclude", default=True),
-            web.Number("neighbors", default=10)
-        ]
+        return {
+            'genre': web.Select(options=self.dataset.get_genres()),
+            'exclude': web.Checkbox(default=True),
+            'neighbors': web.Number(default=10)
+        }

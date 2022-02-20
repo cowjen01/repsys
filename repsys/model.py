@@ -1,7 +1,7 @@
 import functools
 import logging
 from abc import ABC, abstractmethod
-from typing import Text, List, Optional
+from typing import Text, Dict, Optional, Type
 
 import numpy as np
 
@@ -45,11 +45,11 @@ class Model(ABC):
         set in the web application."""
         pass
 
-    def web_params(self) -> List[WebParam]:
+    def web_params(self) -> Dict[str, Type[WebParam]]:
         """Return a list of parameters that will be displayed
         in the web application allowing a user to pass additional
         arguments to the prediction method."""
-        return []
+        return {}
 
     def update_dataset(self, dataset: Dataset) -> None:
         """Update the model with an instance of the dataset."""
@@ -61,19 +61,17 @@ class Model(ABC):
         self.dataset = dataset
 
     @enforce_dataset
-    def predict_top_n(self, X, n=20, **kwargs):
+    def predict_top_n(self, input_data, n=20, **kwargs):
         """Make a prediction, but return directly a list of top ids."""
-        prediction = self.predict(X, **kwargs)
+        prediction = self.predict(input_data, **kwargs)
         indexes = (-prediction).argsort()[:, :n]
-        ids = np.vectorize(self.dataset.get_item_id)(indexes)
+        vfn = np.vectorize(self.dataset.item_index_to_id)
 
-        return ids
+        return vfn(indexes)
 
     def to_dict(self):
         """Serialize details about the model to the dictionary."""
-        return {
-            "params": [p.to_dict() for p in self.web_params()],
-        }
+        return {"params": {key: param.to_dict() for key, param in self.web_params().items()}}
 
     def __str__(self) -> Text:
         return f"Model '{self.name()}'"
