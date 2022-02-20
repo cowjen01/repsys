@@ -149,6 +149,18 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
     return items, item_index
 
 
+def get_top_tags(items: DataFrame, col: str, n: int = 5) -> List[str]:
+    tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
+    sort_indexes = (-counts).argsort()
+    sorted_tags = tags[sort_indexes]
+    return sorted_tags[:, n].tolist()
+
+
+def get_top_categories(items: DataFrame, col: str, n: int = 5) -> List[str]:
+    sorted_categories = items[col].value_counts()
+    return sorted_categories[:, n].index.tolist()
+
+
 class Dataset(ABC):
     def __init__(self):
         self.items: Optional[DataFrame] = None
@@ -244,32 +256,29 @@ class Dataset(ABC):
             shape=(1, self.get_total_items()),
         )
 
-    def _update_tag_attrs(self) -> None:
+    def compute_histogram(self, items: DataFrame, col: str) -> Tuple[ndarray, ndarray]:
+        params = typing.cast(dtypes.Number, self.item_cols()[col])
+        if params.bins_range:
+            hist_range = params.bins_range
+        else:
+            hist_range = (items[col].quantile(.1), items[col].quantile(.9))
+
+        return np.histogram(items[col], range=hist_range)
+
+    def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
         for col in cols:
             self.tags[col] = np.unique(np.concatenate(self.items[col].values)).tolist()
 
-    def _update_category_attrs(self) -> None:
+    def _update_categories(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Category)
         for col in cols:
             self.categories[col] = self.items[col].unique().tolist()
 
-    def compute_attr_histogram(self, col: str) -> Tuple[ndarray, ndarray]:
-        params = typing.cast(dtypes.Number, self.item_cols()[col])
-
-        if params.bins_range:
-            hist_range = params.bins_range
-        else:
-            hist_range = (self.items[col].quantile(.1), self.items[col].quantile(.9))
-
-        hist = np.histogram(self.items[col], range=hist_range)
-
-        return hist
-
-    def _update_number_attrs(self) -> None:
+    def _update_histograms(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)
         for col in cols:
-            self.histograms[col] = self.compute_attr_histogram(col)
+            self.histograms[col] = self.compute_histogram(self.items, col)
 
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]
@@ -289,9 +298,9 @@ class Dataset(ABC):
         self.items = items
         self.item_index = item_index
 
-        self._update_tag_attrs()
-        self._update_category_attrs()
-        self._update_number_attrs()
+        self._update_tags()
+        self._update_categories()
+        self._update_histograms()
 
     def prepare(self) -> None:
         logger.debug("Loading dataset ...")

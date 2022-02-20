@@ -2,14 +2,13 @@ import logging
 import os
 from typing import Dict
 
-import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
 from sanic.response import json, file
 
 import repsys.dtypes as dtypes
-from repsys.dataset import Dataset
+from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
 from repsys.model import Model
 
@@ -196,23 +195,20 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
         for col in tag_cols:
-            tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
-            sort_indexes = (-counts).argsort()
-            sorted_tags = tags[sort_indexes]
             attributes[col] = {
-                'topValues': sorted_tags[:5].tolist()
+                'topValues': get_top_tags(items, col, 5)
             }
 
         category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
         for col in category_cols:
             sorted_categories = items[col].value_counts()
             attributes[col] = {
-                'topValues': sorted_categories[:5].index.tolist()
+                'topValues': get_top_categories(items, col, 5)
             }
 
         number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
         for col in number_cols:
-            hist = dataset.compute_attr_histogram(col)
+            hist = dataset.compute_histogram(items, col)
             attributes[col] = {
                 'values': hist[0].tolist(),
                 'bins': hist[1].tolist()
