@@ -14,3 +14,9 @@ class InvalidDatasetError(Exception):
     def __init__(self, message):
         self.message = f'Dataset validation failed: {message}'
         super().__init__(self.message)
+
+
+class PackageLoaderError(Exception):
+    def __init__(self, message):
+        self.message = f'Packages loading failed: {message}'
+        super().__init__(self.message)

@@ -18,19 +18,19 @@ from repsys.dtypes import (
 from repsys.errors import InvalidDatasetError
 
 
-def check_df_columns(df: DataFrame, cols: ColumnDict):
+def _check_df_columns(df: DataFrame, cols: ColumnDict):
     for col in cols.keys():
         if col not in df.columns:
             raise InvalidDatasetError(f"Column '{col}' not found in the data.")
 
 
-def check_valid_dtypes(cols: ColumnDict, valid_dtypes: List[Type[DataType]]):
+def _check_valid_dtypes(cols: ColumnDict, valid_dtypes: List[Type[DataType]]):
     for col, dt in cols.items():
         if type(dt) not in valid_dtypes:
             raise InvalidDatasetError(f"Type '{dt.__name__}' of column '{col}' is forbidden.")
 
 
-def check_required_dtypes(cols: ColumnDict, req_dtypes: List[Type[DataType]]):
+def _check_required_dtypes(cols: ColumnDict, req_dtypes: List[Type[DataType]]):
     dtypes = [type(dt) for dt in cols.values()]
     for dt in req_dtypes:
         if dt not in dtypes:
@@ -41,12 +41,12 @@ def validate_item_cols(cols: ColumnDict) -> None:
     valid_dtypes = [ItemID, Tag, String, Title, Number, Category]
     required_dtypes = [ItemID, Title]
 
-    check_valid_dtypes(cols, valid_dtypes)
-    check_required_dtypes(cols, required_dtypes)
+    _check_valid_dtypes(cols, valid_dtypes)
+    _check_required_dtypes(cols, required_dtypes)
 
 
 def validate_item_data(items: DataFrame, cols: ColumnDict) -> None:
-    check_df_columns(items, cols)
+    _check_df_columns(items, cols)
 
     item_col = find_column_by_type(cols, ItemID)
     if items[item_col].unique().shape[0] != items.shape[0]:
@@ -57,13 +57,13 @@ def validate_interact_cols(cols: ColumnDict) -> None:
     valid_dtypes = [ItemID, UserID, Interaction]
     required_dtypes = [ItemID, UserID]
 
-    check_valid_dtypes(cols, valid_dtypes)
-    check_required_dtypes(cols, required_dtypes)
+    _check_valid_dtypes(cols, valid_dtypes)
+    _check_required_dtypes(cols, required_dtypes)
 
 
 def validate_interact_data(interacts: DataFrame, items: DataFrame, interact_cols: ColumnDict,
                            item_cols: ColumnDict) -> None:
-    check_df_columns(interacts, interact_cols)
+    _check_df_columns(interacts, interact_cols)
 
     interacts_item_id_col = find_column_by_type(interact_cols, ItemID)
     items_id_col = find_column_by_type(item_cols, ItemID)

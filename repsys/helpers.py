@@ -84,23 +84,21 @@ def latest_checkpoint(pattern: Text) -> Optional[Text]:
 
 
 def latest_split_checkpoint() -> Optional[Text]:
-    return latest_checkpoint("split-*.zip")
+    return latest_checkpoint("dataset-split-*.zip")
 
 
-def latest_eval_checkpoint() -> Optional[Text]:
-    return latest_checkpoint("eval-*.zip")
+def latest_dataset_eval_checkpoint() -> Optional[Text]:
+    return latest_checkpoint("dataset-eval-*.zip")
 
 
 def new_split_checkpoint():
     create_checkpoints_dir()
-    return os.path.join(
-        checkpoints_dir_path(), fill_timestamp("split-{ts}.zip")
-    )
+    return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-split-{ts}.zip"))
 
 
-def new_eval_checkpoint():
+def new_dataset_eval_checkpoint():
     create_checkpoints_dir()
-    return os.path.join(checkpoints_dir_path(), fill_timestamp("eval-{ts}.zip"))
+    return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-eval-{ts}.zip"))
 
 
 def set_seed(seed: int) -> None:
