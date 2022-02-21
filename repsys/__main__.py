@@ -4,7 +4,7 @@ import sys
 
 import coloredlogs
 
-from repsys.cli import repsys
+from repsys.cli import repsys_group
 
 
 def setup_logging(level):
@@ -19,7 +19,7 @@ def main():
     sys.path.insert(1, os.getcwd())
     setup_logging(logging.INFO)
 
-    repsys(prog_name="repsys")
+    repsys_group(prog_name="repsys")
 
 
 if __name__ == "__main__":
