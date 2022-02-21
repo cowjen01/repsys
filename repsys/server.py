@@ -56,26 +56,59 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         if split not in ['train', 'validation', 'test']:
             raise InvalidUsage("The split must be one of: train, validation or test.")
 
+    def get_items_by_query(query: Dict[str, any]) -> DataFrame:
+        col = query.get('attribute')
+
+        if not col:
+            raise InvalidUsage("Searched attribute must be specified.")
+
+        if col not in dataset.item_cols().keys():
+            raise InvalidUsage(f"Attribute '{col}' not found.'")
+
+        col_type = type(dataset.item_cols().get(col))
+
+        items = dataset.items
+        if col_type == dtypes.Number:
+            range_filter = query.get('range')
+
+            if not range_filter or len(range_filter) != 2:
+                raise InvalidUsage(f"A range must be specified for '{col}' attribute.")
+
+            items = items[(items[col] >= range_filter[0]) & (items[col] <= range_filter[1])]
+
+        if col_type == dtypes.Category or col_type == dtypes.Tag:
+            values_filter = query.get('values')
+
+            if not values_filter or len(values_filter) == 0:
+                raise InvalidUsage(f"Values must be specified for '{col}' attribute.")
+
+            if col_type == dtypes.Category:
+                items = items[items[col] == values_filter[0]]
+            else:
+                items = items[items[col].apply(lambda x: set(values_filter).issubset(set(x)))]
+
+        return items
+
     @app.route('/')
     @app.route('/dataset')
     @app.route('/models')
     def index(request):
         return file(f"{static_folder}/index.html")
 
-    @app.route("/api/models")
+    @app.route("/api/models", methods=["GET"])
     def get_models(request):
         return json({
             model.name(): model.to_dict() for model in models.values()
         })
 
-    @app.route("/api/dataset")
+    @app.route("/api/dataset", methods=["GET"])
     def get_dataset(request):
         return json({
             "totalItems": dataset.get_total_items(),
             "attributes": get_item_attributes()
         })
 
-    @app.route("/api/users")
+    @app.route("/api/users", methods=["GET"])
     def get_users(request):
         split = request.args.get("split")
 
@@ -84,7 +117,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         users = dataset.get_users_by_split(split)
         return json(users)
 
-    @app.route("/api/items")
+    @app.route("/api/items", methods=["GET"])
     def get_items(request):
         query = request.args.get("query")
 
@@ -96,20 +129,6 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         items = dataset.get_items_by_title(query)
         data = json(serialize_items(items))
-
-        return data
-
-    @app.route("/api/users/<uid>")
-    def get_user_detail(request, uid: str):
-        split = dataset.get_split_by_user(uid)
-
-        if not split:
-            raise NotFound(f"User '{uid}' not found.")
-
-        items = dataset.get_interacted_items_by_user(uid, split)
-        data = json({
-            'interactions': serialize_items(items)
-        })
 
         return data
 
@@ -158,37 +177,30 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
         if not query:
             raise InvalidUsage("Search query must be specified.")
 
-        col = query.get('attribute')
-
-        if not col:
-            raise InvalidUsage("Searched attribute must be specified.")
-
-        if col not in dataset.item_cols().keys():
-            raise InvalidUsage(f"Attribute '{col}' not found.'")
-
-        col_type = type(dataset.item_cols().get(col))
-
-        items = dataset.items
-        if col_type == dtypes.Number:
-            range_filter = query.get('range')
-
-            if not range_filter or len(range_filter) != 2:
-                raise InvalidUsage(f"A range must be specified for '{col}' attribute.")
-
-            items = items[(items[col] >= range_filter[0]) & (items[col] <= range_filter[1])]
-
-        if col_type == dtypes.Category or col_type == dtypes.Tag:
-            values_filter = query.get('values')
-
-            if not values_filter or len(values_filter) == 0:
-                raise InvalidUsage(f"Values must be specified for '{col}' attribute.")
-
-            if col_type == dtypes.Category:
-                items = items[items[col] == values_filter[0]]
-            else:
-                items = items[items[col].apply(lambda x: set(values_filter).issubset(set(x)))]
+        items = get_items_by_query(query)
 
         return json(items.index.tolist())
+
+    @app.route("/api/users/search", methods=["POST"])
+    def search_users(request):
+        query = request.json.get("query")
+
+        if not query:
+            raise InvalidUsage("Search query must be specified.")
+
+        split = request.json.get("split")
+        validate_split_name(split)
+
+        min_interacts = query.get("threshold")
+        if not min_interacts:
+            raise InvalidUsage("Minimum interactions to the items by a user must be specified.")
+
+        items = get_items_by_query(query)
+        item_indexes = items.index.map(dataset.item_id_to_index)
+
+        user_ids = dataset.get_users_by_interacted_items(item_indexes, split, min_interacts)
+
+        return json(user_ids)
 
     @app.route("/api/items/describe", methods=["POST"])
     def describe_items(request):
@@ -256,6 +268,20 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
                 'topItems': serialize_items(items)
             }
         })
+
+    @app.route("/api/users/<uid>", methods=["GET"])
+    def get_user_detail(request, uid: str):
+        split = dataset.get_split_by_user(uid)
+
+        if not split:
+            raise NotFound(f"User '{uid}' not found.")
+
+        items = dataset.get_interacted_items_by_user(uid, split)
+        data = json({
+            'interactions': serialize_items(items)
+        })
+
+        return data
 
     @app.listener("after_server_stop")
     def on_shutdown(current_app, loop):

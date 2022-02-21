@@ -272,6 +272,23 @@ class Dataset(ABC):
 
         return items
 
+    def get_users_by_interacted_items(self, indexes: List[int], split: str, min_interacts: int = 3) -> List[str]:
+        matrix = self.splits.get(split).complete_matrix
+        matrix_copy = matrix[:, indexes].copy()
+        matrix_copy[matrix_copy > 0] = 1
+        user_interacts = matrix_copy.sum(axis=1)
+        user_indexes = np.where(user_interacts.A1 > min_interacts)[0]
+
+        if len(user_indexes) == 0:
+            return []
+
+        def mapper_func(x):
+            return self.user_index_to_id(x, split)
+
+        user_ids = np.vectorize(mapper_func)(user_indexes)
+
+        return user_ids.tolist()
+
     def compute_histogram_by_col(self, items: DataFrame, col: str) -> Tuple[ndarray, ndarray]:
         params = typing.cast(dtypes.Number, self.item_cols()[col])
         if params.bins_range:
