@@ -1,9 +1,5 @@
 class WebParam:
-    def __init__(
-        self,
-        field,
-        default="",
-    ) -> None:
+    def __init__(self, field, default="") -> None:
         self.field = field
         self.default = default
 

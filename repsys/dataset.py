@@ -263,7 +263,9 @@ class Dataset(ABC):
 
     def get_top_items_by_users(self, indexes: List[int], split: str, n: int = 5) -> DataFrame:
         matrix = self.splits.get(split).complete_matrix
-        interactions = matrix[indexes].sum(axis=0).A1
+        matrix_copy = matrix[indexes].copy()
+        matrix_copy[matrix_copy > 0] = 1
+        interactions = matrix_copy.sum(axis=0).A1
         sort_indexes = (-interactions).argsort()[:n]
         item_ids = list(map(self.item_index_to_id, sort_indexes))
         items = self.items.loc[item_ids]
