@@ -8,3 +8,9 @@ class RepsysCoreError(Exception):
     def __init__(self, message):
         self.message = f'Executing of the command failed: {message}'
         super().__init__(self.message)
+
+
+class InvalidDatasetError(Exception):
+    def __init__(self, message):
+        self.message = f'Dataset validation failed: {message}'
+        super().__init__(self.message)

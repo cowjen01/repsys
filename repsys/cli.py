@@ -29,22 +29,18 @@ logger = logging.getLogger(__name__)
 def split_input_callback(ctx, param, value):
     if not value:
         path = latest_split_checkpoint()
-
         if not path:
             raise click.ClickException(
                 "No split were found in the default directory '.repsys_checkpoints'. "
-                "Please provide a path to the split or run 'repsys split' command."
+                "Please provide a path to the split or run 'repsys dataset split' command."
             )
-
         return path
-
     return value
 
 
 def eval_input_callback(ctx, param, value):
     if not value:
         return latest_eval_checkpoint()
-
     return value
 
 
@@ -68,15 +64,8 @@ def dataset_callback(ctx, param, value):
     return load_dataset_pkg(value)
 
 
-def dataset_option(func):
-    @click.option(
-        "-d",
-        "--dataset-pkg",
-        "dataset",
-        callback=dataset_callback,
-        default="dataset",
-        show_default=True,
-    )
+def dataset_pkg_option(func):
+    @click.option("-d", "--dataset-pkg", "dataset", callback=dataset_callback, default="dataset", show_default=True)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -84,15 +73,8 @@ def dataset_option(func):
     return wrapper
 
 
-def models_option(func):
-    @click.option(
-        "-m",
-        "--models-pkg",
-        "models",
-        callback=models_callback,
-        default="models",
-        show_default=True,
-    )
+def models_pkg_option(func):
+    @click.option("-m", "--models-pkg", "models", callback=models_callback, default="models", show_default=True)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -100,13 +82,8 @@ def models_option(func):
     return wrapper
 
 
-def split_option(func):
-    @click.option(
-        "-s",
-        "--split-path",
-        callback=split_input_callback,
-        type=click.Path(exists=True),
-    )
+def split_path_option(func):
+    @click.option("-s", "--split-path", callback=split_input_callback, type=click.Path(exists=True))
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -125,9 +102,7 @@ def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
         model.fit(training=training)
 
 
-def evaluate_models(
-    models: Dict[str, Model], dataset: Dataset, data_type: Text, output_path: Text
-):
+def evaluate_models(models: Dict[str, Model], dataset: Dataset, data_type: Text, output_path: Text):
     create_tmp_dir()
 
     evaluator = ModelEvaluator()
@@ -151,84 +126,69 @@ def evaluate_models(
 
 
 @click.group()
-def repsys():
+@click.option('--debug/--no-debug', default=False)
+@click.pass_context
+def repsys_group(ctx, debug):
     """Repsys client for recommendation systems development."""
+    ctx.ensure_object(dict)
+    ctx.obj['DEBUG'] = debug
+
+
+@click.group(name='models')
+def models_group():
+    """Implemented models commands."""
+    """Implemented models commands."""
     pass
 
 
-@repsys.command()
-@models_option
-@dataset_option
-@split_option
-@click.option(
-    "-t",
-    "--data-type",
-    default="test",
-    type=click.Choice(["test", "vad"]),
-    show_default=True,
-)
+@click.group(name='dataset')
+def dataset_group():
+    """Implemented dataset commands."""
+    pass
+
+
+repsys_group.add_command(dataset_group)
+repsys_group.add_command(models_group)
+
+
+@repsys_group.command()
+@models_pkg_option
+@dataset_pkg_option
+@split_path_option
+@click.option("-t", "--data-type", default="test", type=click.Choice(["test", "validation"]), show_default=True)
 @click.option("-o", "--output-path", callback=eval_output_callback)
-def evaluate(
-    models: Dict[str, Model],
-    dataset: Dataset,
-    split_path: Text,
-    data_type: Text,
-    output_path: Text,
-):
+def evaluate(models: Dict[str, Model], dataset: Dataset, split_path: Text, data_type: Text, output_path: Text):
     """Evaluate implemented models."""
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
     evaluate_models(models, dataset, data_type, output_path)
 
 
-@repsys.command()
-@models_option
-@dataset_option
-@split_option
-@click.option(
-    "-e",
-    "--eval-path",
-    callback=eval_input_callback,
-    type=click.Path(exists=True),
-)
-@click.option(
-    "-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True
-)
-def server(
-    models: Dict[str, Model],
-    dataset: Dataset,
-    split_path: Text,
-    eval_path: Text,
-    port: int,
-):
+@repsys_group.command()
+@models_pkg_option
+@dataset_pkg_option
+@split_path_option
+@click.option("-e", "--eval-path", callback=eval_input_callback, type=click.Path(exists=True))
+@click.option("-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True)
+def server(models: Dict[str, Model], dataset: Dataset, split_path: Text, eval_path: Text, port: int):
     """Start Repsys server."""
-    # create_tmp_dir()
-
-    # unzip_dir(eval_path, tmp_dir_path())
-
-    # evaluator = ModelEvaluator()
-    # evaluator.load(tmp_dir_path())
-
-    # remove_tmp_dir()
-
-    # evaluator.print()
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
     run_server(port, models, dataset)
 
 
-@repsys.command()
-@dataset_option
-@models_option
-@split_option
-def train(models: Dict[str, Model], dataset: Dataset, split_path: Text):
+@models_group.command(name='train')
+@dataset_pkg_option
+@models_pkg_option
+@split_path_option
+def train_models(models: Dict[str, Model], dataset: Dataset, split_path: Text):
     """Train models by providing dataset split."""
     dataset.load(split_path)
     fit_models(models, dataset, training=True)
 
 
-@repsys.command()
-@dataset_option
+@dataset_group.command()
+@dataset_pkg_option
 @click.option("-o", "--output-path", callback=split_output_callback)
 def split(dataset: Dataset, output_path: Text):
     """Create a train/validation/test split."""

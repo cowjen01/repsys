@@ -15,25 +15,26 @@ class DatasetConfig:
         self.min_item_interacts = min_item_interacts
         self.min_interact_value = min_interact_value
 
-    def validate(self):
-        if self.train_split_prop <= 0 or self.train_split_prop >= 1:
-            raise InvalidConfigError('The train split proportion must be between 0 and 1')
-
-        if self.test_holdout_prop <= 0 or self.test_holdout_prop >= 1:
-            raise InvalidConfigError('The test holdout proportion must be between 0 and 1')
-
-        if self.min_user_interacts < 0:
-            raise InvalidConfigError('Minimum user interactions can be negative')
-
-        if self.min_item_interacts < 0:
-            raise InvalidConfigError('Minimum item interactions can be negative')
-
 
 class Config:
     def __init__(self, seed: int, server_port: int, dataset_config: DatasetConfig):
         self.dataset = dataset_config
         self.seed = seed
         self.server_port = server_port
+
+
+def validate_dataset_config(config: DatasetConfig):
+    if config.train_split_prop <= 0 or config.train_split_prop >= 1:
+        raise InvalidConfigError('The train split proportion must be between 0 and 1')
+
+    if config.test_holdout_prop <= 0 or config.test_holdout_prop >= 1:
+        raise InvalidConfigError('The test holdout proportion must be between 0 and 1')
+
+    if config.min_user_interacts < 0:
+        raise InvalidConfigError('Minimum user interactions can be negative')
+
+    if config.min_item_interacts < 0:
+        raise InvalidConfigError('Minimum item interactions can be negative')
 
 
 def read_config(config_path: str = None):
@@ -54,7 +55,7 @@ def read_config(config_path: str = None):
         config.getfloat('dataset', 'minInteractValue', fallback=const.DEFAULT_MIN_INTERACT_VALUE)
     )
 
-    dataset_config.validate()
+    validate_dataset_config(dataset_config)
 
     seed = config.getint('general', 'seed', fallback=const.DEFAULT_SEED)
     server_port = config.get('server', 'port', fallback=const.DEFAULT_SERVER_PORT)

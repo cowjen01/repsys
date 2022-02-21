@@ -28,6 +28,7 @@ from repsys.helpers import (
     zip_dir,
     set_seed
 )
+from repsys.validators import validate_dataset, validate_item_cols, validate_interact_cols
 
 logger = logging.getLogger(__name__)
 
@@ -236,17 +237,20 @@ class Dataset(ABC):
     def get_items_by_title(self, query: str) -> DataFrame:
         col = self._get_title_col()
         item_filter = self.items[col].str.contains(query, case=False)
+
         return self.items[item_filter]
 
     def get_interactions_by_user(self, uid: str, split: str) -> csr_matrix:
         index = self.user_id_to_index(uid, split)
         matrix = self.splits.get(split).complete_matrix
+
         return matrix[index]
 
     def get_interacted_items_by_user(self, uid: str, split: str) -> DataFrame:
         interactions = self.get_interactions_by_user(uid, split)
         indexes = (interactions > 0).indices
         ids = list(map(self.item_index_to_id, indexes))
+
         return self.items.loc[ids]
 
     def item_indexes_to_matrix(self, indexes: List[int]) -> csr_matrix:
@@ -259,6 +263,7 @@ class Dataset(ABC):
     def get_interact_values_by_users(self, indexes: List[int], split: str):
         matrix = self.splits.get(split).complete_matrix
         interactions = matrix[indexes]
+
         return interactions.data
 
     def get_top_items_by_users(self, indexes: List[int], split: str, n: int = 5) -> DataFrame:
@@ -268,16 +273,15 @@ class Dataset(ABC):
         interactions = matrix_copy.sum(axis=0).A1
         sort_indexes = (-interactions).argsort()[:n]
         item_ids = list(map(self.item_index_to_id, sort_indexes))
-        items = self.items.loc[item_ids]
 
-        return items
+        return self.items.loc[item_ids]
 
     def get_users_by_interacted_items(self, indexes: List[int], split: str, min_interacts: int = 3) -> List[str]:
         matrix = self.splits.get(split).complete_matrix
         matrix_copy = matrix[:, indexes].copy()
         matrix_copy[matrix_copy > 0] = 1
-        user_interacts = matrix_copy.sum(axis=1)
-        user_indexes = np.where(user_interacts.A1 > min_interacts)[0]
+        user_interacts = matrix_copy.sum(axis=1).A1
+        user_indexes = np.where(user_interacts > min_interacts)[0]
 
         if len(user_indexes) == 0:
             return []
@@ -341,15 +345,15 @@ class Dataset(ABC):
         items = self.load_items()
         item_cols = self.item_cols()
         interacts = self.load_interactions()
-        interaction_cols = self.interaction_cols()
+        interact_cols = self.interaction_cols()
 
         logger.debug("Validating dataset ...")
 
-        # validate_dataset(activities_df, items, activity_cols, item_cols)
+        validate_dataset(items, item_cols, interacts, interact_cols)
 
-        interacts_item_col = find_column_by_type(interaction_cols, dtypes.ItemID)
-        interacts_user_col = find_column_by_type(interaction_cols, dtypes.UserID)
-        interacts_value_col = find_column_by_type(interaction_cols, dtypes.Interaction)
+        interacts_item_col = find_column_by_type(interact_cols, dtypes.ItemID)
+        interacts_user_col = find_column_by_type(interact_cols, dtypes.UserID)
+        interacts_value_col = find_column_by_type(interact_cols, dtypes.Interaction)
 
         interacts[interacts_item_col] = interacts[interacts_item_col].astype(str)
         interacts[interacts_user_col] = interacts[interacts_user_col].astype(str)
@@ -360,7 +364,7 @@ class Dataset(ABC):
 
         logger.debug("Splitting interactions ...")
 
-        interactions = interacts[interaction_cols.keys()]
+        interactions = interacts[interact_cols.keys()]
         interactions = interactions.rename(
             columns={interacts_item_col: 'item', interacts_user_col: 'user', interacts_value_col: 'value'})
 
@@ -422,12 +426,18 @@ class Dataset(ABC):
 
     def load(self, path: str) -> None:
         logger.info(f"Loading dataset from '{path}'")
+
+        item_cols = self.item_cols()
+        interact_cols = self.interaction_cols()
+
+        validate_item_cols(item_cols)
+        validate_interact_cols(interact_cols)
+
         create_tmp_dir()
         try:
             unzip_dir(path, tmp_dir_path())
-            # validate_item_dtypes(item_dtypes)
             items, item_index = load_items(self.item_cols(), tmp_dir_path())
-            # validate_item_data(items, item_dtypes)
+
             train_split = load_split('train', tmp_dir_path())
             vad_split = load_split('validation', tmp_dir_path())
             test_split = load_split('test', tmp_dir_path())
