@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Dict
 
+import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -48,6 +49,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         return attributes
 
+    def validate_split_name(split: str):
+        if not split:
+            raise InvalidUsage("The dataset's split must be specified.")
+
+        if split not in ['train', 'validation', 'test']:
+            raise InvalidUsage("The split must be one of: train, validation or test.")
+
     @app.route('/')
     @app.route('/dataset')
     @app.route('/models')
@@ -71,11 +79,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
     def get_users(request):
         split = request.args.get("split")
 
-        if not split:
-            raise InvalidUsage("The dataset's split must be specified.")
-
-        if split not in ['train', 'validation', 'test']:
-            raise InvalidUsage("The split must be one of: train, validation or test.")
+        validate_split_name(split)
 
         users = dataset.get_users_by_split(split)
         return json(users)
@@ -169,7 +173,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
             range_filter = query.get('range')
 
             if not range_filter or len(range_filter) != 2:
-                raise InvalidUsage(f"Range must be specified for '{col}' attribute.")
+                raise InvalidUsage(f"A range must be specified for '{col}' attribute.")
 
             items = items[(items[col] >= range_filter[0]) & (items[col] <= range_filter[1])]
 
@@ -188,7 +192,11 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
     @app.route("/api/items/describe", methods=["POST"])
     def describe_items(request):
-        item_ids = request.json
+        item_ids = request.json.get('items')
+
+        if not item_ids or len(item_ids) == 0:
+            raise InvalidUsage('A list of items must be specified.')
+
         items = dataset.items.loc[item_ids]
 
         attributes = {}
@@ -201,14 +209,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
         for col in category_cols:
-            sorted_categories = items[col].value_counts()
             attributes[col] = {
                 'topValues': get_top_categories(items, col, 5)
             }
 
         number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
         for col in number_cols:
-            hist = dataset.compute_histogram(items, col)
+            hist = dataset.compute_histogram_by_col(items, col)
             attributes[col] = {
                 'values': hist[0].tolist(),
                 'bins': hist[1].tolist()
@@ -216,6 +223,38 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
 
         return json({
             'attributes': attributes
+        })
+
+    @app.route("/api/users/describe", methods=["POST"])
+    def describe_users(request):
+        user_ids = request.json.get('users')
+        split = request.json.get('split')
+
+        if not user_ids or len(user_ids) == 0:
+            raise InvalidUsage('A list of users must be specified.')
+
+        validate_split_name(split)
+
+        def mapper_func(x):
+            return dataset.user_id_to_index(x, split)
+
+        user_indexes = list(map(mapper_func, user_ids))
+
+        if None in user_indexes:
+            raise InvalidUsage(f"Some of the input users not found.")
+
+        items = dataset.get_top_items_by_users(user_indexes, split)
+        interact_values = dataset.get_interact_values_by_users(user_indexes, split)
+        values_hist = np.histogram(interact_values)
+
+        return json({
+            'interactions': {
+                'distribution': {
+                    'values': values_hist[0].tolist(),
+                    'bins': values_hist[1].tolist()
+                },
+                'topItems': serialize_items(items)
+            }
         })
 
     @app.listener("after_server_stop")

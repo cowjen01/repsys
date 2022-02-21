@@ -151,14 +151,14 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
 
 def get_top_tags(items: DataFrame, col: str, n: int = 5) -> List[str]:
     tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
-    sort_indexes = (-counts).argsort()
+    sort_indexes = (-counts).argsort()[:n]
     sorted_tags = tags[sort_indexes]
-    return sorted_tags[:, n].tolist()
+    return sorted_tags.tolist()
 
 
 def get_top_categories(items: DataFrame, col: str, n: int = 5) -> List[str]:
     sorted_categories = items[col].value_counts()
-    return sorted_categories[:, n].index.tolist()
+    return sorted_categories[:n].index.tolist()
 
 
 class Dataset(ABC):
@@ -256,7 +256,21 @@ class Dataset(ABC):
             shape=(1, self.get_total_items()),
         )
 
-    def compute_histogram(self, items: DataFrame, col: str) -> Tuple[ndarray, ndarray]:
+    def get_interact_values_by_users(self, indexes: List[int], split: str):
+        matrix = self.splits.get(split).complete_matrix
+        interactions = matrix[indexes]
+        return interactions.data
+
+    def get_top_items_by_users(self, indexes: List[int], split: str, n: int = 5) -> DataFrame:
+        matrix = self.splits.get(split).complete_matrix
+        interactions = matrix[indexes].sum(axis=0).A1
+        sort_indexes = (-interactions).argsort()[:n]
+        item_ids = list(map(self.item_index_to_id, sort_indexes))
+        items = self.items.loc[item_ids]
+
+        return items
+
+    def compute_histogram_by_col(self, items: DataFrame, col: str) -> Tuple[ndarray, ndarray]:
         params = typing.cast(dtypes.Number, self.item_cols()[col])
         if params.bins_range:
             hist_range = params.bins_range
@@ -278,7 +292,7 @@ class Dataset(ABC):
     def _update_histograms(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)
         for col in cols:
-            self.histograms[col] = self.compute_histogram(self.items, col)
+            self.histograms[col] = self.compute_histogram_by_col(self.items, col)
 
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]

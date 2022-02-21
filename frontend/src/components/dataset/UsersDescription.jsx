@@ -52,9 +52,9 @@ function UsersDescription({ users }) {
           Interactions Distribution
         </Typography>
         <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-          A distribution of the total number of interactions
+          A distribution of the interaction values
         </Typography>
-        <BarPlotHistogram bins={distribution.bins} hist={distribution.hist} />
+        <BarPlotHistogram bins={distribution.bins} values={distribution.values} />
       </Box>
     </Stack>
   );
