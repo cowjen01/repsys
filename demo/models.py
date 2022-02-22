@@ -75,7 +75,7 @@ class KNN(Model):
             items = self.dataset.items
 
             # get ids of the items don't contain the genre
-            exclude_ids = items.index[items["genres"].apply(lambda x: genre not in x)]
+            exclude_ids = items.index[items["genre"].apply(lambda x: genre not in x)]
             exclude_indexes = exclude_ids.map(self.dataset.item_id_to_index)
 
             # keep just the items with the genre

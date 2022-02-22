@@ -1,9 +1,8 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
-import pandas as pd
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -17,7 +16,8 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, embeddings):
+def create_app(models: Dict[str, Model], dataset: Dataset,
+               embeddings: Dict[str, Optional[Dict[str, DataFrame]]]) -> Sanic:
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -274,31 +274,29 @@ def create_app(models: Dict[str, Model], dataset: Dataset, embeddings):
         split = request.args.get("split")
         validate_split_name(split)
 
-        split_embeds = embeddings.get(split).get('items')
-        item_ids = np.vectorize(dataset.item_index_to_id)(split_embeds[1])
-        titles = dataset.items.loc[item_ids][dataset.get_title_col()]
-        embeds_data = split_embeds[0]
+        if embeddings.get(split) is None or embeddings.get(split).get('items') is None:
+            raise NotFound(f"Item embeddings for split '{split}' not found.")
 
-        data = pd.DataFrame({'id': item_ids, 'title': titles, 'x': embeds_data[:, 0], 'y': embeds_data[:, 1]})
+        split_embeddings = embeddings.get(split).get('items')
+        df = split_embeddings.join(dataset.items[dataset.get_title_col()])
+        df = df.rename(columns={dataset.get_title_col(): 'title'})
+        df["id"] = df.index
 
-        return json(data.to_dict("records"))
+        return json(df.to_dict("records"))
 
     @app.route("/api/users/embeddings", methods=["GET"])
     def get_user_embeddings(request):
         split = request.args.get("split")
         validate_split_name(split)
 
-        split_embeds = embeddings.get(split).get('users')
+        if embeddings.get(split) is None or embeddings.get(split).get('users') is None:
+            raise NotFound(f"User embeddings for split '{split}' not found.")
 
-        def mapper_func(x):
-            return dataset.user_index_to_id(x, split)
+        split_embeddings = embeddings.get(split).get('users')
+        df = split_embeddings.copy()
+        df["id"] = df.index
 
-        user_ids = np.vectorize(mapper_func)(split_embeds[1])
-        embeds_data = split_embeds[0]
-
-        data = pd.DataFrame({'id': user_ids, 'x': embeds_data[:, 0], 'y': embeds_data[:, 1]})
-
-        return json(data.to_dict("records"))
+        return json(df.to_dict("records"))
 
     @app.route("/api/users/<uid>", methods=["GET"])
     def get_user_detail(request, uid: str):
@@ -321,7 +319,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset, embeddings):
     return app
 
 
-def run_server(port: int, models: Dict[str, Model], dataset: Dataset, embeddings) -> None:
+def run_server(port: int, models: Dict[str, Model], dataset: Dataset,
+               embeddings: Dict[str, Optional[Dict[str, DataFrame]]]) -> None:
     app = create_app(models, dataset, embeddings)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=port, debug=False, access_log=False)

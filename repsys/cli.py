@@ -5,6 +5,7 @@ from typing import Dict
 
 import click
 import numpy as np
+import pandas as pd
 
 from repsys.constants import DEFAULT_SERVER_PORT
 from repsys.dataset import Dataset
@@ -127,13 +128,15 @@ def evaluate_dataset(dataset: Dataset, output_path: str):
         evaluator = DatasetEvaluator()
         evaluator.update(dataset)
 
-        item_embeddings, item_indexes = evaluator.get_item_embeddings()
-        np.save(os.path.join(tmp_dir_path(), 'item-embeddings'), item_embeddings)
-        np.save(os.path.join(tmp_dir_path(), 'item-indexes'), item_indexes)
+        item_embeddings, item_indexes = evaluator.get_item_embeddings(split='train')
+        item_ids = np.vectorize(dataset.item_index_to_id)(item_indexes)
+        data = pd.DataFrame({'id': item_ids, 'x': item_embeddings[:, 0], 'y': item_embeddings[:, 1]})
+        data.to_csv(os.path.join(tmp_dir_path(), 'item-embeddings-train.csv'), index=False)
 
-        user_embeddings, user_indexes = evaluator.get_user_embeddings()
-        np.save(os.path.join(tmp_dir_path(), 'user-embeddings'), user_embeddings)
-        np.save(os.path.join(tmp_dir_path(), 'user-indexes'), user_indexes)
+        user_embeddings, user_indexes = evaluator.get_user_embeddings(split='train')
+        user_ids = np.vectorize(dataset.user_index_iterator(split='train'))(user_indexes)
+        data = pd.DataFrame({'id': user_ids, 'x': user_embeddings[:, 0], 'y': user_embeddings[:, 1]})
+        data.to_csv(os.path.join(tmp_dir_path(), 'user-embeddings-train.csv'), index=False)
 
         zip_dir(output_path, tmp_dir_path())
     finally:
@@ -160,25 +163,27 @@ def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
 
-    create_tmp_dir()
-    try:
-        unzip_dir(dataset_eval_path, tmp_dir_path())
+    embeddings = {
+        'train': None,
+        'validation': None
+    }
+    if dataset_eval_path is not None:
+        create_tmp_dir()
+        try:
+            unzip_dir(dataset_eval_path, tmp_dir_path())
 
-        item_embeddings = np.load(os.path.join(tmp_dir_path(), 'item-embeddings.npy'))
-        item_indexes = np.load(os.path.join(tmp_dir_path(), 'item-indexes.npy'))
+            item_embeddings = pd.read_csv(os.path.join(tmp_dir_path(), 'item-embeddings-train.csv'),
+                                          dtype={'id': str}).set_index('id')
+            user_embeddings = pd.read_csv(os.path.join(tmp_dir_path(), 'user-embeddings-train.csv'),
+                                          dtype={'id': str}).set_index('id')
 
-        user_embeddings = np.load(os.path.join(tmp_dir_path(), 'user-embeddings.npy'))
-        user_indexes = np.load(os.path.join(tmp_dir_path(), 'user-indexes.npy'))
-
-        embeddings = {
-            'train': {
-                'items': (item_embeddings, item_indexes),
-                'users': (user_embeddings, user_indexes)
+            embeddings['train'] = {
+                'items': item_embeddings,
+                'users': user_embeddings
             }
-        }
 
-    finally:
-        remove_tmp_dir()
+        finally:
+            remove_tmp_dir()
 
     run_server(port, models, dataset, embeddings)
 

@@ -1,4 +1,4 @@
-from typing import Dict, List, Type, Optional, Tuple
+from typing import Dict, List, Type, Optional, Tuple, Any
 
 
 class DataType:
@@ -29,8 +29,10 @@ class Title(DataType):
 
 
 class Number(DataType):
-    def __init__(self, bins_range: Optional[Tuple[int, int]] = None):
+    def __init__(self, data_type: Any = float, nan_value: int = 0, bins_range: Optional[Tuple[int, int]] = None):
         self.bins_range = bins_range
+        self.nan_value = nan_value
+        self.data_type = data_type
 
     def __str__(self):
         return 'number'

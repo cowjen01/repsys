@@ -136,9 +136,15 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
     data_path = os.path.join(input_dir, "items.csv")
     index_path = os.path.join(input_dir, "items.txt")
 
-    items_dtypes = {col: str for col, dt in item_cols.items() if type(dt) != dtypes.Number}
+    csv_dtypes = {}
+    for col, dt in item_cols.items():
+        if type(dt) != dtypes.Number:
+            csv_dtypes[col] = str
+        else:
+            params = typing.cast(dtypes.Number, dt)
+            csv_dtypes[col] = params.data_type
 
-    items = pd.read_csv(data_path, dtype=items_dtypes)
+    items = pd.read_csv(data_path, dtype=csv_dtypes, keep_default_na=False)
     items = items.set_index(find_column_by_type(item_cols, dtypes.ItemID))
 
     tag_cols = filter_columns_by_type(item_cols, dtypes.Tag)
@@ -216,6 +222,12 @@ class Dataset(ABC):
 
     def user_index_to_id(self, index: int, split: str) -> str:
         return self.splits.get(split).user_index.inverse.get(index)
+
+    def user_index_iterator(self, split: str):
+        return lambda x: self.user_index_to_id(x, split)
+
+    def user_id_iterator(self, split: str):
+        return lambda x: self.user_id_to_index(x, split)
 
     def get_train_data(self) -> csr_matrix:
         return self.splits.get('train').train_matrix
@@ -340,14 +352,14 @@ class Dataset(ABC):
         self._update_histograms()
 
     def prepare(self) -> None:
-        logger.debug("Loading dataset ...")
+        logger.info("Loading dataset ...")
 
         items = self.load_items()
         item_cols = self.item_cols()
         interacts = self.load_interactions()
         interact_cols = self.interaction_cols()
 
-        logger.debug("Validating dataset ...")
+        logger.info("Validating dataset ...")
 
         validate_dataset(items, item_cols, interacts, interact_cols)
 
@@ -362,7 +374,7 @@ class Dataset(ABC):
             interacts['value'] = 1
             interacts_value_col = 'value'
 
-        logger.debug("Splitting interactions ...")
+        logger.info("Splitting interactions ...")
 
         interactions = interacts[interact_cols.keys()]
         interactions = interactions.rename(
@@ -403,17 +415,26 @@ class Dataset(ABC):
         # keep only columns defined in the dtypes
         items = items[item_cols.keys()]
 
+        str_cols = [col for col, dt, in item_cols.items() if type(dt) != dtypes.Number]
+        for col in str_cols:
+            items[col] = items[col].fillna('')
+            items[col] = items[col].astype(str)
+
         items_id_col = find_column_by_type(item_cols, dtypes.ItemID)
-        items[items_id_col] = items[items_id_col].astype(str)
         items = items.set_index(items_id_col)
 
         # filter only items included in the training data
         items = items[items.index.isin(item_ids)]
 
+        numeric_cols = filter_columns_by_type(item_cols, dtypes.Number)
+        for col in numeric_cols:
+            params = typing.cast(dtypes.Number, item_cols.get(col))
+            items[col] = items[col].fillna(params.nan_value)
+            items[col] = items[col].astype(params.data_type)
+
         tag_cols = filter_columns_by_type(item_cols, dtypes.Tag)
         for col in tag_cols:
             params = typing.cast(dtypes.Tag, item_cols[col])
-            items[col] = items[col].fillna("")
             items[col] = items[col].str.split(params.sep)
 
         splits = (
@@ -537,6 +558,9 @@ class DatasetSplitter:
 
             train_list.append(group[np.logical_not(indexes)])
             holdout_list.append(group[indexes])
+
+            if i % 1000 == 0:
+                logger.info(f'{i} users sampled')
 
         train_data = pd.concat(train_list)
         holdout_data = pd.concat(holdout_list)
