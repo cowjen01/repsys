@@ -13,6 +13,7 @@ function UsersEmbeddings({ attributes, split }) {
   const [filterResetIndex, setFilterResetIndex] = useState(0);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [isPlotLoading, setIsPlotLoading] = useState(false);
   const embeddings = useGetUsersEmbeddingsQuery();
   const [searchUsers, users] = useSearchUsersMutation();
 
@@ -46,7 +47,7 @@ function UsersEmbeddings({ attributes, split }) {
     setSelectedUsers([]);
   };
 
-  const isLoading = embeddings.isLoading || users.isLoading;
+  const isLoading = embeddings.isLoading || users.isLoading || isPlotLoading;
 
   return (
     <Grid container spacing={2}>
@@ -71,7 +72,9 @@ function UsersEmbeddings({ attributes, split }) {
                   onUnselect={handlePlotUnselect}
                   embeddings={embeddings.data}
                   onSelect={handlePlotSelect}
-                  filterResults={users.data}
+                  selectedIds={users.data}
+                  onComputeStarted={() => setIsPlotLoading(true)}
+                  onComputeFinished={() => setIsPlotLoading(false)}
                 />
               </Paper>
             </Box>

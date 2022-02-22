@@ -13,6 +13,7 @@ function ItemsEmbeddings({ attributes }) {
   const [filterResetIndex, setFilterResetIndex] = useState(0);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]);
+  const [isPlotLoading, setIsPlotLoading] = useState(false);
   const embeddings = useGetItemsEmbeddingsQuery();
   const [searchItems, items] = useSearchItemsMutation();
 
@@ -43,7 +44,7 @@ function ItemsEmbeddings({ attributes }) {
     setSelectedItems([]);
   };
 
-  const isLoading = embeddings.isLoading || items.isLoading;
+  const isLoading = embeddings.isLoading || items.isLoading || isPlotLoading;
 
   return (
     <Grid container spacing={2}>
@@ -67,7 +68,9 @@ function ItemsEmbeddings({ attributes }) {
                   onUnselect={handlePlotUnselect}
                   embeddings={embeddings.data}
                   onSelect={handlePlotSelect}
-                  filterResults={items.data}
+                  selectedIds={items.data}
+                  onComputeStarted={() => setIsPlotLoading(true)}
+                  onComputeFinished={() => setIsPlotLoading(false)}
                 />
               </Paper>
             </Box>

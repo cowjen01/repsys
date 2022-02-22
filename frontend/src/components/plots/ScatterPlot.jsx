@@ -26,6 +26,14 @@ function ScatterPlot({
 
   const gridcolor = theme.palette.mode === 'dark' ? theme.palette.divider : null;
 
+  const defaultColors = useMemo(() => {
+    const colors = [];
+    for (let i = 0; i < x.length; i += 1) {
+      colors.push(plotColors.unselectedMarker);
+    }
+    return colors;
+  }, [x.length]);
+
   const finalColor = useMemo(() => {
     if (!highlighted.length && !color.length) {
       return plotColors.selectedMarker;
@@ -35,11 +43,7 @@ function ScatterPlot({
       return color;
     }
 
-    const colors = [];
-    for (let i = 0; i < x.length; i += 1) {
-      colors.push(plotColors.unselectedMarker);
-    }
-
+    const colors = [...defaultColors];
     highlighted.forEach((p) => {
       colors[p] = plotColors.selectedMarker;
     });
@@ -98,7 +102,7 @@ function ScatterPlot({
           zeroline: false,
           gridcolor,
           scaleanchor: 'x',
-          scaleratio: 1
+          scaleratio: 1,
         },
         margin: { t: 20, b: 20, l: 30, r: 20 },
         ...layoutProps,

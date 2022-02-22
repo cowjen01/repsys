@@ -59,8 +59,8 @@ class DatasetEvaluator:
         matrix = matrix[index_perm]
 
         pymde.seed(self.seed)
-        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, constraint=pymde.Standardized(), verbose=self.verbose, **kwargs)
-        embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50)
+        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
+        embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50, eps=1e-6)
         embeddings = embeddings.cpu().numpy()
 
         return embeddings, index_perm

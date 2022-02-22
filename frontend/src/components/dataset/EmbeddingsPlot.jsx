@@ -6,9 +6,11 @@ import ScatterPlot from '../plots/ScatterPlot';
 
 function EmbeddingsPlot({
   onSelect,
-  filterResults,
+  selectedIds,
   embeddings,
   onUnselect,
+  onComputeStarted,
+  onComputeFinished,
   color,
   resetIndex,
   showScale,
@@ -23,7 +25,7 @@ function EmbeddingsPlot({
   const handleSelect = (eventData) => {
     if (eventData && eventData.points.length) {
       const { points } = eventData;
-      onSelect(points.map((p) => p.customdata.id));
+      onSelect(points.map((p) => p.customdata));
       setHighlightedPoints(points[0].data.selectedpoints);
     }
   };
@@ -35,24 +37,34 @@ function EmbeddingsPlot({
   };
 
   useEffect(() => {
-    if (filterResults.length) {
+    if (selectedIds.length) {
+      onComputeStarted();
+      const ids = new Set(selectedIds);
       const indices = embeddings.reduce((acc, item, index) => {
-        if (filterResults.includes(item.id)) {
+        if (ids.has(item.id)) {
           acc.push(index);
         }
         return acc;
       }, []);
       setHighlightedPoints(indices);
+      onComputeFinished();
     }
-  }, [filterResults]);
+  }, [selectedIds]);
 
   const scatterPoints = useMemo(
-    () => ({
-      x: embeddings.map(({ x }) => x),
-      y: embeddings.map(({ y }) => y),
-      meta: embeddings.map(({ id }) => ({ id })),
-      label: embeddings.map(({ title }) => title),
-    }),
+    () =>
+      embeddings.reduce(
+        (acc, { x, y, id, title }) => {
+          acc.x.push(x);
+          acc.y.push(y);
+          acc.meta.push(id);
+          if (title) {
+            acc.label.push(title);
+          }
+          return acc;
+        },
+        { x: [], y: [], meta: [], label: [] }
+      ),
     [embeddings]
   );
 
@@ -84,12 +96,14 @@ function EmbeddingsPlot({
 
 EmbeddingsPlot.defaultProps = {
   color: [],
-  filterResults: [],
+  selectedIds: [],
   embeddings: [],
   resetIndex: 0,
   showScale: false,
   onSelect: () => {},
   onUnselect: () => {},
+  onComputeStarted: () => {},
+  onComputeFinished: () => {},
 };
 
 EmbeddingsPlot.propTypes = {
@@ -98,8 +112,10 @@ EmbeddingsPlot.propTypes = {
   showScale: pt.bool,
   resetIndex: pt.number,
   // eslint-disable-next-line react/forbid-prop-types
-  filterResults: pt.arrayOf(pt.number),
+  selectedIds: pt.arrayOf(pt.string),
   color: pt.arrayOf(pt.number),
+  onComputeStarted: pt.func,
+  onComputeFinished: pt.func,
   embeddings: pt.arrayOf(
     pt.shape({
       title: pt.string,
