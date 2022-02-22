@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy as np
 from pandas import DataFrame
@@ -11,13 +11,13 @@ from sanic.response import json, file
 import repsys.dtypes as dtypes
 from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
+from repsys.evaluators import DatasetEvaluator
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset,
-               embeddings: Dict[str, Optional[Dict[str, DataFrame]]]) -> Sanic:
+def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator) -> Sanic:
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -257,7 +257,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset,
 
         items = dataset.get_top_items_by_users(user_indexes, split)
         interact_values = dataset.get_interact_values_by_users(user_indexes, split)
-        values_hist = np.histogram(interact_values)
+        values_hist = np.histogram(interact_values, bins=5)
 
         return json({
             'interactions': {
@@ -274,11 +274,10 @@ def create_app(models: Dict[str, Model], dataset: Dataset,
         split = request.args.get("split")
         validate_split_name(split)
 
-        if embeddings.get(split) is None or embeddings.get(split).get('items') is None:
+        if dataset_evaluator.item_embeddings.get(split) is None:
             raise NotFound(f"Item embeddings for split '{split}' not found.")
 
-        split_embeddings = embeddings.get(split).get('items')
-        df = split_embeddings.join(dataset.items[dataset.get_title_col()])
+        df = dataset_evaluator.item_embeddings.get(split).join(dataset.items[dataset.get_title_col()])
         df = df.rename(columns={dataset.get_title_col(): 'title'})
         df["id"] = df.index
 
@@ -289,11 +288,10 @@ def create_app(models: Dict[str, Model], dataset: Dataset,
         split = request.args.get("split")
         validate_split_name(split)
 
-        if embeddings.get(split) is None or embeddings.get(split).get('users') is None:
+        if dataset_evaluator.user_embeddings.get(split) is None:
             raise NotFound(f"User embeddings for split '{split}' not found.")
 
-        split_embeddings = embeddings.get(split).get('users')
-        df = split_embeddings.copy()
+        df = dataset_evaluator.user_embeddings.get(split).copy()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -319,8 +317,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset,
     return app
 
 
-def run_server(port: int, models: Dict[str, Model], dataset: Dataset,
-               embeddings: Dict[str, Optional[Dict[str, DataFrame]]]) -> None:
-    app = create_app(models, dataset, embeddings)
+def run_server(port: int, models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator) -> None:
+    app = create_app(models, dataset, dataset_evaluator)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=port, debug=False, access_log=False)

@@ -1,22 +1,39 @@
 import functools
-from typing import Optional
+import os
+from typing import Optional, Tuple
 
 import numpy as np
+import pandas as pd
 import pymde
+from numpy import ndarray
+from pandas import DataFrame
 from scipy.sparse import csr_matrix
 
 from repsys.dataset import Dataset
-from repsys.helpers import set_seed
+from repsys.helpers import set_seed, remove_tmp_dir, create_tmp_dir, zip_dir, tmp_dir_path, unzip_dir
+
+
+def embeddings_to_df(embeds: ndarray, ids: ndarray) -> DataFrame:
+    df = pd.DataFrame({'id': ids, 'x': embeds[:, 0], 'y': embeds[:, 1]})
+    return df
+
+
+def write_df(df: DataFrame, file_name: str) -> None:
+    df.to_csv(os.path.join(tmp_dir_path(), file_name), index=False)
+
+
+def read_df(file_path: str) -> DataFrame:
+    return pd.read_csv(file_path, dtype={'id': str}).set_index('id')
 
 
 def enforce_updated(func):
     @functools.wraps(func)
-    def wrapper(self, *args, **kwargs):
-        if not hasattr(self, "_updated") or not self._updated:
-            raise Exception("The evaluator must be updated (call update() method).")
+    def _wrapper(self, *args, **kwargs):
+        if not getattr(self, "_updated"):
+            raise Exception("The evaluator must be updated (call update_dataset()).")
         return func(self, *args, **kwargs)
 
-    return wrapper
+    return _wrapper
 
 
 class DatasetEvaluator:
@@ -25,33 +42,72 @@ class DatasetEvaluator:
         self.verbose = verbose
         self.seed = seed
         self._updated = False
+        self.item_embeddings = {}
+        self.user_embeddings = {}
 
-    def update(self, dataset: Dataset):
+    def update_dataset(self, dataset: Dataset) -> None:
         self.dataset = dataset
         self._updated = True
 
-    def _compute_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, **kwargs):
+    def _get_input_data(self, split: str) -> csr_matrix:
+        return self.dataset.splits.get(split).complete_matrix
+
+    def _get_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, **kwargs) -> Tuple[ndarray, ndarray]:
         set_seed(self.seed)
         index_perm = np.random.permutation(matrix.shape[0])
         index_perm = index_perm[: max_samples]
         matrix = matrix[index_perm]
 
         pymde.seed(self.seed)
-        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
+        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, constraint=pymde.Standardized(), verbose=self.verbose, **kwargs)
         embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50)
         embeddings = embeddings.cpu().numpy()
 
         return embeddings, index_perm
 
     @enforce_updated
-    def get_item_embeddings(self, split: str = 'train', **kwargs):
-        matrix = self.dataset.splits.get(split).complete_matrix.T
-        return self._compute_embeddings(matrix, **kwargs)
+    def compute_item_embeddings(self, split: str = 'train', **kwargs) -> None:
+        matrix = self._get_input_data(split).T
+        embeds, indexes = self._get_embeddings(matrix, **kwargs)
+        ids = np.vectorize(self.dataset.item_index_to_id)(indexes)
+        self.item_embeddings[split] = embeddings_to_df(embeds, ids)
 
     @enforce_updated
-    def get_user_embeddings(self, split: str = 'train', **kwargs):
-        matrix = self.dataset.splits.get(split).complete_matrix
-        return self._compute_embeddings(matrix, **kwargs)
+    def compute_user_embeddings(self, split: str = 'train', **kwargs) -> None:
+        matrix = self._get_input_data(split)
+        embeds, indexes = self._get_embeddings(matrix, **kwargs)
+        ids = np.vectorize(self.dataset.user_index_iterator(split))(indexes)
+        self.user_embeddings[split] = embeddings_to_df(embeds, ids)
+
+    @enforce_updated
+    def compute_embeddings(self, split: str = 'train', **kwargs):
+        self.compute_user_embeddings(split, **kwargs)
+        self.compute_item_embeddings(split, **kwargs)
+
+    def save(self, path: str) -> None:
+        create_tmp_dir()
+        try:
+            for split, df in self.item_embeddings.items():
+                write_df(df, f'items-{split}.csv')
+            for split, df in self.user_embeddings.items():
+                write_df(df, f'users-{split}.csv')
+            zip_dir(path, tmp_dir_path())
+        finally:
+            remove_tmp_dir()
+
+    def load(self, path: str) -> None:
+        create_tmp_dir()
+        try:
+            unzip_dir(path, tmp_dir_path())
+            for split in ['train', 'validation', 'test']:
+                items_path = os.path.join(tmp_dir_path(), f'items-{split}.csv')
+                if os.path.isfile(items_path):
+                    self.item_embeddings[split] = read_df(items_path)
+                users_path = os.path.join(tmp_dir_path(), f'users-{split}.csv')
+                if os.path.isfile(users_path):
+                    self.user_embeddings[split] = read_df(users_path)
+        finally:
+            remove_tmp_dir()
 
 # def enforcedataset(func):
 #     @functools.wraps(func)

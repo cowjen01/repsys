@@ -4,7 +4,7 @@ import { Box, Grid, Paper } from '@mui/material';
 
 import ErrorAlert from '../ErrorAlert';
 import EmbeddingsPlot from './EmbeddingsPlot';
-import { useGetUsersEmbeddingsQuery, useSearchItemsMutation } from '../../api';
+import { useGetUsersEmbeddingsQuery, useSearchUsersMutation } from '../../api';
 import { PlotLoader } from '../loaders';
 import AttributesSelector from './AttributesSelector';
 import UsersDescription from './UsersDescription';
@@ -14,7 +14,7 @@ function UsersEmbeddings({ attributes, split }) {
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const embeddings = useGetUsersEmbeddingsQuery();
-  const [searchUsers, users] = useSearchItemsMutation();
+  const [searchUsers, users] = useSearchUsersMutation();
 
   if (embeddings.isError) {
     return <ErrorAlert error={embeddings.error} />;

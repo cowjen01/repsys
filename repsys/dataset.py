@@ -312,7 +312,7 @@ class Dataset(ABC):
         else:
             hist_range = (items[col].quantile(.1), items[col].quantile(.9))
 
-        return np.histogram(items[col], range=hist_range)
+        return np.histogram(items[col], range=hist_range, bins=5)
 
     def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
@@ -351,7 +351,7 @@ class Dataset(ABC):
         self._update_categories()
         self._update_histograms()
 
-    def prepare(self) -> None:
+    def split(self) -> None:
         logger.info("Loading dataset ...")
 
         items = self.load_items()
