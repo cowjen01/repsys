@@ -3,6 +3,7 @@ import os
 from typing import Dict
 
 import numpy as np
+import pandas as pd
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -16,7 +17,7 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset):
+def create_app(models: Dict[str, Model], dataset: Dataset, embeddings):
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -111,7 +112,6 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
     @app.route("/api/users", methods=["GET"])
     def get_users(request):
         split = request.args.get("split")
-
         validate_split_name(split)
 
         users = dataset.get_users_by_split(split)
@@ -269,6 +269,37 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
             }
         })
 
+    @app.route("/api/items/embeddings", methods=["GET"])
+    def get_user_embeddings(request):
+        split = request.args.get("split")
+        validate_split_name(split)
+
+        split_embeds = embeddings.get(split).get('items')
+        item_ids = np.vectorize(dataset.item_index_to_id)(split_embeds[1])
+        titles = dataset.items.loc[item_ids][dataset.get_title_col()]
+        embeds_data = split_embeds[0]
+
+        data = pd.DataFrame({'id': item_ids, 'title': titles, 'x': embeds_data[:, 0], 'y': embeds_data[:, 1]})
+
+        return json(data.to_dict("records"))
+
+    @app.route("/api/users/embeddings", methods=["GET"])
+    def get_user_embeddings(request):
+        split = request.args.get("split")
+        validate_split_name(split)
+
+        split_embeds = embeddings.get(split).get('users')
+
+        def mapper_func(x):
+            return dataset.user_index_to_id(x, split)
+
+        user_ids = np.vectorize(mapper_func)(split_embeds[1])
+        embeds_data = split_embeds[0]
+
+        data = pd.DataFrame({'id': user_ids, 'x': embeds_data[:, 0], 'y': embeds_data[:, 1]})
+
+        return json(data.to_dict("records"))
+
     @app.route("/api/users/<uid>", methods=["GET"])
     def get_user_detail(request, uid: str):
         split = dataset.get_split_by_user(uid)
@@ -290,7 +321,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset):
     return app
 
 
-def run_server(port: int, models: Dict[str, Model], dataset: Dataset) -> None:
-    app = create_app(models, dataset)
+def run_server(port: int, models: Dict[str, Model], dataset: Dataset, embeddings) -> None:
+    app = create_app(models, dataset, embeddings)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=port, debug=False, access_log=False)

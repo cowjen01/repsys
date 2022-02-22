@@ -30,32 +30,28 @@ class DatasetEvaluator:
         self.dataset = dataset
         self._updated = True
 
-    def _compute_embeddings(self, matrix: csr_matrix, max_samples: int, **kwargs):
+    def _compute_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, **kwargs):
         set_seed(self.seed)
         index_perm = np.random.permutation(matrix.shape[0])
         index_perm = index_perm[: max_samples]
         matrix = matrix[index_perm]
 
         pymde.seed(self.seed)
-        mde = pymde.preserve_neighbors(matrix, init='random', verbose=self.verbose, **kwargs)
+        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
         embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50)
         embeddings = embeddings.cpu().numpy()
 
-        return embeddings
+        return embeddings, index_perm
 
     @enforce_updated
-    def get_item_embeddings(self, split: str = 'train', max_samples: int = 5000, **kwargs):
+    def get_item_embeddings(self, split: str = 'train', **kwargs):
         matrix = self.dataset.splits.get(split).complete_matrix.T
-        embeddings = self._compute_embeddings(matrix, max_samples, **kwargs)
-
-        return embeddings
+        return self._compute_embeddings(matrix, **kwargs)
 
     @enforce_updated
-    def get_user_embeddings(self, split: str = 'train', max_samples: int = 5000, **kwargs):
+    def get_user_embeddings(self, split: str = 'train', **kwargs):
         matrix = self.dataset.splits.get(split).complete_matrix
-        embeddings = self._compute_embeddings(matrix, max_samples, **kwargs)
-
-        return embeddings
+        return self._compute_embeddings(matrix, **kwargs)
 
 # def enforcedataset(func):
 #     @functools.wraps(func)

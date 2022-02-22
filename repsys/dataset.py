@@ -202,7 +202,7 @@ class Dataset(ABC):
 
         return None
 
-    def _get_title_col(self) -> str:
+    def get_title_col(self) -> str:
         return find_column_by_type(self.item_cols(), dtypes.Title)
 
     def item_id_to_index(self, iid: str) -> int:
@@ -235,7 +235,7 @@ class Dataset(ABC):
         return list(self.splits.get(split).user_index.keys())
 
     def get_items_by_title(self, query: str) -> DataFrame:
-        col = self._get_title_col()
+        col = self.get_title_col()
         item_filter = self.items[col].str.contains(query, case=False)
 
         return self.items[item_filter]

@@ -11,8 +11,9 @@ from repsys.dataset import Dataset
 from repsys.evaluators import DatasetEvaluator
 from repsys.helpers import (
     latest_split_checkpoint,
+    latest_dataset_eval_checkpoint,
     new_split_checkpoint,
-    new_dataset_eval_checkpoint, create_tmp_dir, remove_tmp_dir, tmp_dir_path, zip_dir,
+    new_dataset_eval_checkpoint, create_tmp_dir, remove_tmp_dir, tmp_dir_path, zip_dir, unzip_dir,
 )
 from repsys.loaders import load_dataset_pkg, load_models_pkg
 from repsys.model import Model
@@ -33,9 +34,9 @@ def split_input_callback(ctx, param, value):
     return value
 
 
-def eval_input_callback(ctx, param, value):
+def dataset_eval_input_callback(ctx, param, value):
     if not value:
-        return latest_eval_checkpoint()
+        return latest_dataset_eval_checkpoint()
     return value
 
 
@@ -126,11 +127,13 @@ def evaluate_dataset(dataset: Dataset, output_path: str):
         evaluator = DatasetEvaluator()
         evaluator.update(dataset)
 
-        item_embeddings = evaluator.get_item_embeddings()
+        item_embeddings, item_indexes = evaluator.get_item_embeddings()
         np.save(os.path.join(tmp_dir_path(), 'item-embeddings'), item_embeddings)
+        np.save(os.path.join(tmp_dir_path(), 'item-indexes'), item_indexes)
 
-        user_embeddings = evaluator.get_user_embeddings()
+        user_embeddings, user_indexes = evaluator.get_user_embeddings()
         np.save(os.path.join(tmp_dir_path(), 'user-embeddings'), user_embeddings)
+        np.save(os.path.join(tmp_dir_path(), 'user-indexes'), user_indexes)
 
         zip_dir(output_path, tmp_dir_path())
     finally:
@@ -150,13 +153,34 @@ def repsys_group(ctx, debug):
 @models_pkg_option
 @dataset_pkg_option
 @split_path_option
-@click.option("-e", "--eval-path", callback=eval_input_callback, type=click.Path(exists=True))
+@click.option("--dataset-eval-path", callback=dataset_eval_input_callback, type=click.Path(exists=True))
 @click.option("-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True)
-def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, eval_path: str, port: int):
+def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str, port: int):
     """Start server."""
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
-    run_server(port, models, dataset)
+
+    create_tmp_dir()
+    try:
+        unzip_dir(dataset_eval_path, tmp_dir_path())
+
+        item_embeddings = np.load(os.path.join(tmp_dir_path(), 'item-embeddings.npy'))
+        item_indexes = np.load(os.path.join(tmp_dir_path(), 'item-indexes.npy'))
+
+        user_embeddings = np.load(os.path.join(tmp_dir_path(), 'user-embeddings.npy'))
+        user_indexes = np.load(os.path.join(tmp_dir_path(), 'user-indexes.npy'))
+
+        embeddings = {
+            'train': {
+                'items': (item_embeddings, item_indexes),
+                'users': (user_embeddings, user_indexes)
+            }
+        }
+
+    finally:
+        remove_tmp_dir()
+
+    run_server(port, models, dataset, embeddings)
 
 
 @click.group(name='models')

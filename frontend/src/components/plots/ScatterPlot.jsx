@@ -4,7 +4,7 @@ import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
 
 const plotColors = {
-  selectedMarker: '#cd4c3b',
+  selectedMarker: '#636EFA',
   unselectedMarker: '#dcdcdc',
 };
 
@@ -61,7 +61,7 @@ function ScatterPlot({
           y,
           hovertext: label,
           hoverinfo: 'text',
-          type: 'scatter',
+          type: 'scattergl',
           mode: 'markers',
           customdata: meta,
           unselected: {
@@ -77,7 +77,7 @@ function ScatterPlot({
             },
           },
           marker: {
-            size: 4,
+            size: 2,
             color: finalColor,
             showscale: showScale,
           },
@@ -97,6 +97,8 @@ function ScatterPlot({
         yaxis: {
           zeroline: false,
           gridcolor,
+          scaleanchor: 'x',
+          scaleratio: 1
         },
         margin: { t: 20, b: 20, l: 30, r: 20 },
         ...layoutProps,
