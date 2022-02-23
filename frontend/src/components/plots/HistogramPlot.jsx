@@ -41,7 +41,7 @@ function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) 
         plot_bgcolor: 'rgba(0,0,0,0)',
         font: { color: theme.palette.text.primary },
         uirevision: true,
-        margin: { t: 20, b: 20, l: 20, r: 20 },
+        margin: { t: 20, b: 20, l: 30, r: 20 },
         ...layoutProps,
       }}
       {...props}

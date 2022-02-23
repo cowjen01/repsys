@@ -1,3 +1,4 @@
+import functools
 import glob
 import os
 import random
@@ -91,6 +92,10 @@ def latest_dataset_eval_checkpoint() -> Optional[Text]:
     return latest_checkpoint("dataset-eval-*.zip")
 
 
+def latest_models_eval_checkpoint() -> Optional[Text]:
+    return latest_checkpoint("models-eval-*.zip")
+
+
 def new_split_checkpoint():
     create_checkpoints_dir()
     return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-split-{ts}.zip"))
@@ -101,6 +106,33 @@ def new_dataset_eval_checkpoint():
     return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-eval-{ts}.zip"))
 
 
+def new_models_eval_checkpoint():
+    create_checkpoints_dir()
+    return os.path.join(checkpoints_dir_path(), fill_timestamp("models-eval-{ts}.zip"))
+
+
 def set_seed(seed: int) -> None:
     np.random.seed(seed)
     random.seed(seed)
+
+
+def enforce_updated(func):
+    @functools.wraps(func)
+    def _wrapper(self, *args, **kwargs):
+        if not getattr(self, "_updated"):
+            raise Exception("The instance must be updated (call appropriate update method).")
+        return func(self, *args, **kwargs)
+
+    return _wrapper
+
+
+def tmpdir_provider(func):
+    @functools.wraps(func)
+    def _wrapper(*args, **kwargs):
+        create_tmp_dir()
+        try:
+            func(*args, **kwargs)
+        finally:
+            remove_tmp_dir()
+
+    return _wrapper

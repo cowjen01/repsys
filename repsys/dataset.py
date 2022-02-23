@@ -21,12 +21,11 @@ from repsys.dtypes import (
     filter_columns_by_type
 )
 from repsys.helpers import (
-    create_tmp_dir,
     tmp_dir_path,
-    remove_tmp_dir,
     unzip_dir,
     zip_dir,
-    set_seed
+    set_seed,
+    tmpdir_provider
 )
 from repsys.validators import validate_dataset, validate_item_cols, validate_interact_cols
 
@@ -158,8 +157,8 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
 
 def get_top_tags(items: DataFrame, col: str, n: int = 5) -> List[str]:
     tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
-    sort_indexes = (-counts).argsort()[:n]
-    sorted_tags = tags[sort_indexes]
+    sort_indices = (-counts).argsort()[:n]
+    sorted_tags = tags[sort_indices]
     return sorted_tags.tolist()
 
 
@@ -232,7 +231,7 @@ class Dataset(ABC):
     def get_train_data(self) -> csr_matrix:
         return self.splits.get('train').train_matrix
 
-    def get_vad_data(self) -> Tuple[csr_matrix, csr_matrix]:
+    def get_validation_data(self) -> Tuple[csr_matrix, csr_matrix]:
         split = self.splits.get('validation')
         return split.train_matrix, split.holdout_matrix
 
@@ -260,48 +259,48 @@ class Dataset(ABC):
 
     def get_interacted_items_by_user(self, uid: str, split: str) -> DataFrame:
         interactions = self.get_interactions_by_user(uid, split)
-        indexes = (interactions > 0).indices
-        ids = list(map(self.item_index_to_id, indexes))
+        indices = (interactions > 0).indices
+        ids = list(map(self.item_index_to_id, indices))
 
         return self.items.loc[ids]
 
-    def item_indexes_to_matrix(self, indexes: List[int]) -> csr_matrix:
+    def item_indices_to_matrix(self, indices: List[int]) -> csr_matrix:
         return csr_matrix(
-            (np.ones_like(indexes), (np.zeros_like(indexes), indexes)),
+            (np.ones_like(indices), (np.zeros_like(indices), indices)),
             dtype="float64",
             shape=(1, self.get_total_items()),
         )
 
-    def get_interact_values_by_users(self, indexes: List[int], split: str):
+    def get_interact_values_by_users(self, indices: List[int], split: str):
         matrix = self.splits.get(split).complete_matrix
-        interactions = matrix[indexes]
+        interactions = matrix[indices]
 
         return interactions.data
 
-    def get_top_items_by_users(self, indexes: List[int], split: str, n: int = 5) -> DataFrame:
+    def get_top_items_by_users(self, indices: List[int], split: str, n: int = 5) -> DataFrame:
         matrix = self.splits.get(split).complete_matrix
-        matrix_copy = matrix[indexes].copy()
+        matrix_copy = matrix[indices].copy()
         matrix_copy[matrix_copy > 0] = 1
         interactions = matrix_copy.sum(axis=0).A1
-        sort_indexes = (-interactions).argsort()[:n]
-        item_ids = list(map(self.item_index_to_id, sort_indexes))
+        sort_indices = (-interactions).argsort()[:n]
+        item_ids = list(map(self.item_index_to_id, sort_indices))
 
         return self.items.loc[item_ids]
 
-    def get_users_by_interacted_items(self, indexes: List[int], split: str, min_interacts: int = 3) -> List[str]:
+    def get_users_by_interacted_items(self, indices: List[int], split: str, min_interacts: int = 3) -> List[str]:
         matrix = self.splits.get(split).complete_matrix
-        matrix_copy = matrix[:, indexes].copy()
+        matrix_copy = matrix[:, indices].copy()
         matrix_copy[matrix_copy > 0] = 1
         user_interacts = matrix_copy.sum(axis=1).A1
-        user_indexes = np.where(user_interacts > min_interacts)[0]
+        user_indices = np.where(user_interacts > min_interacts)[0]
 
-        if len(user_indexes) == 0:
+        if len(user_indices) == 0:
             return []
 
         def mapper_func(x):
             return self.user_index_to_id(x, split)
 
-        user_ids = np.vectorize(mapper_func)(user_indexes)
+        user_ids = np.vectorize(mapper_func)(user_indices)
 
         return user_ids.tolist()
 
@@ -445,6 +444,7 @@ class Dataset(ABC):
 
         self._update_data(splits, items, item_index)
 
+    @tmpdir_provider
     def load(self, path: str) -> None:
         logger.info(f"Loading dataset from '{path}'")
 
@@ -454,31 +454,24 @@ class Dataset(ABC):
         validate_item_cols(item_cols)
         validate_interact_cols(interact_cols)
 
-        create_tmp_dir()
-        try:
-            unzip_dir(path, tmp_dir_path())
-            items, item_index = load_items(self.item_cols(), tmp_dir_path())
+        unzip_dir(path, tmp_dir_path())
+        items, item_index = load_items(self.item_cols(), tmp_dir_path())
 
-            train_split = load_split('train', tmp_dir_path())
-            vad_split = load_split('validation', tmp_dir_path())
-            test_split = load_split('test', tmp_dir_path())
+        train_split = load_split('train', tmp_dir_path())
+        vad_split = load_split('validation', tmp_dir_path())
+        test_split = load_split('test', tmp_dir_path())
 
-            splits = train_split, vad_split, test_split
+        splits = train_split, vad_split, test_split
 
-            self._update_data(splits, items, item_index)
-        finally:
-            remove_tmp_dir()
+        self._update_data(splits, items, item_index)
 
+    @tmpdir_provider
     def save(self, path: str) -> None:
-        create_tmp_dir()
-        try:
-            for key, split in self.splits.items():
-                save_split(key, split, tmp_dir_path())
+        for key, split in self.splits.items():
+            save_split(key, split, tmp_dir_path())
 
-            save_items(self.items, self.item_cols(), self.item_index, tmp_dir_path())
-            zip_dir(path, tmp_dir_path())
-        finally:
-            remove_tmp_dir()
+        save_items(self.items, self.item_cols(), self.item_index, tmp_dir_path())
+        zip_dir(path, tmp_dir_path())
 
     def __str__(self):
         return f"Dataset '{self.name()}'"
@@ -549,17 +542,17 @@ class DatasetSplitter:
 
             # randomly choose 20% of all items user interacted with
             # these interactions goes to test list, other goes to training list
-            indexes = np.zeros(n_items, dtype="bool")
+            indices = np.zeros(n_items, dtype="bool")
             holdout_size = int(self.test_holdout_prop * n_items)
 
             set_seed(self.seed)
             rand_items = np.random.choice(n_items, size=holdout_size, replace=False).astype("int64")
-            indexes[rand_items] = True
+            indices[rand_items] = True
 
-            train_list.append(group[np.logical_not(indexes)])
-            holdout_list.append(group[indexes])
+            train_list.append(group[np.logical_not(indices)])
+            holdout_list.append(group[indices])
 
-            if i % 1000 == 0:
+            if i % 1000 == 0 and i > 0:
                 logger.info(f'{i} users sampled')
 
         train_data = pd.concat(train_list)

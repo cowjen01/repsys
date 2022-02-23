@@ -81,7 +81,7 @@ function ScatterPlot({
             },
           },
           marker: {
-            size: 2,
+            size: 6 - Math.log10(x.length),
             color: finalColor,
             showscale: showScale,
           },

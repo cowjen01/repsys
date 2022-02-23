@@ -87,7 +87,7 @@ function UsersEmbeddings({ metricsData }) {
           <Grid item xs={4} sx={{ height: '100%' }}>
             {selectedUsers.length > 0 && (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-                <UsersDescription users={selectedUsers} />
+                <UsersDescription split="validation" users={selectedUsers} />
               </Paper>
             )}
           </Grid>

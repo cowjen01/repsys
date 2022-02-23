@@ -53,7 +53,7 @@ function UsersDistribution({ metricsData }) {
       const points = eventData.points[0].data.selectedpoints;
       setSelectedData({
         indices: points,
-        users: points.map((p) => embeddings.data[p].id),
+        users: points.map((p) => modelMetrics.data[p].id),
       });
     }
   };
@@ -137,7 +137,7 @@ function UsersDistribution({ metricsData }) {
                   index={1}
                   sx={{ p: 2, overflow: 'auto', height: 'calc(100% - 48px)' }}
                 >
-                  <UsersDescription users={selectedData.users} />
+                  <UsersDescription split="validation" users={selectedData.users} />
                 </TabPanel>
               </Paper>
             )}

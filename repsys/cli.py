@@ -4,14 +4,15 @@ from typing import Dict
 
 import click
 
-from repsys.constants import DEFAULT_SERVER_PORT
-from repsys.core import train_models, evaluate_dataset, start_server, split_dataset
+from repsys.core import train_models, evaluate_dataset, start_server, split_dataset, evaluate_models
 from repsys.dataset import Dataset
 from repsys.helpers import (
     latest_split_checkpoint,
     latest_dataset_eval_checkpoint,
     new_split_checkpoint,
     new_dataset_eval_checkpoint,
+    new_models_eval_checkpoint,
+    latest_models_eval_checkpoint
 )
 from repsys.loaders import load_dataset_pkg, load_models_pkg
 from repsys.model import Model
@@ -37,6 +38,12 @@ def dataset_eval_input_callback(ctx, param, value):
     return value
 
 
+def models_eval_input_callback(ctx, param, value):
+    if not value:
+        return latest_models_eval_checkpoint()
+    return value
+
+
 def split_output_callback(ctx, param, value):
     if not value:
         return new_split_checkpoint()
@@ -46,6 +53,12 @@ def split_output_callback(ctx, param, value):
 def dataset_eval_output_callback(ctx, param, value):
     if not value:
         return new_dataset_eval_checkpoint()
+    return value
+
+
+def models_eval_output_callback(ctx, param, value):
+    if not value:
+        return new_models_eval_checkpoint()
     return value
 
 
@@ -98,10 +111,11 @@ def repsys_group(ctx, debug):
 @dataset_pkg_option
 @split_path_option
 @click.option("--dataset-eval-path", callback=dataset_eval_input_callback, type=click.Path(exists=True))
-@click.option("-p", "--port", default=DEFAULT_SERVER_PORT, type=int, show_default=True)
-def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str, port: int):
+@click.option("--models-eval-path", callback=models_eval_input_callback, type=click.Path(exists=True))
+def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str,
+                     models_eval_path: str):
     """Start server."""
-    start_server(models, dataset, split_path, dataset_eval_path, port)
+    start_server(models, dataset, split_path, dataset_eval_path, models_eval_path)
 
 
 @click.group(name='models')
@@ -122,17 +136,15 @@ repsys_group.add_command(models_group)
 
 
 # MODELS GROUP
-# @models_group.command(name='eval')
-# @models_pkg_option
-# @dataset_pkg_option
-# @split_path_option
-# @click.option("-t", "--data-type", default="test", type=click.Choice(["test", "validation"]), show_default=True)
-# @click.option("-o", "--output-path", callback=dataset_eval_output_callback)
-# def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, data_type: str, output_path: str):
-#     """Evaluate models using test/validation split."""
-#     dataset.load(split_path)
-#     fit_models(models, dataset, training=False)
-#     # evaluate_models(models, dataset, data_type, output_path)
+@models_group.command(name='eval')
+@models_pkg_option
+@dataset_pkg_option
+@split_path_option
+@click.option("-t", "--split-type", default="validation", type=click.Choice(["test", "validation"]), show_default=True)
+@click.option("-o", "--output-path", callback=models_eval_output_callback)
+def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str):
+    """Evaluate models using test/validation split."""
+    evaluate_models(models, dataset, split_path, split_type, output_path)
 
 
 @models_group.command(name='train')

@@ -8,13 +8,13 @@ import { ItemListView } from '../items';
 import ErrorAlert from '../ErrorAlert';
 import { useDescribeUsersMutation } from '../../api';
 
-function UsersDescription({ users }) {
+function UsersDescription({ users, split }) {
   const [describeUsers, { data, error, isError, isLoading, isUninitialized }] =
     useDescribeUsersMutation();
 
   useEffect(() => {
     if (users.length) {
-      describeUsers({ users });
+      describeUsers({ users, split });
     }
   }, [users]);
 
@@ -60,7 +60,12 @@ function UsersDescription({ users }) {
   );
 }
 
+UsersDescription.defaultProps = {
+  split: 'train',
+};
+
 UsersDescription.propTypes = {
+  split: pt.string,
   users: pt.arrayOf(pt.number).isRequired,
 };
 

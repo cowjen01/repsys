@@ -11,13 +11,14 @@ from sanic.response import json, file
 import repsys.dtypes as dtypes
 from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
-from repsys.evaluators import DatasetEvaluator
+from repsys.evaluators import DatasetEvaluator, ModelEvaluator
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator) -> Sanic:
+def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator,
+               models_evaluator: ModelEvaluator) -> Sanic:
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -153,12 +154,12 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
 
             input_data = dataset.get_interactions_by_user(user_id, split)
         else:
-            item_indexes = list(map(dataset.item_id_to_index, item_ids))
+            item_indices = list(map(dataset.item_id_to_index, item_ids))
 
-            if None in item_indexes:
+            if None in item_indices:
                 raise InvalidUsage(f"Some of the input items not found.")
 
-            input_data = dataset.item_indexes_to_matrix(item_indexes)
+            input_data = dataset.item_indices_to_matrix(item_indices)
 
         model = models.get(model_name)
 
@@ -196,9 +197,9 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
             raise InvalidUsage("Minimum interactions to the items by a user must be specified.")
 
         items = get_items_by_query(query)
-        item_indexes = items.index.map(dataset.item_id_to_index)
+        item_indices = items.index.map(dataset.item_id_to_index)
 
-        user_ids = dataset.get_users_by_interacted_items(item_indexes, split, min_interacts)
+        user_ids = dataset.get_users_by_interacted_items(item_indices, split, min_interacts)
 
         return json(user_ids)
 
@@ -250,13 +251,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
         def mapper_func(x):
             return dataset.user_id_to_index(x, split)
 
-        user_indexes = list(map(mapper_func, user_ids))
+        user_indices = list(map(mapper_func, user_ids))
 
-        if None in user_indexes:
+        if None in user_indices:
             raise InvalidUsage(f"Some of the input users not found.")
 
-        items = dataset.get_top_items_by_users(user_indexes, split)
-        interact_values = dataset.get_interact_values_by_users(user_indexes, split)
+        items = dataset.get_top_items_by_users(user_indices, split)
+        interact_values = dataset.get_interact_values_by_users(user_indices, split)
         values_hist = np.histogram(interact_values, bins=5)
 
         return json({
@@ -310,6 +311,33 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
 
         return data
 
+    @app.route("/api/models/metrics", methods=["GET"])
+    def get_metrics(request):
+        return json({
+            'metrics': {
+                'distributed': {
+                    'users': [f'recall@{k}' for k in models_evaluator.recall_steps],
+                    'items': [],
+                },
+            },
+            'results': {
+                model: {'current': df.mean().to_dict()} for model, df in models_evaluator.results.items()
+            }
+        })
+
+    @app.route("/api/models/<model_name>/metrics", methods=["GET"])
+    def get_model_metrics(request, model_name: str):
+        if models.get(model_name) is None:
+            raise NotFound(f"Model '{model_name}' not implemented.")
+
+        if models_evaluator.results.get(model_name) is None:
+            raise NotFound(f"Model '{model_name}' not evaluated.")
+
+        df = models_evaluator.results.get(model_name).copy()
+        df["id"] = df.index
+
+        return json(df.to_dict("records"))
+
     @app.listener("after_server_stop")
     def on_shutdown(current_app, loop):
         logger.info("Server has been shut down.")
@@ -317,7 +345,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
     return app
 
 
-def run_server(port: int, models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator) -> None:
-    app = create_app(models, dataset, dataset_evaluator)
+def run_server(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator,
+               models_evaluator: ModelEvaluator, port: int = 3001) -> None:
+    app = create_app(models, dataset, dataset_evaluator, models_evaluator)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=port, debug=False, access_log=False)

@@ -48,16 +48,16 @@ def read_config(config_path: str = None):
             config.read_file(f)
 
     dataset_config = DatasetConfig(
-        config.getfloat('dataset', 'testHoldoutProp', fallback=const.DEFAULT_TEST_HOLDOUT_PROP),
-        config.getfloat('dataset', 'trainSplitProp', fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
-        config.getint('dataset', 'minUserInteracts', fallback=const.DEFAULT_MIN_USER_INTERACTS),
-        config.getint('dataset', 'minItemInteracts', fallback=const.DEFAULT_MIN_ITEM_INTERACTS),
-        config.getfloat('dataset', 'minInteractValue', fallback=const.DEFAULT_MIN_INTERACT_VALUE)
+        config.getfloat('dataset', 'TEST_HOLDOUT_PROP', fallback=const.DEFAULT_TEST_HOLDOUT_PROP),
+        config.getfloat('dataset', 'TRAIN_SPLIT_PROP', fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
+        config.getint('dataset', 'MIN_USER_INTERACTS', fallback=const.DEFAULT_MIN_USER_INTERACTS),
+        config.getint('dataset', 'MIN_ITEM_INTERACTS', fallback=const.DEFAULT_MIN_ITEM_INTERACTS),
+        config.getfloat('dataset', 'MIN_INTERACT_VALUE', fallback=const.DEFAULT_MIN_INTERACT_VALUE)
     )
 
     validate_dataset_config(dataset_config)
 
-    seed = config.getint('general', 'seed', fallback=const.DEFAULT_SEED)
-    server_port = config.get('server', 'port', fallback=const.DEFAULT_SERVER_PORT)
+    seed = config.getint('general', 'SEED', fallback=const.DEFAULT_SEED)
+    server_port = config.get('server', 'PORT', fallback=const.DEFAULT_SERVER_PORT)
 
     return Config(seed, server_port, dataset_config)
