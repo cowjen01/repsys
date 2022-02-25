@@ -12,9 +12,9 @@ from repsys.helpers import (
     new_split_checkpoint,
     new_dataset_eval_checkpoint,
     new_models_eval_checkpoint,
-    latest_models_eval_checkpoint
+    models_eval_checkpoints
 )
-from repsys.loaders import load_dataset_pkg, load_models_pkg
+from repsys.loaders import load_packages
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
@@ -38,9 +38,15 @@ def dataset_eval_input_callback(ctx, param, value):
     return value
 
 
-def models_eval_input_callback(ctx, param, value):
+def latest_model_eval_input_callback(ctx, param, value):
     if not value:
-        return latest_models_eval_checkpoint()
+        return models_eval_checkpoints(history=0)
+    return value
+
+
+def compare_model_eval_input_callback(ctx, param, value):
+    if not value:
+        return models_eval_checkpoints(history=1)
     return value
 
 
@@ -63,15 +69,21 @@ def models_eval_output_callback(ctx, param, value):
 
 
 def models_callback(ctx, param, value):
-    return load_models_pkg(value)
+    return load_packages(value, Model)
 
 
 def dataset_callback(ctx, param, value):
-    return load_dataset_pkg(value)
+    instances = load_packages(value, Dataset)
+    default_name = list(instances.keys())[0]
+    if len(instances) > 1:
+        dataset_name = click.prompt('Multiple datasets detected, please specify',
+                                    type=click.Choice(list(instances.keys())), default=default_name)
+        return instances.get(dataset_name)
+    return instances.get(default_name)
 
 
 def dataset_pkg_option(func):
-    @click.option("-d", "--dataset-pkg", "dataset", callback=dataset_callback, default="dataset", show_default=True)
+    @click.option("--dataset-pkg", "dataset", callback=dataset_callback, default="dataset", show_default=True)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -80,7 +92,7 @@ def dataset_pkg_option(func):
 
 
 def models_pkg_option(func):
-    @click.option("-m", "--models-pkg", "models", callback=models_callback, default="models", show_default=True)
+    @click.option("--models-pkg", "models", callback=models_callback, default="models", show_default=True)
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -89,7 +101,7 @@ def models_pkg_option(func):
 
 
 def split_path_option(func):
-    @click.option("-s", "--split-path", callback=split_input_callback, type=click.Path(exists=True))
+    @click.option("--split-path", callback=split_input_callback, type=click.Path(exists=True))
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -111,14 +123,15 @@ def repsys_group(ctx, debug):
 @dataset_pkg_option
 @split_path_option
 @click.option("--dataset-eval-path", callback=dataset_eval_input_callback, type=click.Path(exists=True))
-@click.option("--models-eval-path", callback=models_eval_input_callback, type=click.Path(exists=True))
+@click.option("--latest-model-eval-path", callback=latest_model_eval_input_callback, type=click.Path(exists=True))
+@click.option("--compare-model-eval-path", callback=compare_model_eval_input_callback, type=click.Path(exists=True))
 def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str,
-                     models_eval_path: str):
+                     latest_model_eval_path: str, compare_model_eval_path: str):
     """Start server."""
-    start_server(models, dataset, split_path, dataset_eval_path, models_eval_path)
+    start_server(models, dataset, split_path, dataset_eval_path, latest_model_eval_path, compare_model_eval_path)
 
 
-@click.group(name='models')
+@click.group(name='model')
 def models_group():
     """Model commands."""
     """Implemented models commands."""
@@ -140,20 +153,23 @@ repsys_group.add_command(models_group)
 @models_pkg_option
 @dataset_pkg_option
 @split_path_option
-@click.option("-t", "--split-type", default="validation", type=click.Choice(["test", "validation"]), show_default=True)
+@click.option("-s", "--split-type", default="validation", type=click.Choice(["test", "validation"]), show_default=True)
 @click.option("-o", "--output-path", callback=models_eval_output_callback)
-def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str):
+@click.option("-m", "--model")
+def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str,
+                    model: str):
     """Evaluate models using test/validation split."""
-    evaluate_models(models, dataset, split_path, split_type, output_path)
+    evaluate_models(models, dataset, split_path, split_type, output_path, model)
 
 
 @models_group.command(name='train')
 @dataset_pkg_option
 @models_pkg_option
 @split_path_option
-def models_train_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str):
+@click.option("-m", "--model")
+def models_train_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, model: str):
     """Train models using train split."""
-    train_models(models, dataset, split_path)
+    train_models(models, dataset, split_path, model)
 
 
 # DATASET GROUP
@@ -169,6 +185,7 @@ def dataset_split_cmd(dataset: Dataset, output_path: str):
 @dataset_pkg_option
 @split_path_option
 @click.option("-o", "--output-path", callback=dataset_eval_output_callback)
-def dataset_eval_cmd(dataset: Dataset, split_path: str, output_path: str):
+@click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne"]), show_default=True)
+def dataset_eval_cmd(dataset: Dataset, split_path: str, output_path: str, method: str):
     """Create dataset embeddings using train split."""
-    evaluate_dataset(dataset, split_path, output_path)
+    evaluate_dataset(dataset, split_path, output_path, method)

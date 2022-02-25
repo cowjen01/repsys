@@ -49,7 +49,7 @@ def validate_item_data(items: DataFrame, cols: ColumnDict) -> None:
     _check_df_columns(items, cols)
 
     item_col = find_column_by_type(cols, ItemID)
-    if items[item_col].unique().shape[0] != items.shape[0]:
+    if items.duplicated(subset=[item_col]).sum() > 0:
         raise InvalidDatasetError(f"Index '{item_col}' contains non-unique values.")
 
 

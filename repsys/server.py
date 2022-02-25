@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Optional
 
 import numpy as np
 from pandas import DataFrame
@@ -17,8 +17,8 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator,
-               models_evaluator: ModelEvaluator) -> Sanic:
+def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optional[DatasetEvaluator],
+               latest_model_eval: Optional[ModelEvaluator], compare_model_eval: Optional[ModelEvaluator]) -> Sanic:
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -165,7 +165,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
 
         params = {k: v for k, v in params.items() if k in model.web_params().keys()}
 
-        ids = model.predict_top_n(input_data, limit, **params)
+        ids = model.predict_top_items(input_data, limit, **params)
         items = dataset.items.loc[ids[0]]
         data = json(serialize_items(items))
 
@@ -275,10 +275,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
         split = request.args.get("split")
         validate_split_name(split)
 
-        if dataset_evaluator.item_embeddings.get(split) is None:
+        if dataset_eval is None:
+            raise NotFound("No dataset evaluation found.")
+
+        if dataset_eval.item_embeddings.get(split) is None:
             raise NotFound(f"Item embeddings for split '{split}' not found.")
 
-        df = dataset_evaluator.item_embeddings.get(split).join(dataset.items[dataset.get_title_col()])
+        df = dataset_eval.item_embeddings.get(split).join(dataset.items[dataset.get_title_col()])
         df = df.rename(columns={dataset.get_title_col(): 'title'})
         df["id"] = df.index
 
@@ -289,10 +292,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
         split = request.args.get("split")
         validate_split_name(split)
 
-        if dataset_evaluator.user_embeddings.get(split) is None:
+        if dataset_eval is None:
+            raise NotFound("No dataset evaluation found.")
+
+        if dataset_eval.user_embeddings.get(split) is None:
             raise NotFound(f"User embeddings for split '{split}' not found.")
 
-        df = dataset_evaluator.user_embeddings.get(split).copy()
+        df = dataset_eval.user_embeddings.get(split).copy()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -313,15 +319,20 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
 
     @app.route("/api/models/metrics", methods=["GET"])
     def get_metrics(request):
+        if latest_model_eval is None:
+            raise NotFound("No models evaluation found.")
+
         return json({
             'metrics': {
                 'distributed': {
-                    'users': [f'recall@{k}' for k in models_evaluator.recall_steps],
+                    'users': [f'recall@{k}' for k in latest_model_eval.recall_steps],
                     'items': [],
                 },
             },
             'results': {
-                model: {'current': df.mean().to_dict()} for model, df in models_evaluator.results.items()
+                model: {
+                    'current': df.mean().to_dict(),
+                } for model, df in latest_model_eval.results.items()
             }
         })
 
@@ -330,10 +341,13 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
         if models.get(model_name) is None:
             raise NotFound(f"Model '{model_name}' not implemented.")
 
-        if models_evaluator.results.get(model_name) is None:
+        if latest_model_eval is None:
+            raise NotFound("No models evaluation found.")
+
+        if latest_model_eval.results.get(model_name) is None:
             raise NotFound(f"Model '{model_name}' not evaluated.")
 
-        df = models_evaluator.results.get(model_name).copy()
+        df = latest_model_eval.results.get(model_name).copy()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -345,8 +359,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: Da
     return app
 
 
-def run_server(models: Dict[str, Model], dataset: Dataset, dataset_evaluator: DatasetEvaluator,
-               models_evaluator: ModelEvaluator, port: int = 3001) -> None:
-    app = create_app(models, dataset, dataset_evaluator, models_evaluator)
+def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optional[DatasetEvaluator],
+               latest_model_eval: Optional[ModelEvaluator], compare_model_eval: Optional[ModelEvaluator]) -> None:
+    app = create_app(models, dataset, dataset_eval, latest_model_eval, compare_model_eval)
     app.config.FALLBACK_ERROR_FORMAT = "json"
-    app.run(host="localhost", port=port, debug=False, access_log=False)
+    app.run(host="localhost", port=3001, debug=False, access_log=False)

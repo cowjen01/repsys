@@ -29,4 +29,11 @@ function mergeDeep(target, ...sources) {
   return mergeDeep(target, ...sources);
 }
 
-export { sleep, capitalize, mergeDeep };
+function sliceIdentifier(id, limit = 20) {
+  if (!id) return '';
+  const str = id.toString();
+  if (str.length < limit) return id;
+  return `${str.slice(0, limit)}...`;
+}
+
+export { sleep, capitalize, mergeDeep, sliceIdentifier };

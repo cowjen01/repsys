@@ -17,6 +17,8 @@ import { favouriteUsersSelector, setCustomInteractions, setSelectedUser } from '
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
 import TabPanel from '../TabPanel';
 import { useGetUsersQuery, useGetItemsByTitleQuery } from '../../api';
+import { sliceIdentifier } from '../../utils';
+import { itemViewSelector } from '../../reducers/settings';
 
 let timerID;
 
@@ -24,6 +26,7 @@ function UserSelectDialog() {
   const dispatch = useDispatch();
   const dialogOpen = useSelector(userSelectDialogSelector);
   const favouriteUsers = useSelector(favouriteUsersSelector);
+  const itemView = useSelector(itemViewSelector);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [interactions, setInteractions] = useState([]);
@@ -92,7 +95,7 @@ function UserSelectDialog() {
               loading={users.isLoading}
               onChange={(event, newValue) => setCurrentUser(newValue)}
               options={users.data || []}
-              getOptionLabel={(user) => `User ${user}`}
+              getOptionLabel={(user) => `User ${sliceIdentifier(user, 25)}`}
               sx={{ marginBottom: 2, marginTop: 2 }}
               renderInput={(params) => (
                 <TextField {...params} variant="filled" label="Selected user" />
@@ -126,14 +129,14 @@ function UserSelectDialog() {
               openOnFocus
               isOptionEqualToValue={(option, value) => option.id === value.id}
               options={items.data || []}
-              getOptionLabel={(item) => item.title}
+              getOptionLabel={(item) => item[itemView.title]}
               sx={{ marginBottom: 2, marginTop: 2 }}
               onInputChange={handleQueryStringChange}
               renderInput={(params) => (
                 <TextField
                   {...params}
                   variant="filled"
-                  label="User interactions"
+                  label="Selected items"
                   InputProps={{
                     ...params.InputProps,
                     endAdornment: (
@@ -153,7 +156,7 @@ function UserSelectDialog() {
               variant="contained"
               onClick={handleInteractionsSelect}
             >
-              Select Interactions
+              Select Items
             </Button>
           </Box>
         </TabPanel>

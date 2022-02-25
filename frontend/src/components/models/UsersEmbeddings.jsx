@@ -16,6 +16,7 @@ function UsersEmbeddings({ metricsData }) {
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
+  const [selectedColorScale, setSelectedColorScale] = useState('Bluered');
 
   const embeddings = useGetUsersEmbeddingsQuery('validation');
   const modelMetrics = useGetMetricsByModelQuery(selectedModel);
@@ -65,6 +66,12 @@ function UsersEmbeddings({ metricsData }) {
             onChange={handleMetricChange}
             options={metrics}
           />
+          <CategoryFilter
+            label="Color scale"
+            value={selectedColorScale}
+            onChange={setSelectedColorScale}
+            options={['Bluered', 'Hot', 'Jet', 'YlGnBu']}
+          />
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -79,6 +86,7 @@ function UsersEmbeddings({ metricsData }) {
                   onSelect={handlePlotSelect}
                   color={embeddingsColor}
                   resetIndex={plotResetIndex}
+                  colorScale={selectedColorScale}
                   showScale
                 />
               </Paper>

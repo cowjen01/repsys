@@ -13,8 +13,7 @@ export const slice = createSlice({
     },
     itemDetailDialog: {
       open: false,
-      title: '',
-      content: '',
+      item: null,
     },
     snackbar: {
       open: false,
@@ -52,8 +51,7 @@ export const slice = createSlice({
     openItemDetailDialog: (state, { payload }) => {
       state.itemDetailDialog = {
         open: true,
-        title: payload.title || '',
-        content: payload.content || 'No description provided.',
+        item: payload,
       };
     },
     closeItemDetailDialog: (state) => {

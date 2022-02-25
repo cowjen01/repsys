@@ -19,6 +19,7 @@ function ScatterPlot({
   highlighted,
   dragMode,
   showScale,
+  colorScale,
   layoutProps,
   ...props
 }) {
@@ -84,6 +85,7 @@ function ScatterPlot({
             size: 6 - Math.log10(x.length),
             color: finalColor,
             showscale: showScale,
+            colorscale: colorScale
           },
         },
       ]}
@@ -126,6 +128,7 @@ ScatterPlot.propTypes = {
   showScale: pt.bool,
   // eslint-disable-next-line react/forbid-prop-types
   layoutProps: pt.any,
+  colorScale: pt.string,
 };
 
 ScatterPlot.defaultProps = {
@@ -138,6 +141,7 @@ ScatterPlot.defaultProps = {
   highlighted: [],
   dragMode: 'lasso',
   layoutProps: {},
+  colorScale: 'Bluered'
 };
 
 export default ScatterPlot;

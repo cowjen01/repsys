@@ -1,8 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Text, Dict, Optional, Type
+from typing import Dict, Optional, Type
 
 import numpy as np
+from scipy.sparse import csr_matrix
 
 from repsys.dataset import Dataset
 from repsys.helpers import enforce_updated
@@ -17,7 +18,7 @@ class Model(ABC):
         self._updated = False
 
     @abstractmethod
-    def name(self) -> Text:
+    def name(self) -> str:
         """Get a unique name of the model."""
         pass
 
@@ -30,7 +31,7 @@ class Model(ABC):
 
     @abstractmethod
     @enforce_updated
-    def predict(self, x, **kwargs):
+    def predict(self, x: csr_matrix, **kwargs):
         """Make a prediction from the input interactions and
         return a matrix including ratings for each item. The second
         argument includes a dictionary of values for each parameter
@@ -49,7 +50,7 @@ class Model(ABC):
         self.dataset = dataset
 
     @enforce_updated
-    def predict_top_n(self, x, n=20, **kwargs):
+    def predict_top_items(self, x: csr_matrix, n=20, **kwargs):
         """Make a prediction, but return directly a list of top ids."""
         prediction = self.predict(x, **kwargs)
         indices = (-prediction).argsort()[:, :n]
@@ -61,5 +62,5 @@ class Model(ABC):
             key: param.to_dict() for key, param in self.web_params().items()
         }}
 
-    def __str__(self) -> Text:
+    def __str__(self) -> str:
         return f"Model '{self.name()}'"

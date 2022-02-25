@@ -3,7 +3,7 @@ import os
 
 import repsys.constants as const
 from repsys.errors import InvalidConfigError
-from repsys.helpers import get_default_config_path
+from repsys.helpers import default_config_path
 
 
 class DatasetConfig:
@@ -41,7 +41,7 @@ def read_config(config_path: str = None):
     config = configparser.ConfigParser()
 
     if not config_path:
-        config_path = get_default_config_path()
+        config_path = default_config_path()
 
     if os.path.isfile(config_path):
         with open(config_path, 'r') as f:

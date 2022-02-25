@@ -64,12 +64,7 @@ function RecGridView({ index }) {
     if (interactiveMode) {
       dispatch(addCustomInteraction(item));
     } else {
-      dispatch(
-        openItemDetailDialog({
-          title: item[itemView.title],
-          content: item[itemView.content],
-        })
-      );
+      dispatch(openItemDetailDialog(item));
     }
   };
 

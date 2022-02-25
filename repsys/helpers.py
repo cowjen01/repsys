@@ -4,45 +4,45 @@ import os
 import random
 import shutil
 import time
-from typing import Text, Optional
+from typing import Optional, List
 
 import numpy as np
 
 
-def remove_dir(path: Text):
+def remove_dir(path: str) -> None:
     shutil.rmtree(path)
 
 
-def create_dir(path: Text):
+def create_dir(path: str) -> None:
     if not os.path.exists(path):
         os.makedirs(path)
 
 
-def get_current_dir():
+def current_dir_path() -> str:
     return os.getcwd()
 
 
-def get_default_config_path():
-    return os.path.join(get_current_dir(), 'repsys.ini')
+def default_config_path() -> str:
+    return os.path.join(current_dir_path(), 'repsys.ini')
 
 
-def tmp_dir_path():
-    return os.path.join(get_current_dir(), "tmp")
+def tmp_dir_path() -> str:
+    return os.path.join(current_dir_path(), "tmp")
 
 
-def create_tmp_dir():
+def create_tmp_dir() -> None:
     create_dir(tmp_dir_path())
 
 
-def remove_tmp_dir():
+def remove_tmp_dir() -> None:
     remove_dir(tmp_dir_path())
 
 
-def unzip_dir(zip_path: Text, dir_path: Text):
+def unzip_dir(zip_path: str, dir_path: str) -> None:
     shutil.unpack_archive(zip_path, dir_path)
 
 
-def zip_dir(zip_path: Text, dir_path: Text):
+def zip_dir(zip_path: str, dir_path: str) -> None:
     path_chunks = zip_path.split(".")
     if path_chunks[-1] == "zip":
         zip_path = ".".join(path_chunks[:-1])
@@ -50,13 +50,13 @@ def zip_dir(zip_path: Text, dir_path: Text):
     shutil.make_archive(zip_path, "zip", dir_path)
 
 
-def get_subclasses(cls):
+def get_subclasses(cls) -> List[str]:
     return cls.__subclasses__() + [
         g for s in cls.__subclasses__() for g in get_subclasses(s)
     ]
 
 
-def fill_timestamp(file_name: Text):
+def fill_timestamp(file_name: str) -> str:
     if "{ts}" in file_name:
         ts = int(time.time())
         return file_name.format(ts=ts)
@@ -64,49 +64,49 @@ def fill_timestamp(file_name: Text):
     return file_name
 
 
-def checkpoints_dir_path():
+def checkpoints_dir_path() -> str:
     return ".repsys_checkpoints/"
 
 
-def create_checkpoints_dir():
+def create_checkpoints_dir() -> None:
     create_dir(checkpoints_dir_path())
 
 
-def latest_checkpoint(pattern: Text) -> Optional[Text]:
+def latest_checkpoints(pattern: str, history: int = 0) -> Optional[str]:
     path = os.path.join(checkpoints_dir_path(), pattern)
     files = glob.glob(path)
 
-    if not files:
+    if not files or len(files) <= history:
         return None
 
     files.sort(reverse=True)
 
-    return files[0]
+    return files[history]
 
 
-def latest_split_checkpoint() -> Optional[Text]:
-    return latest_checkpoint("dataset-split-*.zip")
+def latest_split_checkpoint() -> Optional[str]:
+    return latest_checkpoints("dataset-split-*.zip")
 
 
-def latest_dataset_eval_checkpoint() -> Optional[Text]:
-    return latest_checkpoint("dataset-eval-*.zip")
+def latest_dataset_eval_checkpoint() -> Optional[str]:
+    return latest_checkpoints("dataset-eval-*.zip")
 
 
-def latest_models_eval_checkpoint() -> Optional[Text]:
-    return latest_checkpoint("models-eval-*.zip")
+def models_eval_checkpoints(history: int = 0) -> Optional[str]:
+    return latest_checkpoints("models-eval-*.zip", history)
 
 
-def new_split_checkpoint():
+def new_split_checkpoint() -> str:
     create_checkpoints_dir()
     return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-split-{ts}.zip"))
 
 
-def new_dataset_eval_checkpoint():
+def new_dataset_eval_checkpoint() -> str:
     create_checkpoints_dir()
     return os.path.join(checkpoints_dir_path(), fill_timestamp("dataset-eval-{ts}.zip"))
 
 
-def new_models_eval_checkpoint():
+def new_models_eval_checkpoint() -> str:
     create_checkpoints_dir()
     return os.path.join(checkpoints_dir_path(), fill_timestamp("models-eval-{ts}.zip"))
 

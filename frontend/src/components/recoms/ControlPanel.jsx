@@ -31,7 +31,7 @@ import {
 } from '../../reducers/app';
 import { ItemListView } from '../items';
 import { openSnackbar, openUserSelectDialog } from '../../reducers/dialogs';
-
+import { sliceIdentifier } from '../../utils';
 import { useGetUserByIDQuery } from '../../api';
 
 const listHeight = 360;
@@ -119,19 +119,20 @@ function UserPanel() {
       </Paper>
       {(customInteractions.length > 0 || selectedUser) && (
         <Box sx={{ marginTop: 2 }}>
-          {customInteractions.length > 0 ? (
+          {customInteractions.length > 0 && (
             <Chip
               sx={{ marginBottom: 2 }}
               onDelete={handleDelete}
               icon={<FilterListIcon />}
               label="Custom interactions"
             />
-          ) : (
+          )}
+          {selectedUser && (
             <Chip
               sx={{ marginBottom: 2 }}
               onDelete={handleDelete}
               icon={<FilterListIcon />}
-              label={`User ${selectedUser}`}
+              label={`User ${sliceIdentifier(selectedUser)}`}
             />
           )}
           {!user.isFetching ? (

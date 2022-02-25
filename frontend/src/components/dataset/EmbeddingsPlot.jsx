@@ -14,6 +14,7 @@ function EmbeddingsPlot({
   color,
   resetIndex,
   showScale,
+  colorScale
 }) {
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
@@ -84,6 +85,7 @@ function EmbeddingsPlot({
       highlighted={highlightedPoints}
       label={scatterPoints.label}
       innerRef={scatterRef}
+      colorScale={colorScale}
       onDeselect={handleUnselect}
       onSelected={handleSelect}
       showScale={highlightedPoints.length > 0 ? false : showScale}
@@ -100,6 +102,7 @@ EmbeddingsPlot.defaultProps = {
   embeddings: [],
   resetIndex: 0,
   showScale: false,
+  colorScale: 'Bluered',
   onSelect: () => {},
   onUnselect: () => {},
   onComputeStarted: () => {},
@@ -116,6 +119,7 @@ EmbeddingsPlot.propTypes = {
   color: pt.arrayOf(pt.number),
   onComputeStarted: pt.func,
   onComputeFinished: pt.func,
+  colorScale: pt.string,
   embeddings: pt.arrayOf(
     pt.shape({
       title: pt.string,

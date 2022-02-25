@@ -27,44 +27,59 @@ def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
 
 
 def start_server(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str,
-                 models_eval_path: str):
+                 latest_model_eval_path: str, compare_model_eval_path: str):
     dataset.load(split_path)
     fit_models(models, dataset, training=False)
 
-    dataset_evaluator = DatasetEvaluator()
-    dataset_evaluator.update_dataset(dataset)
+    dataset_eval = None
+    latest_model_eval = None
+    compare_model_eval = None
 
-    models_evaluator = ModelEvaluator()
-    models_evaluator.update_dataset(dataset)
+    if latest_model_eval_path is not None:
+        logger.info('Loading latest models evaluations ...')
+        latest_model_eval = ModelEvaluator()
+        latest_model_eval.load(latest_model_eval_path)
 
-    if models_eval_path is not None:
-        logger.info('Loading models evaluations ...')
-        models_evaluator.load(models_eval_path)
+    if compare_model_eval_path is not None:
+        logger.info('Loading compare models evaluations ...')
+        compare_model_eval = ModelEvaluator()
+        compare_model_eval.load(compare_model_eval_path)
 
     if dataset_eval_path is not None:
         logger.info('Loading dataset evaluations ...')
-        dataset_evaluator.load(dataset_eval_path)
+        dataset_eval = DatasetEvaluator()
+        dataset_eval.load(dataset_eval_path)
 
-    run_server(models, dataset, dataset_evaluator, models_evaluator)
+    run_server(models, dataset, dataset_eval, latest_model_eval, compare_model_eval)
 
 
-def train_models(models: Dict[str, Model], dataset: Dataset, split_path: str):
+def train_models(models: Dict[str, Model], dataset: Dataset, split_path: str, model_name: str = None):
     dataset.load(split_path)
+
+    if model_name is not None:
+        model = models.get(model_name)
+        models = {model_name: model}
+
     fit_models(models, dataset, training=True)
 
 
-def evaluate_dataset(dataset: Dataset, split_path: str, output_path: str):
+def evaluate_dataset(dataset: Dataset, split_path: str, output_path: str, method: str):
     dataset.load(split_path)
 
     evaluator = DatasetEvaluator()
     evaluator.update_dataset(dataset)
-    evaluator.compute_embeddings('train')
-    evaluator.compute_embeddings('validation')
+    evaluator.compute_embeddings('train', method=method)
+    evaluator.compute_embeddings('validation', method=method)
     evaluator.save(output_path)
 
 
-def evaluate_models(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str):
+def evaluate_models(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str,
+                    model_name: str):
     dataset.load(split_path)
+
+    if model_name is not None:
+        model = models.get(model_name)
+        models = {model_name: model}
 
     fit_models(models, dataset, training=False)
 

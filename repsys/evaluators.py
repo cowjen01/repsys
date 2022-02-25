@@ -1,4 +1,4 @@
-from typing import Tuple, List, Dict
+from typing import Tuple, Dict
 
 import pandas as pd
 import pymde
@@ -6,6 +6,8 @@ from jax import numpy as jnp, vmap, jit, default_backend
 from numpy import ndarray
 from pandas import DataFrame
 from scipy.sparse import csr_matrix
+from sklearn.decomposition import PCA
+from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
@@ -46,16 +48,21 @@ class DatasetEvaluator:
     def _get_input_data(self, split: str) -> csr_matrix:
         return self.dataset.splits.get(split).complete_matrix
 
-    def _get_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, **kwargs) -> Tuple[ndarray, ndarray]:
+    def _get_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, method: str = 'pymde', **kwargs) -> Tuple[
+        ndarray, ndarray]:
         set_seed(self.seed)
         index_perm = np.random.permutation(matrix.shape[0])
         index_perm = index_perm[: max_samples]
         matrix = matrix[index_perm]
 
-        pymde.seed(self.seed)
-        mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
-        embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50, eps=1e-6)
-        embeddings = embeddings.cpu().numpy()
+        if method == 'pymde':
+            pymde.seed(self.seed)
+            mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
+            embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50, eps=1e-6)
+            embeddings = embeddings.cpu().numpy()
+        else:
+            pca = PCA(n_components=50).fit_transform(matrix.toarray())
+            embeddings = TSNE(n_iter=1500, n_components=2, metric='cosine', init='random', verbose=2).fit_transform(pca)
 
         return embeddings, index_perm
 
@@ -102,36 +109,37 @@ class DatasetEvaluator:
                 self.user_embeddings[split] = read_df(users_path)
 
 
-def recall(sort_mask, sort_indices, true_matrix):
-    k = sort_mask.sum()
+def recall(recall_mask, sort_indices, x_true):
+    k = recall_mask.sum()
     # an array of row number indices
-    row_indices = jnp.arange(true_matrix.shape[0])[:, jnp.newaxis]
+    row_indices = jnp.arange(x_true.shape[0])[:, jnp.newaxis]
     # increase col indices by 1 to make zero index available as a null value
     sort_indices = sort_indices + 1
     # keep only first K cols for each row, the rest set to zero
-    col_indices = jnp.where(sort_mask, sort_indices, 0)
+    col_indices = jnp.where(recall_mask, sort_indices, 0)
     # create a binary matrix from indices
     # the matrix has an increased dimension by 1 to hold the increased indices
-    predict_matrix_shape = (true_matrix.shape[0], true_matrix.shape[1] + 1)
+    predict_matrix_shape = (x_true.shape[0], x_true.shape[1] + 1)
     predict_matrix = jnp.zeros(predict_matrix_shape, dtype=bool)
     predict_matrix = predict_matrix.at[row_indices, col_indices].set(True)
     # remove the first column that holds unused indices
     predict_matrix = predict_matrix[:, 1:]
-    tmp = (jnp.logical_and(true_matrix, predict_matrix).sum(axis=1)).astype(jnp.float32)
+    tmp = (jnp.logical_and(x_true, predict_matrix).sum(axis=1)).astype(jnp.float32)
     # divide a sum of the agreed indices by a sum of the true indices
     # to avoid dividing by zero, use the K value as a minimum
-    return tmp / jnp.minimum(k, true_matrix.sum(axis=1))
+    return tmp / jnp.minimum(k, x_true.sum(axis=1))
 
 
-# def ndcg(ndcg_mask, sort_indices, X_true):
-#     K = sort_indices.shape[1]
-#     rows_idx = jnp.arange(X_true.shape[0])[:, jnp.newaxis]
-#     tp = 1.0 / jnp.log2(jnp.arange(2, K + 2))
-#     # the slowest part ...
-#     dcg = (X_true[rows_idx, sort_indices] * tp).sum(axis=1)
-#     # null all positions, where mask is False (keep the rest)
-#     idcg = jnp.where(ndcg_mask, tp, 0).sum(axis=1)
-#     return dcg / idcg
+# TODO should we use X_true or X_true_binary
+def ndcg(ndcg_mask, sort_indices, x_true):
+    K = sort_indices.shape[1]
+    rows_idx = jnp.arange(x_true.shape[0])[:, jnp.newaxis]
+    tp = 1.0 / jnp.log2(jnp.arange(2, K + 2))
+    # the slowest part ...
+    dcg = (x_true[rows_idx, sort_indices] * tp).sum(axis=1)
+    # null all positions, where mask is False (keep the rest)
+    idcg = jnp.where(ndcg_mask, tp, 0).sum(axis=1)
+    return dcg / idcg
 
 
 def partial_sort(x_predict: csr_matrix, k: int):
@@ -156,6 +164,7 @@ class ModelEvaluator:
 
         self.recall_steps = recall_steps
         self.ndcg_steps = ndcg_steps
+        self.ndcg_k = ndcg_steps[0]
         self._dataset: Optional[Dataset] = None
         self._updated = False
         self.results: Dict[str, DataFrame] = {}
@@ -195,20 +204,19 @@ class ModelEvaluator:
         top_recall_indices = sort_indices[:, :max_recall_k]
         recall_results = jitted_recall(recall_k_mask, top_recall_indices, x_true_bin)
 
-        # jitted_ndcg = jit(ndcg)
-        # ndcg_results = jitted_ndcg(
-        #     ndcg_mask, sort_indices[:, : self.ndcg_k], x_true
-        # )
+        # vmap_ndcg = vmap(ndcg, in_axes=(0, None, None), out_axes=0)
+        # jitted_ndcg = jit(vmap_ndcg)
+        # ndcg_results = jitted_ndcg(ndcg_mask, sort_indices[:, :self.ndcg_k], x_true)
 
         # converting the device array to a numpy array we enforce to wait for the results
         # also it is possible to call block_until_ready()
-        data = {}
+        results = {}
         for i, k in enumerate(self.recall_steps):
-            data[f"recall@{k}"] = np.asarray(recall_results[i])
+            results[f"recall@{k}"] = np.asarray(recall_results[i])
 
-        # data[f"ndcg@{self.ndcg_k}"] = np.asarray(ndcg_results)
+        # results[f"ndcg@{self.ndcg_k}"] = np.asarray(ndcg_results)
 
-        return data
+        return results
 
     def print(self) -> None:
         for model, df in self.results.items():
@@ -218,11 +226,10 @@ class ModelEvaluator:
     @enforce_updated
     def evaluate(self, model: Model, split: str = 'validation'):
         test_split = self._dataset.splits.get(split)
-        x = test_split.train_matrix
-        x_true = test_split.holdout_matrix
-        x_predict = model.predict(x)
+        x_true = test_split.holdout_matrix.toarray()
+        x_predict = model.predict(test_split.train_matrix)
 
-        results = self._get_metrics_results(x_predict, x_true.toarray())
+        results = self._get_metrics_results(x_predict, x_true)
         user_ids = list(test_split.user_index.keys())
         self.results[model.name()] = results_to_df(results, user_ids)
 
