@@ -159,14 +159,14 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
 
 def get_top_tags(items: DataFrame, col: str, n: int = 5) -> List[str]:
     tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
-    sort_indices = (-counts).argsort()[:n]
-    sorted_tags = tags[sort_indices]
-    return sorted_tags.tolist()
+    sort_indices = (-counts).argsort()
+    sorted_tags = list(filter(None, tags[sort_indices]))[:n]
+    return sorted_tags
 
 
 def get_top_categories(items: DataFrame, col: str, n: int = 5) -> List[str]:
     sorted_categories = items[col].value_counts()
-    return sorted_categories[:n].index.tolist()
+    return list(filter(None, sorted_categories.index.tolist()))[:n]
 
 
 class Dataset(ABC):
@@ -279,7 +279,7 @@ class Dataset(ABC):
 
         return interactions.data
 
-    def get_top_items_by_users(self, indices: List[int], split: str, n: int = 5) -> DataFrame:
+    def get_top_items_by_users(self, indices: List[int], split: str, n: int = 10) -> DataFrame:
         matrix = self.splits.get(split).complete_matrix
         matrix_copy = matrix[indices].copy()
         matrix_copy[matrix_copy > 0] = 1
@@ -289,7 +289,7 @@ class Dataset(ABC):
 
         return self.items.loc[item_ids]
 
-    def get_users_by_interacted_items(self, indices: List[int], split: str, min_interacts: int = 3) -> List[str]:
+    def get_users_by_interacted_items(self, indices: List[int], split: str, min_interacts: int = 5) -> List[str]:
         matrix = self.splits.get(split).complete_matrix
         matrix_copy = matrix[:, indices].copy()
         matrix_copy[matrix_copy > 0] = 1
@@ -318,12 +318,12 @@ class Dataset(ABC):
     def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
         for col in cols:
-            self.tags[col] = np.unique(np.concatenate(self.items[col].values)).tolist()
+            self.tags[col] = list(filter(None, np.unique(np.concatenate(self.items[col].values))))
 
     def _update_categories(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Category)
         for col in cols:
-            self.categories[col] = self.items[col].unique().tolist()
+            self.categories[col] = list(filter(None, self.items[col].unique()))
 
     def _update_histograms(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)

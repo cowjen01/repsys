@@ -1,11 +1,5 @@
 export const usersDescription = {
-  interactions: {
-    distribution: {
-      values: [450, 230, 1000, 123],
-      bins: [0, 5, 10, 50, 200],
-    },
-    topItems: [],
-  },
+  topItems: [],
 };
 
 export const trainUsers = [

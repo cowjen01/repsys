@@ -257,17 +257,9 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
             raise InvalidUsage(f"Some of the input users not found.")
 
         items = dataset.get_top_items_by_users(user_indices, split)
-        interact_values = dataset.get_interact_values_by_users(user_indices, split)
-        values_hist = np.histogram(interact_values, bins=5)
 
         return json({
-            'interactions': {
-                'distribution': {
-                    'values': values_hist[0].tolist(),
-                    'bins': values_hist[1].tolist()
-                },
-                'topItems': serialize_items(items)
-            }
+            'topItems': serialize_items(items)
         })
 
     @app.route("/api/items/embeddings", methods=["GET"])

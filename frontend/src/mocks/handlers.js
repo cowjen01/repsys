@@ -43,7 +43,7 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
-    usersDescription.interactions.topItems = shuffle(items).slice(0, 5);
+    usersDescription.topItems = shuffle(items).slice(0, 5);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {

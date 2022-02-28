@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import pt from 'prop-types';
 import { Typography, Stack, Box, List } from '@mui/material';
 
-import BarPlotHistogram from './BarPlotHistogram';
 import { PanelLoader } from '../loaders';
 import { ItemListView } from '../items';
 import ErrorAlert from '../ErrorAlert';
@@ -30,8 +29,6 @@ function UsersDescription({ users, split }) {
     return <PanelLoader />;
   }
 
-  const { distribution, topItems } = data.interactions;
-
   return (
     <Stack spacing={1}>
       <Box>
@@ -42,12 +39,12 @@ function UsersDescription({ users, split }) {
           A list of the most interacted items
         </Typography>
         <List dense>
-          {topItems.map((item) => (
+          {data.topItems.map((item) => (
             <ItemListView key={item.id} item={item} style={{ paddingLeft: 5 }} />
           ))}
         </List>
       </Box>
-      <Box>
+      {/* <Box>
         <Typography variant="h6" sx={{ fontSize: '1rem' }}>
           Interactions Distribution
         </Typography>
@@ -55,7 +52,7 @@ function UsersDescription({ users, split }) {
           A distribution of the interaction values
         </Typography>
         <BarPlotHistogram bins={distribution.bins} values={distribution.values} />
-      </Box>
+      </Box> */}
     </Stack>
   );
 }
