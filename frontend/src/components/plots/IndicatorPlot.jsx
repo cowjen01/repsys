@@ -12,7 +12,7 @@ function IndicatorPlot({ title, value, min, max, height, delta }) {
         {
           value,
           title: { text: title, font: { size: 16 } },
-          delta: { reference: delta },
+          delta: delta ? { reference: delta } : null,
           type: 'indicator',
           mode: 'gauge+number+delta',
           gauge: { axis: { range: [min, max] } },
@@ -45,7 +45,7 @@ IndicatorPlot.propTypes = {
 IndicatorPlot.defaultProps = {
   min: 0,
   max: 1,
-  delta: 0,
+  delta: null,
   height: 200,
 };
 

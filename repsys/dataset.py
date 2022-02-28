@@ -25,7 +25,9 @@ from repsys.helpers import (
     unzip_dir,
     zip_dir,
     set_seed,
-    tmpdir_provider
+    tmpdir_provider,
+    find_checkpoints,
+    current_ts
 )
 from repsys.validators import validate_dataset, validate_item_cols, validate_interact_cols
 
@@ -386,7 +388,6 @@ class Dataset(ABC):
             config.dataset.test_holdout_prop,
             config.dataset.min_user_interacts,
             config.dataset.min_item_interacts,
-            config.dataset.min_interact_value,
             config.seed
         )
 
@@ -428,7 +429,7 @@ class Dataset(ABC):
         numeric_cols = filter_columns_by_type(item_cols, dtypes.Number)
         for col in numeric_cols:
             params = typing.cast(dtypes.Number, item_cols.get(col))
-            items[col] = items[col].fillna(params.nan_value)
+            items[col] = items[col].fillna(params.empty_value)
             items[col] = items[col].astype(params.data_type)
 
         tag_cols = filter_columns_by_type(item_cols, dtypes.Tag)
@@ -445,8 +446,14 @@ class Dataset(ABC):
         self._update_data(splits, items, item_index)
 
     @tmpdir_provider
-    def load(self, path: str) -> None:
-        logger.info(f"Loading dataset from '{path}'")
+    def load(self, checkpoints_dir: str) -> None:
+        checkpoints = find_checkpoints(checkpoints_dir, "dataset-split-*.zip")
+
+        if not checkpoints:
+            raise Exception("No dataset splits were found.")
+
+        split_path = checkpoints[0]
+        logger.info(f"Loading dataset from '{split_path}'")
 
         item_cols = self.item_cols()
         interact_cols = self.interaction_cols()
@@ -454,7 +461,7 @@ class Dataset(ABC):
         validate_item_cols(item_cols)
         validate_interact_cols(interact_cols)
 
-        unzip_dir(path, tmp_dir_path())
+        unzip_dir(split_path, tmp_dir_path())
         items, item_index = load_items(self.item_cols(), tmp_dir_path())
 
         train_split = load_split('train', tmp_dir_path())
@@ -466,12 +473,15 @@ class Dataset(ABC):
         self._update_data(splits, items, item_index)
 
     @tmpdir_provider
-    def save(self, path: str) -> None:
+    def save(self, checkpoints_dir: str) -> None:
+        filename = f'dataset-split-{current_ts()}.zip'
+        file_path = os.path.join(checkpoints_dir, filename)
+
         for key, split in self.splits.items():
             save_split(key, split, tmp_dir_path())
 
         save_items(self.items, self.item_cols(), self.item_index, tmp_dir_path())
-        zip_dir(path, tmp_dir_path())
+        zip_dir(file_path, tmp_dir_path())
 
     def __str__(self):
         return f"Dataset '{self.name()}'"
@@ -484,7 +494,6 @@ class DatasetSplitter:
         test_holdout_prop=0.2,
         min_user_interacts=5,
         min_item_interacts=0,
-        min_interact_value=0,
         seed=1234,
         user_col='user',
         item_col='item',
@@ -494,7 +503,6 @@ class DatasetSplitter:
         self.test_holdout_prop = test_holdout_prop
         self.min_user_interacts = min_user_interacts
         self.min_item_interacts = min_item_interacts
-        self.min_interact_value = min_interact_value
         self.seed = seed
         self.user_col = user_col
         self.item_col = item_col
@@ -509,9 +517,6 @@ class DatasetSplitter:
     # filter interactions by two conditions (minimal interactions
     # for movie, minimal interactions by user)
     def _filter_triplets(self, df: DataFrame) -> Tuple[DataFrame, Series, Series]:
-        if self.min_interact_value > 0:
-            df = df[df[self.value_col] >= self.min_interact_value]
-
         # Only keep the triplets for items which
         # were clicked on by at least min_sc users.
         if self.min_item_interacts > 0:

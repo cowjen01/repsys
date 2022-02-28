@@ -29,9 +29,9 @@ class Title(DataType):
 
 
 class Number(DataType):
-    def __init__(self, data_type: Any = float, nan_value: int = 0, bins_range: Optional[Tuple[int, int]] = None):
+    def __init__(self, data_type: Any = float, empty_value: int = 0, bins_range: Optional[Tuple[int, int]] = None):
         self.bins_range = bins_range
-        self.nan_value = nan_value
+        self.empty_value = empty_value
         self.data_type = data_type
 
     def __str__(self):

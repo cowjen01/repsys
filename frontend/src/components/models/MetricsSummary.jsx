@@ -49,7 +49,7 @@ function MetricsSummary({ metricsData }) {
               {indicators.map((indicator) => (
                 <Grid item xs={3} key={indicator.name}>
                   <IndicatorPlot
-                    height={150}
+                    height={140}
                     title={indicator.name}
                     value={indicator.value}
                     delta={indicator.delta}

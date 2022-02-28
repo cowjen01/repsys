@@ -1,4 +1,3 @@
-import functools
 import logging
 from typing import Dict
 
@@ -6,65 +5,16 @@ import click
 
 from repsys.core import train_models, evaluate_dataset, start_server, split_dataset, evaluate_models
 from repsys.dataset import Dataset
-from repsys.helpers import (
-    latest_split_checkpoint,
-    latest_dataset_eval_checkpoint,
-    new_split_checkpoint,
-    new_dataset_eval_checkpoint,
-    new_models_eval_checkpoint,
-    models_eval_checkpoints
-)
+from repsys.helpers import *
 from repsys.loaders import load_packages
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
 
 
-def split_input_callback(ctx, param, value):
+def checkpoints_dir_callback(ctx, param, value):
     if not value:
-        path = latest_split_checkpoint()
-        if not path:
-            raise click.ClickException(
-                "No split were found in the default directory '.repsys_checkpoints'. "
-                "Please provide a path to the split or run 'repsys dataset split' command."
-            )
-        return path
-    return value
-
-
-def dataset_eval_input_callback(ctx, param, value):
-    if not value:
-        return latest_dataset_eval_checkpoint()
-    return value
-
-
-def latest_model_eval_input_callback(ctx, param, value):
-    if not value:
-        return models_eval_checkpoints(history=0)
-    return value
-
-
-def compare_model_eval_input_callback(ctx, param, value):
-    if not value:
-        return models_eval_checkpoints(history=1)
-    return value
-
-
-def split_output_callback(ctx, param, value):
-    if not value:
-        return new_split_checkpoint()
-    return value
-
-
-def dataset_eval_output_callback(ctx, param, value):
-    if not value:
-        return new_dataset_eval_checkpoint()
-    return value
-
-
-def models_eval_output_callback(ctx, param, value):
-    if not value:
-        return new_models_eval_checkpoint()
+        return checkpoints_dir_path()
     return value
 
 
@@ -100,8 +50,8 @@ def models_pkg_option(func):
     return wrapper
 
 
-def split_path_option(func):
-    @click.option("--split-path", callback=split_input_callback, type=click.Path(exists=True))
+def checkpoints_dir_option(func):
+    @click.option("--checkpoints-dir", callback=checkpoints_dir_callback, type=click.Path(exists=True))
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
         return func(*args, **kwargs)
@@ -113,22 +63,18 @@ def split_path_option(func):
 @click.option('--debug/--no-debug', default=False)
 @click.pass_context
 def repsys_group(ctx, debug):
-    """Repsys client for recommendation systems development."""
     ctx.ensure_object(dict)
     ctx.obj['DEBUG'] = debug
+    create_checkpoints_dir()
 
 
 @repsys_group.command(name='server')
 @models_pkg_option
 @dataset_pkg_option
-@split_path_option
-@click.option("--dataset-eval-path", callback=dataset_eval_input_callback, type=click.Path(exists=True))
-@click.option("--latest-model-eval-path", callback=latest_model_eval_input_callback, type=click.Path(exists=True))
-@click.option("--compare-model-eval-path", callback=compare_model_eval_input_callback, type=click.Path(exists=True))
-def server_start_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str,
-                     latest_model_eval_path: str, compare_model_eval_path: str):
+@checkpoints_dir_option
+def server_start_cmd(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str):
     """Start server."""
-    start_server(models, dataset, split_path, dataset_eval_path, latest_model_eval_path, compare_model_eval_path)
+    start_server(models, dataset, checkpoints_dir)
 
 
 @click.group(name='model')
@@ -152,40 +98,33 @@ repsys_group.add_command(models_group)
 @models_group.command(name='eval')
 @models_pkg_option
 @dataset_pkg_option
-@split_path_option
+@checkpoints_dir_option
 @click.option("-s", "--split-type", default="validation", type=click.Choice(["test", "validation"]), show_default=True)
-@click.option("-o", "--output-path", callback=models_eval_output_callback)
-@click.option("-m", "--model")
-def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str,
-                    model: str):
-    """Evaluate models using test/validation split."""
-    evaluate_models(models, dataset, split_path, split_type, output_path, model)
+@click.option("-m", "--model-name")
+def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_type: str, checkpoints_dir: str, model_name: str):
+    evaluate_models(models, dataset, checkpoints_dir, split_type, model_name)
 
 
 @models_group.command(name='train')
 @dataset_pkg_option
 @models_pkg_option
-@split_path_option
-@click.option("-m", "--model")
-def models_train_cmd(models: Dict[str, Model], dataset: Dataset, split_path: str, model: str):
-    """Train models using train split."""
-    train_models(models, dataset, split_path, model)
+@checkpoints_dir_option
+@click.option("-m", "--model-name")
+def models_train_cmd(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str, model_name: str):
+    train_models(models, dataset, checkpoints_dir, model_name)
 
 
 # DATASET GROUP
 @dataset_group.command(name='split')
 @dataset_pkg_option
-@click.option("-o", "--output-path", callback=split_output_callback)
-def dataset_split_cmd(dataset: Dataset, output_path: str):
-    """Create train/validation/test split."""
-    split_dataset(dataset, output_path)
+@checkpoints_dir_option
+def dataset_split_cmd(dataset: Dataset, checkpoints_dir: str):
+    split_dataset(dataset, checkpoints_dir)
 
 
 @dataset_group.command(name='eval')
 @dataset_pkg_option
-@split_path_option
-@click.option("-o", "--output-path", callback=dataset_eval_output_callback)
+@checkpoints_dir_option
 @click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne"]), show_default=True)
-def dataset_eval_cmd(dataset: Dataset, split_path: str, output_path: str, method: str):
-    """Create dataset embeddings using train split."""
-    evaluate_dataset(dataset, split_path, output_path, method)
+def dataset_eval_cmd(dataset: Dataset, checkpoints_dir: str, method: str):
+    evaluate_dataset(dataset, checkpoints_dir, method)

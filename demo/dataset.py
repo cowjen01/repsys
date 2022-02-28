@@ -37,7 +37,10 @@ class MovieLens(Dataset):
         return df
 
     def load_interactions(self):
-        return pd.read_csv("./datasets/ml-20m/ratings.csv")
+        df = pd.read_csv("./datasets/ml-20m/ratings.csv")
+        df = df[df['rating'] > 3.5]
+        df.loc[df['rating'] > 0, 'rating'] = 1
+        return df
 
 
 # class TempleWebster(Dataset):

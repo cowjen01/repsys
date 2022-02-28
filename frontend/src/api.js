@@ -48,8 +48,8 @@ export const repsysApi = createApi({
     getModels: builder.query({
       query: () => '/models',
     }),
-    getMetricsByModel: builder.query({
-      query: (model) => `/models/${model}/metrics`,
+    getUserMetricsByModel: builder.query({
+      query: (model) => `/models/${model}/metrics/user`,
     }),
     predictItemsByModel: builder.mutation({
       query: ({ model, ...body }) => ({
@@ -83,7 +83,7 @@ export const {
   useGetDatasetQuery,
   useGetItemsByTitleQuery,
   useGetItemsEmbeddingsQuery,
-  useGetMetricsByModelQuery,
+  useGetUserMetricsByModelQuery,
   useGetModelsMetricsQuery,
   useGetModelsQuery,
   useGetUserByIDQuery,

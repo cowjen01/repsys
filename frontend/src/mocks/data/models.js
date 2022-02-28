@@ -29,10 +29,7 @@ export const models = {
 
 export const modelsMetrics = {
   metrics: {
-    distributed: {
-      users: ['Recall@20', 'Recall@50', 'Recall@100'],
-      items: [],
-    },
+    user: ['Recall@20', 'Recall@50', 'Recall@100'],
   },
   results: {
     knn: {

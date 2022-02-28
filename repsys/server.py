@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict, Optional
+from typing import Dict
 
 import numpy as np
 from pandas import DataFrame
@@ -17,8 +17,8 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optional[DatasetEvaluator],
-               latest_model_eval: Optional[ModelEvaluator], compare_model_eval: Optional[ModelEvaluator]) -> Sanic:
+def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: DatasetEvaluator,
+               model_eval: ModelEvaluator) -> Sanic:
     app = Sanic(__name__)
 
     static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
@@ -319,35 +319,33 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optiona
 
     @app.route("/api/models/metrics", methods=["GET"])
     def get_metrics(request):
-        if latest_model_eval is None:
-            raise NotFound("No models evaluation found.")
+        results = {}
+        for model in model_eval.evaluated_models:
+            model_summary = model_eval.get_eval_summary(model)
+            if model_summary:
+                results[model] = {'current': model_summary}
+                prev_summary = model_eval.get_eval_summary(model, history=1)
+                if prev_summary:
+                    results[model]['previous'] = prev_summary
 
         return json({
             'metrics': {
-                'distributed': {
-                    'users': [f'recall@{k}' for k in latest_model_eval.recall_steps],
-                    'items': [],
-                },
+                'user': model_eval.user_metrics
             },
-            'results': {
-                model: {
-                    'current': df.mean().to_dict(),
-                } for model, df in latest_model_eval.results.items()
-            }
+            'results': results
         })
 
-    @app.route("/api/models/<model_name>/metrics", methods=["GET"])
+    @app.route("/api/models/<model_name>/metrics/user", methods=["GET"])
     def get_model_metrics(request, model_name: str):
         if models.get(model_name) is None:
             raise NotFound(f"Model '{model_name}' not implemented.")
 
-        if latest_model_eval is None:
-            raise NotFound("No models evaluation found.")
+        results = model_eval.get_user_results(model_name)
 
-        if latest_model_eval.results.get(model_name) is None:
+        if results is None:
             raise NotFound(f"Model '{model_name}' not evaluated.")
 
-        df = latest_model_eval.results.get(model_name).copy()
+        df = results.copy()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -359,8 +357,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optiona
     return app
 
 
-def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: Optional[DatasetEvaluator],
-               latest_model_eval: Optional[ModelEvaluator], compare_model_eval: Optional[ModelEvaluator]) -> None:
-    app = create_app(models, dataset, dataset_eval, latest_model_eval, compare_model_eval)
+def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: DatasetEvaluator,
+               model_eval: ModelEvaluator) -> None:
+    app = create_app(models, dataset, dataset_eval, model_eval)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="localhost", port=3001, debug=False, access_log=False)

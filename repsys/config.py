@@ -8,12 +8,11 @@ from repsys.helpers import default_config_path
 
 class DatasetConfig:
     def __init__(self, test_holdout_prop: float, train_split_prop: float, min_user_interacts: int,
-                 min_item_interacts: int, min_interact_value: float):
+                 min_item_interacts: int):
         self.test_holdout_prop = test_holdout_prop
         self.train_split_prop = train_split_prop
         self.min_user_interacts = min_user_interacts
         self.min_item_interacts = min_item_interacts
-        self.min_interact_value = min_interact_value
 
 
 class Config:
@@ -52,7 +51,6 @@ def read_config(config_path: str = None):
         config.getfloat('dataset', 'TRAIN_SPLIT_PROP', fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
         config.getint('dataset', 'MIN_USER_INTERACTS', fallback=const.DEFAULT_MIN_USER_INTERACTS),
         config.getint('dataset', 'MIN_ITEM_INTERACTS', fallback=const.DEFAULT_MIN_ITEM_INTERACTS),
-        config.getfloat('dataset', 'MIN_INTERACT_VALUE', fallback=const.DEFAULT_MIN_INTERACT_VALUE)
     )
 
     validate_dataset_config(dataset_config)

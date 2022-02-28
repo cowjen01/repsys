@@ -9,12 +9,12 @@ from repsys.server import run_server
 logger = logging.getLogger(__name__)
 
 
-def split_dataset(dataset: Dataset, output_path: str):
+def split_dataset(dataset: Dataset, checkpoints_dir: str):
     logger.info("Creating splits of the input data ...")
     dataset.split()
 
-    logger.info(f"Saving the split into '{output_path}'")
-    dataset.save(output_path)
+    logger.info(f"Saving the split into '{checkpoints_dir}'")
+    dataset.save(checkpoints_dir)
 
     logger.warning("DON'T FORGET TO RETRAIN YOUR MODELS! ")
 
@@ -26,35 +26,21 @@ def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
         model.fit(training=training)
 
 
-def start_server(models: Dict[str, Model], dataset: Dataset, split_path: str, dataset_eval_path: str,
-                 latest_model_eval_path: str, compare_model_eval_path: str):
-    dataset.load(split_path)
+def start_server(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str):
+    dataset.load(checkpoints_dir)
     fit_models(models, dataset, training=False)
 
-    dataset_eval = None
-    latest_model_eval = None
-    compare_model_eval = None
+    dataset_eval = DatasetEvaluator(dataset)
+    dataset_eval.load(checkpoints_dir)
 
-    if latest_model_eval_path is not None:
-        logger.info('Loading latest models evaluations ...')
-        latest_model_eval = ModelEvaluator()
-        latest_model_eval.load(latest_model_eval_path)
+    model_eval = ModelEvaluator(dataset)
+    model_eval.load(checkpoints_dir, list(models.keys()), history=2)
 
-    if compare_model_eval_path is not None:
-        logger.info('Loading compare models evaluations ...')
-        compare_model_eval = ModelEvaluator()
-        compare_model_eval.load(compare_model_eval_path)
-
-    if dataset_eval_path is not None:
-        logger.info('Loading dataset evaluations ...')
-        dataset_eval = DatasetEvaluator()
-        dataset_eval.load(dataset_eval_path)
-
-    run_server(models, dataset, dataset_eval, latest_model_eval, compare_model_eval)
+    run_server(models, dataset, dataset_eval, model_eval)
 
 
-def train_models(models: Dict[str, Model], dataset: Dataset, split_path: str, model_name: str = None):
-    dataset.load(split_path)
+def train_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str, model_name: str = None):
+    dataset.load(checkpoints_dir)
 
     if model_name is not None:
         model = models.get(model_name)
@@ -63,31 +49,27 @@ def train_models(models: Dict[str, Model], dataset: Dataset, split_path: str, mo
     fit_models(models, dataset, training=True)
 
 
-def evaluate_dataset(dataset: Dataset, split_path: str, output_path: str, method: str):
-    dataset.load(split_path)
+def evaluate_dataset(dataset: Dataset, checkpoints_dir: str, method: str):
+    dataset.load(checkpoints_dir)
 
-    evaluator = DatasetEvaluator()
-    evaluator.update_dataset(dataset)
+    evaluator = DatasetEvaluator(dataset)
     evaluator.compute_embeddings('train', method=method)
     evaluator.compute_embeddings('validation', method=method)
-    evaluator.save(output_path)
+    evaluator.save(checkpoints_dir)
 
 
-def evaluate_models(models: Dict[str, Model], dataset: Dataset, split_path: str, split_type: str, output_path: str,
-                    model_name: str):
-    dataset.load(split_path)
+def evaluate_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str, split_type: str, model_name: str):
+    dataset.load(checkpoints_dir)
 
     if model_name is not None:
-        model = models.get(model_name)
-        models = {model_name: model}
+        models = {model_name: models.get(model_name)}
 
     fit_models(models, dataset, training=False)
 
-    evaluator = ModelEvaluator()
-    evaluator.update_dataset(dataset)
+    evaluator = ModelEvaluator(dataset)
 
     for model in models.values():
         logger.info(f"Evaluating model '{model.name()}' ...")
-
         evaluator.evaluate(model, split_type)
-        evaluator.save(output_path)
+
+    evaluator.save_latest(checkpoints_dir)

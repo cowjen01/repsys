@@ -5,14 +5,14 @@ import Plotly from 'plotly.js';
 
 import { ScatterPlot, HistogramPlot } from '../plots';
 import UsersDescription from '../dataset/UsersDescription';
-import { useGetMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
+import { useGetUserMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
 import { CategoryFilter } from '../filters';
 import TabPanel from '../TabPanel';
 import { PlotLoader } from '../loaders';
 
 function UsersDistribution({ metricsData }) {
   const models = Object.keys(metricsData.results);
-  const metrics = metricsData.metrics.distributed.users;
+  const metrics = metricsData.metrics.user;
 
   const [activeTab, setActiveTab] = useState(0);
   const [selectedData, setSelectedData] = useState();
@@ -22,7 +22,7 @@ function UsersDistribution({ metricsData }) {
   const histRef = useRef();
 
   const embeddings = useGetUsersEmbeddingsQuery('validation');
-  const modelMetrics = useGetMetricsByModelQuery(selectedModel);
+  const userMetrics = useGetUserMetricsByModelQuery(selectedModel);
 
   const resetHistSelection = () => {
     Plotly.restyle(histRef.current.el, { selectedpoints: [null] });
@@ -53,7 +53,7 @@ function UsersDistribution({ metricsData }) {
       const points = eventData.points[0].data.selectedpoints;
       setSelectedData({
         indices: points,
-        users: points.map((p) => modelMetrics.data[p].id),
+        users: points.map((p) => userMetrics.data[p].id),
       });
     }
   };
@@ -73,11 +73,11 @@ function UsersDistribution({ metricsData }) {
   }, [embeddings.data]);
 
   const histogramData = useMemo(() => {
-    if (modelMetrics.data) {
-      return modelMetrics.data.map((d) => d[selectedMetric]);
+    if (userMetrics.data) {
+      return userMetrics.data.map((d) => d[selectedMetric]);
     }
     return [];
-  }, [modelMetrics.data, selectedMetric]);
+  }, [userMetrics.data, selectedMetric]);
 
   return (
     <Grid container spacing={2}>
@@ -91,7 +91,7 @@ function UsersDistribution({ metricsData }) {
           />
           <CategoryFilter
             label="Metric"
-            disabled={modelMetrics.isFetching}
+            disabled={userMetrics.isFetching}
             value={selectedMetric}
             onChange={handleMetricChange}
             options={metrics}
@@ -102,7 +102,7 @@ function UsersDistribution({ metricsData }) {
         <Grid container spacing={2} sx={{ height: 450 }}>
           <Grid item xs={8}>
             <Box position="relative">
-              {modelMetrics.isFetching && <PlotLoader />}
+              {userMetrics.isFetching && <PlotLoader />}
               <Paper sx={{ p: 2 }}>
                 <HistogramPlot
                   data={histogramData}

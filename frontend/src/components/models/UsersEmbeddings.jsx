@@ -3,27 +3,27 @@ import pt from 'prop-types';
 import { Paper, Grid, Box, Stack } from '@mui/material';
 
 import UsersDescription from '../dataset/UsersDescription';
-import { useGetMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
+import { useGetUserMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
 import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
 import { PlotLoader } from '../loaders';
 
 function UsersEmbeddings({ metricsData }) {
   const models = Object.keys(metricsData.results);
-  const metrics = metricsData.metrics.distributed.users;
+  const metrics = metricsData.metrics.user;
 
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
-  const [selectedColorScale, setSelectedColorScale] = useState('Bluered');
+  const [selectedColorScale, setSelectedColorScale] = useState('Picnic');
 
   const embeddings = useGetUsersEmbeddingsQuery('validation');
-  const modelMetrics = useGetMetricsByModelQuery(selectedModel);
+  const userMetrics = useGetUserMetricsByModelQuery(selectedModel);
 
   const handleModelChange = (newValue) => {
     setSelectedModel(newValue);
-    setSelectedMetric(metrics[0]);
+    // setSelectedMetric(metrics[0]);
     setPlotResetIndex(plotResetIndex + 1);
     setSelectedUsers([]);
   };
@@ -43,11 +43,11 @@ function UsersEmbeddings({ metricsData }) {
   };
 
   const embeddingsColor = useMemo(() => {
-    if (modelMetrics.data) {
-      return modelMetrics.data.map((d) => d[selectedMetric]);
+    if (userMetrics.data) {
+      return userMetrics.data.map((d) => d[selectedMetric]);
     }
     return [];
-  }, [modelMetrics.data, selectedMetric]);
+  }, [userMetrics.data, selectedMetric]);
 
   return (
     <Grid container spacing={2}>
@@ -61,7 +61,7 @@ function UsersEmbeddings({ metricsData }) {
           />
           <CategoryFilter
             label="Metric"
-            disabled={modelMetrics.isFetching}
+            disabled={userMetrics.isFetching}
             value={selectedMetric}
             onChange={handleMetricChange}
             options={metrics}
@@ -70,7 +70,7 @@ function UsersEmbeddings({ metricsData }) {
             label="Color scale"
             value={selectedColorScale}
             onChange={setSelectedColorScale}
-            options={['Bluered', 'Hot', 'Jet', 'YlGnBu']}
+            options={['Picnic', 'Bluered', 'Jet', 'RdBu']}
           />
         </Stack>
       </Grid>
@@ -78,7 +78,7 @@ function UsersEmbeddings({ metricsData }) {
         <Grid container spacing={2} sx={{ height: 500 }}>
           <Grid item xs={8}>
             <Box position="relative">
-              {modelMetrics.isFetching && <PlotLoader />}
+              {userMetrics.isFetching && <PlotLoader />}
               <Paper sx={{ p: 2 }}>
                 <EmbeddingsPlot
                   onUnselect={handlePlotUnselect}

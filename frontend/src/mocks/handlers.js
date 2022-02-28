@@ -61,7 +61,7 @@ export const handlers = [
     // summary of the current and previous metrics
     res(ctx.delay(800), ctx.json(modelsMetrics))
   ),
-  rest.get('/api/models/:modelName/metrics', (req, res, ctx) => {
+  rest.get('/api/models/:modelName/metrics/user', (req, res, ctx) => {
     const { modelName } = req.params;
     return res(ctx.delay(1000), ctx.json(modelsMetricsFull[modelName]));
   }),

@@ -85,7 +85,7 @@ function ScatterPlot({
             size: 6 - Math.log10(x.length),
             color: finalColor,
             showscale: showScale,
-            colorscale: colorScale
+            colorscale: colorScale,
           },
         },
       ]}
@@ -141,7 +141,7 @@ ScatterPlot.defaultProps = {
   highlighted: [],
   dragMode: 'lasso',
   layoutProps: {},
-  colorScale: 'Bluered'
+  colorScale: 'Bluered',
 };
 
 export default ScatterPlot;

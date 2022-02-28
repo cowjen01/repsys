@@ -14,7 +14,7 @@ function EmbeddingsPlot({
   color,
   resetIndex,
   showScale,
-  colorScale
+  colorScale,
 }) {
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
