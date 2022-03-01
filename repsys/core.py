@@ -80,4 +80,5 @@ def evaluate_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir:
         logger.info(f"Evaluating model '{model.name()}' ...")
         evaluator.evaluate(model, split_type)
 
+    evaluator.print()
     evaluator.save(checkpoints_dir)

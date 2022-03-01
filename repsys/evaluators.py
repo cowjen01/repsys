@@ -203,6 +203,7 @@ class ModelEvaluator:
 
     def print(self) -> None:
         for model in self.evaluated_models:
+            print('-----------------------')
             print(f'MODEL {model.upper()}:')
             user_results = self._user_results.get(model)
             print('User Metrics:')
@@ -243,8 +244,6 @@ class ModelEvaluator:
             self._user_results[model.name()] = [df]
         else:
             self._user_results.get(model.name()).append(df)
-
-        self.print()
 
     @tmpdir_provider
     def _save_latest_eval(self, model_name: str, checkpoints_dir: str):
