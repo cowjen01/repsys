@@ -30,8 +30,16 @@ def start_server(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: st
     dataset.load(checkpoints_dir)
     fit_models(models, dataset, training=False)
 
-    dataset_eval = DatasetEvaluator(dataset)
-    dataset_eval.load(checkpoints_dir)
+    dataset_eval_train = DatasetEvaluator(dataset, split='train')
+    dataset_eval_train.load(checkpoints_dir)
+
+    dataset_eval_vad = DatasetEvaluator(dataset, split='validation')
+    dataset_eval_vad.load(checkpoints_dir)
+
+    dataset_eval = {
+        'train': dataset_eval_train,
+        'validation': dataset_eval_vad
+    }
 
     model_eval = ModelEvaluator(dataset)
     model_eval.load(checkpoints_dir, list(models.keys()), history=2)
@@ -52,10 +60,10 @@ def train_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: st
 def evaluate_dataset(dataset: Dataset, checkpoints_dir: str, method: str):
     dataset.load(checkpoints_dir)
 
-    evaluator = DatasetEvaluator(dataset)
-    evaluator.compute_embeddings('train', method=method)
-    evaluator.compute_embeddings('validation', method=method)
-    evaluator.save(checkpoints_dir)
+    for split in ['train', 'validation']:
+        evaluator = DatasetEvaluator(dataset, split)
+        evaluator.compute_embeddings(method=method, max_samples=10000)
+        evaluator.save(checkpoints_dir)
 
 
 def evaluate_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str, split_type: str, model_name: str):
@@ -72,4 +80,4 @@ def evaluate_models(models: Dict[str, Model], dataset: Dataset, checkpoints_dir:
         logger.info(f"Evaluating model '{model.name()}' ...")
         evaluator.evaluate(model, split_type)
 
-    evaluator.save_latest(checkpoints_dir)
+    evaluator.save(checkpoints_dir)

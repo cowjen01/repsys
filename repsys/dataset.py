@@ -157,16 +157,21 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
     return items, item_index
 
 
-def get_top_tags(items: DataFrame, col: str, n: int = 5) -> List[str]:
-    tags, counts = np.unique(np.concatenate(items[col].values), return_counts=True)
-    sort_indices = (-counts).argsort()
-    sorted_tags = list(filter(None, tags[sort_indices]))[:n]
-    return sorted_tags
+def get_top_tags(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str], List[int]]:
+    tags = items[items[col].str[0] != ''][col]
+    labels, counts = np.unique(np.concatenate(tags.values), return_counts=True)
+    indices = (-counts).argsort()
+    labels = labels[indices].tolist()[:n]
+    counts = counts[indices].tolist()[:n]
+    return labels, counts
 
 
-def get_top_categories(items: DataFrame, col: str, n: int = 5) -> List[str]:
-    sorted_categories = items[col].value_counts()
-    return list(filter(None, sorted_categories.index.tolist()))[:n]
+def get_top_categories(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str], List[int]]:
+    categories = items[items[col] != ''][col]
+    categories = categories.value_counts()
+    labels = categories.index.tolist()[:n]
+    counts = categories.values.tolist()[:n]
+    return labels, counts
 
 
 class Dataset(ABC):
@@ -201,6 +206,9 @@ class Dataset(ABC):
     @abstractmethod
     def load_interactions(self) -> DataFrame:
         pass
+
+    def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:
+        raise Exception('You must implement your custom embeddings method.')
 
     def get_split_by_user(self, uid: str) -> Optional[str]:
         for key, split in self.splits.items():
@@ -306,24 +314,26 @@ class Dataset(ABC):
 
         return user_ids.tolist()
 
-    def compute_histogram_by_col(self, items: DataFrame, col: str) -> Tuple[ndarray, ndarray]:
+    def compute_histogram_by_col(self, items: DataFrame, col: str, bins: int = 5) -> Tuple[ndarray, ndarray]:
         params = typing.cast(dtypes.Number, self.item_cols()[col])
         if params.bins_range:
             hist_range = params.bins_range
         else:
             hist_range = (items[col].quantile(.1), items[col].quantile(.9))
 
-        return np.histogram(items[col], range=hist_range, bins=5)
+        return np.histogram(items[col], range=hist_range, bins=bins)
 
     def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
         for col in cols:
-            self.tags[col] = list(filter(None, np.unique(np.concatenate(self.items[col].values))))
+            tags = np.sort(np.unique(np.concatenate(self.items[col].values)))
+            self.tags[col] = [x for x in tags if x != '']
 
     def _update_categories(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Category)
         for col in cols:
-            self.categories[col] = list(filter(None, self.items[col].unique()))
+            categories = np.sort(self.items[col].unique())
+            self.categories[col] = [cat for cat in categories if cat != '']
 
     def _update_histograms(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)

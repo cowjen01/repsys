@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import pt from 'prop-types';
-import { Typography, Stack, Box, Chip } from '@mui/material';
+import { Typography, Stack, Box } from '@mui/material';
 
 import { PanelLoader } from '../loaders';
-import BarPlotHistogram from './BarPlotHistogram';
 import { capitalize } from '../../utils';
 import { useDescribeItemsMutation } from '../../api';
 import ErrorAlert from '../ErrorAlert';
+import { BarPlot } from '../plots';
 
 function ItemsDescription({ attributes, items }) {
   const [describeItems, { data, error, isError, isLoading, isUninitialized }] =
@@ -31,8 +31,8 @@ function ItemsDescription({ attributes, items }) {
   }
 
   return (
-    <Stack spacing={2}>
-      {Object.entries(data.attributes).map(([key, { topValues, bins, values }]) => (
+    <Stack spacing={1}>
+      {Object.entries(data.attributes).map(([key, { labels, bins, values }]) => (
         <Box key={key}>
           <Typography variant="h6" sx={{ fontSize: '1rem' }}>
             {capitalize(key)}
@@ -42,19 +42,33 @@ function ItemsDescription({ attributes, items }) {
               <Typography variant="body2" sx={{ fontSize: '0.8rem' }} mb={1}>
                 The most frequent values
               </Typography>
-              <Stack direction="row" spacing={1}>
-                {topValues.map((value) => (
-                  <Chip key={value} label={value} />
-                ))}
-              </Stack>
+              <BarPlot
+                height={150}
+                data={[
+                  {
+                    x: labels,
+                    y: values,
+                  },
+                ]}
+              />
             </>
           )}
           {attributes[key].dtype === 'number' && (
             <>
               <Typography sx={{ fontSize: '0.8rem' }} variant="body2">
-                Attribute values distribution
+                Attribute&#39;s values distribution
               </Typography>
-              <BarPlotHistogram bins={bins} values={values} />
+              <BarPlot
+                height={150}
+                data={[
+                  {
+                    x: values.map(
+                      (_, index) => `${Math.ceil(bins[index])}-${Math.ceil(bins[index + 1])}`
+                    ),
+                    y: values,
+                  },
+                ]}
+              />
             </>
           )}
         </Box>

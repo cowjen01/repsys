@@ -1,10 +1,12 @@
 export const itemsDescription = {
   attributes: {
     genres: {
-      topValues: [],
+      labels: [],
+      values: [],
     },
     country: {
-      topValues: [],
+      labels: [],
+      values: [],
     },
     year: {
       values: [30, 20, 10, 20, 20],

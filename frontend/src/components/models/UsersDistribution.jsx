@@ -82,7 +82,7 @@ function UsersDistribution({ metricsData }) {
   return (
     <Grid container spacing={2}>
       <Grid item xs={12}>
-        <Stack direction="row" spacing={2}>
+        <Stack direction="row" spacing={1}>
           <CategoryFilter
             label="Model"
             value={selectedModel}

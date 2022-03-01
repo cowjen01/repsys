@@ -11,11 +11,12 @@ function IndicatorPlot({ title, value, min, max, height, delta }) {
       data={[
         {
           value,
-          title: { text: title, font: { size: 16 } },
+          title: { text: title, font: { size: 13 } },
           delta: delta ? { reference: delta } : null,
           type: 'indicator',
           mode: 'gauge+number+delta',
           gauge: { axis: { range: [min, max] } },
+          hovermode: false,
         },
       ]}
       style={{
@@ -28,6 +29,9 @@ function IndicatorPlot({ title, value, min, max, height, delta }) {
         paper_bgcolor: 'rgba(0,0,0,0)',
         font: { color: text.primary },
         margin: { b: 0, t: 30, l: 30, r: 30 },
+      }}
+      config={{
+        displayModeBar: false,
       }}
     />
   );

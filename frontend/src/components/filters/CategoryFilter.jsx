@@ -14,7 +14,7 @@ function CategoryFilter({ onChange, value, options, label, displayEmpty, ...rest
   };
 
   return (
-    <FormControl variant="filled" sx={{ minWidth: 250 }}>
+    <FormControl variant="filled" sx={{ width: 200 }}>
       <InputLabel>{label}</InputLabel>
       <Select value={value} label={label} onChange={handleChange} onClose={handleClose} {...rest}>
         {displayEmpty && (

@@ -71,13 +71,13 @@ function ScatterPlot({
           customdata: meta,
           unselected: {
             marker: {
-              opacity: 1,
+              opacity: 0.7,
               color: plotColors.unselectedMarker,
             },
           },
           selected: {
             marker: {
-              opacity: 1,
+              opacity: 0.7,
               color: plotColors.selectedMarker,
             },
           },
@@ -86,6 +86,7 @@ function ScatterPlot({
             color: finalColor,
             showscale: showScale,
             colorscale: colorScale,
+            opacity: 0.7,
           },
         },
       ]}

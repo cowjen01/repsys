@@ -1,16 +1,17 @@
-from typing import Tuple, Dict, Optional
+from typing import Tuple, Dict, Optional, Any
 
 import pandas as pd
 import pymde
 from jax import numpy as jnp, vmap, jit, default_backend
 from numpy import ndarray
 from pandas import DataFrame
-from scipy.sparse import csr_matrix
+from scipy.sparse import csr_matrix, issparse
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
+from repsys.metrics import recall, ndcg
 from repsys.model import Model
 
 
@@ -33,66 +34,80 @@ def read_df(file_path: str) -> DataFrame:
 
 
 class DatasetEvaluator:
-    def __init__(self, dataset: Dataset, seed: int = 1234, verbose: bool = True):
+    def __init__(self, dataset: Dataset, split: str = 'train', seed: int = 1234, verbose: bool = True):
         self._dataset = dataset
-        self.verbose = verbose
-        self.seed = seed
-        self.item_embeddings = {}
-        self.user_embeddings = {}
+        self._split = split
+        self._verbose = verbose
+        self._seed = seed
+        self._tsne = TSNE(n_iter=1500, n_components=2, metric='cosine', init='random', verbose=self._verbose)
+        self._pca = PCA(n_components=50)
+        self.item_embeddings: Optional[DataFrame] = None
+        self.user_embeddings: Optional[DataFrame] = None
 
-    def _get_input_data(self, split: str) -> csr_matrix:
-        return self._dataset.splits.get(split).complete_matrix
+    def _sample_data(self, X: ndarray, max_samples: int) -> Tuple[ndarray, ndarray]:
+        set_seed(self._seed)
+        indices = np.random.permutation(X.shape[0])
+        indices = indices[: max_samples]
+        return X[indices], indices
 
-    def _get_embeddings(self, matrix: csr_matrix, max_samples: int = 10000, method: str = 'pymde', **kwargs) -> Tuple[
-        ndarray, ndarray]:
-        set_seed(self.seed)
-        index_perm = np.random.permutation(matrix.shape[0])
-        index_perm = index_perm[: max_samples]
-        matrix = matrix[index_perm]
+    def _pymde_embeddings(self, X: Any) -> ndarray:
+        pymde.seed(self._seed)
+        mde = pymde.preserve_neighbors(X, init='random', n_neighbors=10, verbose=self._verbose)
+        embeddings = mde.embed(verbose=self._verbose, max_iter=1000, memory_size=50, eps=1e-6)
+        embeddings = embeddings.cpu().numpy()
+        return embeddings
+
+    def _tsne_embeddings(self, X: Any) -> ndarray:
+        if issparse(X):
+            X = X.toarray()
+        if X.shape[1] > 50:
+            X = self._pca.fit_transform(X)
+        embeddings = self._tsne.fit_transform(X)
+        return embeddings
+
+    def compute_embeddings(self, method: str = 'pymde', max_samples: int = None):
+        X = self._dataset.splits.get(self._split).complete_matrix
 
         if method == 'pymde':
-            pymde.seed(self.seed)
-            mde = pymde.preserve_neighbors(matrix, init='random', n_neighbors=10, verbose=self.verbose, **kwargs)
-            embeddings = mde.embed(verbose=self.verbose, max_iter=1000, memory_size=50, eps=1e-6)
-            embeddings = embeddings.cpu().numpy()
+            user_embeds = self._pymde_embeddings(X)
+            item_embeds = self._pymde_embeddings(X.T)
+        elif method == 'tsne':
+            user_embeds = self._tsne_embeddings(X)
+            item_embeds = self._tsne_embeddings(X.T)
         else:
-            pca = PCA(n_components=50).fit_transform(matrix.toarray())
-            embeddings = TSNE(n_iter=1500, n_components=2, metric='cosine', init='random', verbose=2).fit_transform(pca)
+            user_embeds, item_embeds = self._dataset.compute_embeddings(X)
+            if user_embeds.shape[1] > 2:
+                user_embeds = self._pymde_embeddings(user_embeds)
+            if item_embeds.shape[1] > 2:
+                item_embeds = self._pymde_embeddings(item_embeds)
 
-        return embeddings, index_perm
+        if max_samples is not None:
+            user_embeds, user_indices = self._sample_data(user_embeds, max_samples)
+            item_embeds, item_indices = self._sample_data(item_embeds, max_samples)
+        else:
+            user_indices = np.arange(user_embeds.shape[0])
+            item_indices = np.arange(item_embeds.shape[0])
 
-    def compute_item_embeddings(self, split: str = 'train', **kwargs) -> None:
-        matrix = self._get_input_data(split).T
-        embeds, indices = self._get_embeddings(matrix, **kwargs)
-        ids = np.vectorize(self._dataset.item_index_to_id)(indices)
-        self.item_embeddings[split] = embeddings_to_df(embeds, ids)
+        user_ids = np.vectorize(self._dataset.user_index_iterator(self._split))(user_indices)
+        item_ids = np.vectorize(self._dataset.item_index_to_id)(item_indices)
 
-    def compute_user_embeddings(self, split: str = 'train', **kwargs) -> None:
-        matrix = self._get_input_data(split)
-        embeds, indices = self._get_embeddings(matrix, **kwargs)
-        ids = np.vectorize(self._dataset.user_index_iterator(split))(indices)
-        self.user_embeddings[split] = embeddings_to_df(embeds, ids)
-
-    def compute_embeddings(self, split: str = 'train', **kwargs):
-        self.compute_user_embeddings(split, **kwargs)
-        self.compute_item_embeddings(split, **kwargs)
+        self.user_embeddings = embeddings_to_df(user_embeds, user_ids)
+        self.item_embeddings = embeddings_to_df(item_embeds, item_ids)
 
     @tmpdir_provider
     def save(self, checkpoints_dir: str) -> None:
-        for split, df in self.item_embeddings.items():
-            write_df(df, f'items-{split}.csv')
+        write_df(self.user_embeddings, f'user-embeds.csv')
+        write_df(self.item_embeddings, f'item-embeds.csv')
 
-        for split, df in self.user_embeddings.items():
-            write_df(df, f'users-{split}.csv')
-
-        filename = f'dataset-eval-{current_ts()}.zip'
+        filename = f'dataset-eval-{self._split}-{current_ts()}.zip'
         file_path = os.path.join(checkpoints_dir, filename)
 
         zip_dir(file_path, tmp_dir_path())
 
     @tmpdir_provider
     def load(self, checkpoints_dir: str) -> None:
-        checkpoints = find_checkpoints(checkpoints_dir, 'dataset-eval-*.zip')
+        pattern = f'dataset-eval-{self._split}-*.zip'
+        checkpoints = find_checkpoints(checkpoints_dir, pattern)
 
         if not checkpoints:
             return
@@ -100,58 +115,11 @@ class DatasetEvaluator:
         file_path = checkpoints[0]
         unzip_dir(file_path, tmp_dir_path())
 
-        for split in ['train', 'validation', 'test']:
-            items_path = os.path.join(tmp_dir_path(), f'items-{split}.csv')
-            if os.path.isfile(items_path):
-                self.item_embeddings[split] = read_df(items_path)
+        items_path = os.path.join(tmp_dir_path(), 'item-embeds.csv')
+        self.item_embeddings = read_df(items_path)
 
-            users_path = os.path.join(tmp_dir_path(), f'users-{split}.csv')
-            if os.path.isfile(users_path):
-                self.user_embeddings[split] = read_df(users_path)
-
-
-def recall(k_mask, sort_indices, x_true_bin):
-    k = k_mask.sum()
-    # an array of row number indices
-    row_indices = jnp.arange(x_true_bin.shape[0])[:, jnp.newaxis]
-    # increase col indices by 1 to make zero index available as a null value
-    sort_indices = sort_indices + 1
-    # keep only first K cols for each row, the rest set to zero
-    col_indices = jnp.where(k_mask, sort_indices, 0)
-    # create a binary matrix from indices
-    # the matrix has an increased dimension by 1 to hold the increased indices
-    predict_matrix_shape = (x_true_bin.shape[0], x_true_bin.shape[1] + 1)
-    predict_matrix = jnp.zeros(predict_matrix_shape, dtype=bool)
-    predict_matrix = predict_matrix.at[row_indices, col_indices].set(True)
-    # remove the first column that holds unused indices
-    predict_matrix = predict_matrix[:, 1:]
-    tmp = (jnp.logical_and(x_true_bin, predict_matrix).sum(axis=1)).astype(jnp.float32)
-    # divide a sum of the agreed indices by a sum of the true indices
-    # to avoid dividing by zero, use the K value as a minimum
-    return tmp / jnp.minimum(k, x_true_bin.sum(axis=1))
-
-
-def ndcg(ndcg_mask, sort_indices, x_true_clipped):
-    K = sort_indices.shape[1]
-    rows_idx = jnp.arange(x_true_clipped.shape[0])[:, jnp.newaxis]
-    tp = 1.0 / jnp.log2(jnp.arange(2, K + 2))
-    # the slowest part ...
-    dcg = (x_true_clipped[rows_idx, sort_indices] * tp).sum(axis=1)
-    # null all positions, where mask is False (keep the rest)
-    idcg = jnp.where(ndcg_mask, tp, 0).sum(axis=1)
-    return dcg / idcg
-
-
-def partial_sort(x_predict: csr_matrix, k: int):
-    row_indices = np.arange(x_predict.shape[0])[:, np.newaxis]
-    # put indices lower than K on the left side of array
-    top_k_indices = np.argpartition(x_predict, k, axis=1)[:, :k]
-    # select unordered top-K predictions
-    top_k_predicts = x_predict[row_indices, top_k_indices]
-    # sort selected predictions by their value
-    sorted_indices = np.argsort(top_k_predicts, axis=1)
-    # get indices of the highest predictions
-    return top_k_indices[row_indices, sorted_indices]
+        users_path = os.path.join(tmp_dir_path(), 'user-embeds.csv')
+        self.user_embeddings = read_df(users_path)
 
 
 class ModelEvaluator:
@@ -168,6 +136,18 @@ class ModelEvaluator:
         self.summary_metrics = [f"recall@{k}" for k in self.recall_steps] + [f"ndcg@{self.ndcg_k}"]
         self.user_metrics = self.summary_metrics + ["mae", "mse", "rmse"]
 
+    @staticmethod
+    def _partial_sort(x_predict: csr_matrix, k: int):
+        row_indices = np.arange(x_predict.shape[0])[:, np.newaxis]
+        # put indices lower than K on the left side of array
+        top_k_indices = np.argpartition(x_predict, k, axis=1)[:, :k]
+        # select unordered top-K predictions
+        top_k_predicts = x_predict[row_indices, top_k_indices]
+        # sort selected predictions by their value
+        sorted_indices = np.argsort(top_k_predicts, axis=1)
+        # get indices of the highest predictions
+        return top_k_indices[row_indices, sorted_indices]
+
     def compute_user_metrics(self, x_predict: ndarray, x_true: ndarray) -> Dict[str, ndarray]:
         max_recall_k = max(self.recall_steps)
         # use the highest K of the configured steps
@@ -181,7 +161,7 @@ class ModelEvaluator:
         if default_backend() == "cpu":
             # at this time there is no jax implementation of the arg partition
             # at cpu we switch to the classical numpy for a moment to sort the array
-            sort_indices = partial_sort(-x_predict, max_k)
+            sort_indices = self._partial_sort(-x_predict, max_k)
         else:
             # on gpu sorting of an array is much faster, so we sort it all
             # once jax arg partition will be implemented, it should appear here

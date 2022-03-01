@@ -2,7 +2,6 @@ import logging
 import os
 from typing import Dict
 
-import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -17,7 +16,7 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: DatasetEvaluator,
+def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
                model_eval: ModelEvaluator) -> Sanic:
     app = Sanic(__name__)
 
@@ -216,22 +215,26 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
 
         tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
         for col in tag_cols:
+            labels, counts = get_top_tags(items, col, n=5)
             attributes[col] = {
-                'topValues': get_top_tags(items, col, 5)
+                'labels': labels,
+                'values': counts
             }
 
         category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
         for col in category_cols:
+            labels, counts = get_top_categories(items, col, n=5)
             attributes[col] = {
-                'topValues': get_top_categories(items, col, 5)
+                'labels': labels,
+                'values': counts
             }
 
         number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
         for col in number_cols:
-            hist = dataset.compute_histogram_by_col(items, col)
+            values, bins = dataset.compute_histogram_by_col(items, col)
             attributes[col] = {
-                'values': hist[0].tolist(),
-                'bins': hist[1].tolist()
+                'values': values.tolist(),
+                'bins': bins.tolist()
             }
 
         return json({
@@ -267,13 +270,11 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
         split = request.args.get("split")
         validate_split_name(split)
 
-        if dataset_eval is None:
-            raise NotFound("No dataset evaluation found.")
+        split_eval = dataset_eval.get(split)
+        if split_eval is None:
+            raise NotFound(f"No embeddings found for split '{split}'.")
 
-        if dataset_eval.item_embeddings.get(split) is None:
-            raise NotFound(f"Item embeddings for split '{split}' not found.")
-
-        df = dataset_eval.item_embeddings.get(split).join(dataset.items[dataset.get_title_col()])
+        df = split_eval.item_embeddings.join(dataset.items[dataset.get_title_col()])
         df = df.rename(columns={dataset.get_title_col(): 'title'})
         df["id"] = df.index
 
@@ -284,13 +285,11 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
         split = request.args.get("split")
         validate_split_name(split)
 
-        if dataset_eval is None:
-            raise NotFound("No dataset evaluation found.")
+        split_eval = dataset_eval.get(split)
+        if split_eval is None:
+            raise NotFound(f"No embeddings found for split '{split}'.")
 
-        if dataset_eval.user_embeddings.get(split) is None:
-            raise NotFound(f"User embeddings for split '{split}' not found.")
-
-        df = dataset_eval.user_embeddings.get(split).copy()
+        df = split_eval.user_embeddings.copy()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -311,6 +310,9 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
 
     @app.route("/api/models/metrics", methods=["GET"])
     def get_metrics(request):
+        if not model_eval.evaluated_models:
+            raise NotFound('Models have not been evaluated yet.')
+
         results = {}
         for model in model_eval.evaluated_models:
             model_summary = model_eval.get_eval_summary(model)
@@ -349,7 +351,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dataset
     return app
 
 
-def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: DatasetEvaluator,
+def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
                model_eval: ModelEvaluator) -> None:
     app = create_app(models, dataset, dataset_eval, model_eval)
     app.config.FALLBACK_ERROR_FORMAT = "json"

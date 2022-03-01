@@ -43,7 +43,7 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
-    usersDescription.topItems = shuffle(items).slice(0, 5);
+    usersDescription.topItems = shuffle(items).slice(0, 10);
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {
@@ -85,8 +85,14 @@ export const handlers = [
   rest.post('/api/items/describe', (req, res, ctx) => {
     const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 4);
     const randCountries = shuffle(dataset.attributes.country.options).slice(0, 4);
-    itemsDescription.attributes.genres.topValues = randGenres;
-    itemsDescription.attributes.country.topValues = randCountries;
+    itemsDescription.attributes.genres.labels = randGenres;
+    itemsDescription.attributes.country.labels = randCountries;
+    itemsDescription.attributes.genres.values = Array(5)
+      .fill()
+      .map(() => randomInt(100, 1000));
+    itemsDescription.attributes.country.values = Array(5)
+      .fill()
+      .map(() => randomInt(100, 1000));
     return res(ctx.delay(1000), ctx.json(itemsDescription));
   }),
   rest.get('/api/items/embeddings', (req, res, ctx) => {

@@ -4,13 +4,11 @@ from abc import ABC
 
 import numpy as np
 import scipy.sparse as sp
-import torch
 from scipy.sparse import csr_matrix
 from sklearn.decomposition import NMF
 from sklearn.neighbors import NearestNeighbors
 
 import repsys.web as web
-from demo.vae import VAEModule, get_device
 from repsys import Model
 
 
@@ -42,57 +40,26 @@ class BaseModel(Model, ABC):
 
             predictions[:, exclude_indexes] = 0
 
+        if kwargs.get('category'):
+            category = kwargs.get('category')
+            items = self.dataset.items
+
+            exclude_ids = items.index[items['product_type'] != category]
+            exclude_indexes = exclude_ids.map(self.dataset.item_id_to_index)
+
+            predictions[:, exclude_indexes] = 0
+
     def web_params(self):
         return {
-            'genre': web.Select(options=self.dataset.get_genres()),
+            'category': web.Select(options=self.dataset.categories.get('product_type')),
+            # 'genre': web.Select(options=self.dataset.tags('genre')),
         }
 
 
-class EASE(BaseModel):
-    def __init__(self, l2_lambda=0.5):
-        super().__init__()
-        self.B = None
-        self.l2_lambda = l2_lambda
-
-    def name(self) -> str:
-        return "ease"
-
-    def _serialize(self):
-        return self.B
-
-    def _deserialize(self, checkpoint):
-        self.B = checkpoint
-
-    def fit(self, training: bool = False) -> None:
-        if training:
-            X = self.dataset.get_train_data()
-            G = X.T.dot(X).toarray()
-
-            diagonal_indices = np.diag_indices(G.shape[0])
-            G[diagonal_indices] += self.l2_lambda
-
-            P = np.linalg.inv(G)
-            B = P / (-np.diag(P))
-            B[diagonal_indices] = 0
-
-            self.B = B
-            self._save_model()
-        else:
-            self._load_model()
-
-    def predict(self, x: csr_matrix, **kwargs):
-        predictions = x.dot(self.B)
-        predictions[x.nonzero()] = 0
-
-        self._apply_filters(predictions, **kwargs)
-
-        return predictions
-
-
 class KNN(BaseModel):
-    def __init__(self, k=15):
+    def __init__(self, k=30):
         super().__init__()
-        self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
+        self.model = NearestNeighbors(n_neighbors=k, radius=1.5, metric="cosine")
 
     def name(self):
         return "knn"
@@ -138,8 +105,8 @@ class KNN(BaseModel):
 
 
 class MF(KNN):
-    def __init__(self, k=15, n=100):
-        super().__init__(k)
+    def __init__(self, n=15):
+        super().__init__()
         self.nmf = NMF(n_components=n, init='nndsvd', max_iter=100, random_state=0, verbose=2)
 
     def name(self):
@@ -174,27 +141,68 @@ class MF(KNN):
         return predictions
 
 
-class VAE(BaseModel):
-    def __init__(self):
+class EASE(BaseModel):
+    def __init__(self, l2_lambda=0.5):
         super().__init__()
-        self.model = None
+        self.B = None
+        self.l2_lambda = l2_lambda
 
-    def name(self):
-        return "vae"
+    def name(self) -> str:
+        return "ease"
 
-    def fit(self, training=False):
-        if not training:
-            input_dim = self.dataset.get_train_data().shape[1]
-            self.model = VAEModule(input_dim, 512, 256, 128, 64).to(get_device())
-            self.model.load_state_dict(torch.load(self._checkpoint_path(), map_location=get_device()))
+    def _serialize(self):
+        return self.B
+
+    def _deserialize(self, checkpoint):
+        self.B = checkpoint
+
+    def fit(self, training: bool = False) -> None:
+        if training:
+            X = self.dataset.get_train_data()
+            G = X.T.dot(X).toarray()
+
+            diagonal_indices = np.diag_indices(G.shape[0])
+            G[diagonal_indices] += self.l2_lambda
+
+            P = np.linalg.inv(G)
+            B = P / (-np.diag(P))
+            B[diagonal_indices] = 0
+
+            self.B = B
+            self._save_model()
+        else:
+            self._load_model()
 
     def predict(self, x: csr_matrix, **kwargs):
-        self.model.eval()
+        predictions = x.dot(self.B)
+        predictions[x.nonzero()] = 0
 
-        with torch.no_grad():
-            input_data = torch.tensor(x.toarray(), dtype=torch.float32)
-            recon_batch, mu, log_var = self.model(input_data)
-            predictions = recon_batch.cpu().detach().numpy()
-            predictions[x.nonzero()] = 0
+        self._apply_filters(predictions, **kwargs)
 
-            return predictions
+        return predictions
+
+
+# class VAE(BaseModel):
+#     def __init__(self):
+#         super().__init__()
+#         self.model = None
+#
+#     def name(self):
+#         return "vae"
+#
+#     def fit(self, training=False):
+#         if not training:
+#             input_dim = self.dataset.get_train_data().shape[1]
+#             self.model = VAEModule(input_dim, 512, 256, 128, 64).to(get_device())
+#             self.model.load_state_dict(torch.load(self._checkpoint_path(), map_location=get_device()))
+#
+#     def predict(self, x: csr_matrix, **kwargs):
+#         self.model.eval()
+#
+#         with torch.no_grad():
+#             input_data = torch.tensor(x.toarray(), dtype=torch.float32)
+#             recon_batch, mu, log_var = self.model(input_data)
+#             predictions = recon_batch.cpu().detach().numpy()
+#             predictions[x.nonzero()] = 0
+#
+#             return predictions

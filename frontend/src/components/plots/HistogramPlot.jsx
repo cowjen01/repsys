@@ -35,6 +35,7 @@ function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) 
         },
         yaxis: {
           zeroline: false,
+          automargin: true,
           gridcolor,
         },
         paper_bgcolor: 'rgba(0,0,0,0)',

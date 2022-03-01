@@ -4,7 +4,8 @@ module.exports = function override(config, env) {
   config.resolve.fallback = {
     assert: require.resolve('assert'),
     stream: require.resolve('stream-browserify'),
-    process: require.resolve('process')
+    process: require.resolve("process/browser"),
+    buffer: require.resolve("buffer"),
   };
   config.plugins.push(
     new webpack.ProvidePlugin({

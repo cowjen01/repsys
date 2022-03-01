@@ -20,21 +20,14 @@ function DatasetEvaluation() {
   return (
     <Grid container spacing={4}>
       <Grid item xs={12}>
-        <Typography component="div" variant="h6">
+        <Typography component="div" variant="h6" gutterBottom>
           Items Embeddings
-        </Typography>
-        <Typography variant="subtitle1" marginBottom={1}>
-          Filter the items by attributes value or select a cluster to see the description.
         </Typography>
         <ItemsEmbeddings attributes={dataset.data.attributes} />
       </Grid>
       <Grid item xs={12}>
-        <Typography component="div" variant="h6">
+        <Typography component="div" variant="h6" gutterBottom>
           Users Embeddings
-        </Typography>
-        <Typography variant="subtitle1" marginBottom={1}>
-          Filter the users by a minimum number of interactions with an attribute or select a cluster
-          to see the description.
         </Typography>
         <UsersEmbeddings attributes={dataset.data.attributes} />
       </Grid>

@@ -15,7 +15,7 @@ function AttributesSelector({
 }) {
   const [selectedAttribute, setSelectedAttribute] = useState('');
   const [selectedValues, setSelectedValues] = useState([]);
-  const [selectedThreshold, setSelectedThreshold] = useState(5);
+  const [selectedThreshold, setSelectedThreshold] = useState(1);
 
   const isMultipleSelect = !!(selectedAttribute && attributes[selectedAttribute].dtype === 'tag');
 
@@ -89,7 +89,7 @@ function AttributesSelector({
   };
 
   return (
-    <Stack direction="row" spacing={2}>
+    <Stack direction="row" spacing={1}>
       <CategoryFilter
         label="Item attribute"
         displayEmpty
@@ -109,7 +109,7 @@ function AttributesSelector({
       />
       {displayThreshold && (
         <TextField
-          sx={{ minWidth: 250 }}
+          sx={{ width: 200 }}
           disabled={!selectedAttribute || disabled}
           label="Min. interactions"
           type="number"

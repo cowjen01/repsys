@@ -125,6 +125,6 @@ def dataset_split_cmd(dataset: Dataset, checkpoints_dir: str):
 @dataset_group.command(name='eval')
 @dataset_pkg_option
 @checkpoints_dir_option
-@click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne"]), show_default=True)
+@click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne", "custom"]), show_default=True)
 def dataset_eval_cmd(dataset: Dataset, checkpoints_dir: str, method: str):
     evaluate_dataset(dataset, checkpoints_dir, method)
