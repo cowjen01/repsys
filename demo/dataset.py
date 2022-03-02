@@ -1,20 +1,22 @@
 import pandas as pd
+from scipy.sparse import csr_matrix
+from sklearn.decomposition import NMF
 
 import repsys.dtypes as dtypes
 from repsys.dataset import Dataset
+import repsys.web as web
 
-
+#
 # class MovieLens(Dataset):
 #     def __init__(self):
-#         super(MovieLens, self).__init__()
-#         self._nmf = NMF(n_components=10, init='nndsvd', max_iter=100, random_state=0, verbose=2)
+#         self.nmf = NMF(n_components=10, init='nndsvd', max_iter=100, random_state=0, verbose=2)
 #
 #     def name(self):
 #         return "ml20m"
 #
 #     def compute_embeddings(self, X: csr_matrix):
-#         W = self._nmf.fit_transform(X)
-#         H = self._nmf.components_
+#         W = self.nmf.fit_transform(X)
+#         H = self.nmf.components_
 #         return W, H.T
 #
 #     def item_cols(self):
@@ -45,42 +47,79 @@ from repsys.dataset import Dataset
 #     def load_interactions(self):
 #         df = pd.read_csv("./datasets/ml-20m/ratings.csv")
 #         df = df[df['rating'] > 3.5]
-#         df.loc[df['rating'] > 0, 'rating'] = 1
+#         df['rating'] = 1
 #         return df
 
-class TempleWebster(Dataset):
+
+class GoodBooks(Dataset):
     def name(self):
-        return "tw"
+        return "gb"
 
     def item_cols(self):
         return {
-            "itemid": dtypes.ItemID(),
-            "title": dtypes.Title(),
-            "description": dtypes.String(),
-            "image_link": dtypes.String(),
-            "material": dtypes.Tag(sep=','),
-            "product_type": dtypes.Category(),
-            "price": dtypes.Number(),
-            "brand": dtypes.Category()
+            "book_id": dtypes.ItemID(),
+            "isbn": dtypes.String(),
+            "authors": dtypes.String(),
+            "year": dtypes.Number(data_type=int),
+            "original_title": dtypes.Title(),
+            "language_code": dtypes.Category(),
+            "average_rating": dtypes.Number(),
+            "image_url": dtypes.String()
         }
 
     def interaction_cols(self):
         return {
-            "itemid": dtypes.ItemID(),
-            "userid": dtypes.UserID(),
-            "amount": dtypes.Interaction(),
+            "book_id": dtypes.ItemID(),
+            "user_id": dtypes.UserID(),
         }
 
     def load_items(self):
-        df = pd.read_csv("./datasets/tw/TW_items.csv")
-        df = df.drop_duplicates(subset=['itemid'])
-        df['product_type'] = df['product_type'].fillna('')
-        df['product_type'] = df['product_type'].apply(lambda x: x[2:-2])
-        return df
+        return pd.read_csv("./datasets/gb/books.csv")
 
     def load_interactions(self):
-        df = pd.read_csv("./datasets/tw/TW_purchases.csv")
-        df = df[['userid', 'itemid', 'amount']]
-        df = df.groupby(by=['userid', 'itemid'], as_index=False).median()
-        # df.loc[df['amount'] > 0, 'amount'] = 1
+        df = pd.read_csv("./datasets/gb/ratings.csv")
+        df = df[df['rating'] > 3]
         return df
+
+    def web_params(self):
+        return {
+            'genre': web.Select(options=self.tags.get('genre')),
+        }
+
+
+# class TempleWebster(Dataset):
+#     def name(self):
+#         return "tw"
+#
+#     def item_cols(self):
+#         return {
+#             "itemid": dtypes.ItemID(),
+#             "title": dtypes.Title(),
+#             "description": dtypes.String(),
+#             "image_link": dtypes.String(),
+#             "material": dtypes.Tag(sep=','),
+#             "product_type": dtypes.Category(),
+#             "price": dtypes.Number(),
+#             "brand": dtypes.Category()
+#         }
+#
+#     def interaction_cols(self):
+#         return {
+#             "itemid": dtypes.ItemID(),
+#             "userid": dtypes.UserID(),
+#             "amount": dtypes.Interaction(),
+#         }
+#
+#     def load_items(self):
+#         df = pd.read_csv("./datasets/tw/TW_items.csv")
+#         df = df.drop_duplicates(subset=['itemid'])
+#         df['product_type'] = df['product_type'].fillna('')
+#         df['product_type'] = df['product_type'].apply(lambda x: x[2:-2])
+#         return df
+#
+#     def load_interactions(self):
+#         df = pd.read_csv("./datasets/tw/TW_purchases.csv")
+#         df = df[['userid', 'itemid', 'amount']]
+#         df = df.groupby(by=['userid', 'itemid'], as_index=False).median()
+#         df.loc[df['amount'] > 0, 'amount'] = 1
+#         return df

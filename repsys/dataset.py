@@ -14,7 +14,6 @@ from pandas import DataFrame, Series, Index
 from scipy.sparse import csr_matrix
 
 import repsys.dtypes as dtypes
-from repsys.config import read_config
 from repsys.dtypes import (
     ColumnDict,
     find_column_by_type,
@@ -175,18 +174,6 @@ def get_top_categories(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str
 
 
 class Dataset(ABC):
-    def __init__(self):
-        self.items: Optional[DataFrame] = None
-        self.item_index: Optional[frozenbidict] = None
-        self.tags = {}
-        self.histograms = {}
-        self.categories = {}
-        self.splits: Dict[str, Optional[Split]] = {
-            'train': None,
-            'validation': None,
-            'test': None
-        }
-
     @abstractmethod
     def name(self):
         pass
@@ -315,13 +302,20 @@ class Dataset(ABC):
         return user_ids.tolist()
 
     def compute_histogram_by_col(self, items: DataFrame, col: str, bins: int = 5) -> Tuple[ndarray, ndarray]:
-        params = typing.cast(dtypes.Number, self.item_cols()[col])
+        params = typing.cast(dtypes.Number, self.item_cols().get(col))
         if params.bins_range:
             hist_range = params.bins_range
         else:
             hist_range = (items[col].quantile(.1), items[col].quantile(.9))
 
-        return np.histogram(items[col], range=hist_range, bins=bins)
+        values, bins = np.histogram(items[col], range=hist_range, bins=bins)
+
+        if params.data_type == int or params.data_type == np.int:
+            bins = bins.round(decimals=0)
+        else:
+            bins = bins.round(decimals=2)
+
+        return values, bins
 
     def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
@@ -338,7 +332,8 @@ class Dataset(ABC):
     def _update_histograms(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Number)
         for col in cols:
-            self.histograms[col] = self.compute_histogram_by_col(self.items, col)
+            values, bins = self.compute_histogram_by_col(self.items, col)
+            self.histograms[col] = values, bins
 
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]
@@ -362,7 +357,22 @@ class Dataset(ABC):
         self._update_categories()
         self._update_histograms()
 
-    def split(self) -> None:
+    def _init_state(self):
+        self.items: Optional[DataFrame] = None
+        self.item_index: Optional[frozenbidict] = None
+        self.tags = {}
+        self.histograms = {}
+        self.categories = {}
+        self.splits: Dict[str, Optional[Split]] = {
+            'train': None,
+            'validation': None,
+            'test': None
+        }
+
+    def fit(self, train_split_prop=0.85, test_holdout_prop=0.2, min_user_interacts=0, min_item_interacts=0,
+            seed=1234) -> None:
+        self._init_state()
+
         logger.info("Loading dataset ...")
 
         items = self.load_items()
@@ -374,6 +384,8 @@ class Dataset(ABC):
 
         validate_dataset(items, item_cols, interacts, interact_cols)
 
+        interacts = interacts[interact_cols.keys()]
+
         interacts_item_col = find_column_by_type(interact_cols, dtypes.ItemID)
         interacts_user_col = find_column_by_type(interact_cols, dtypes.UserID)
         interacts_value_col = find_column_by_type(interact_cols, dtypes.Interaction)
@@ -381,27 +393,18 @@ class Dataset(ABC):
         interacts[interacts_item_col] = interacts[interacts_item_col].astype(str)
         interacts[interacts_user_col] = interacts[interacts_user_col].astype(str)
 
-        if not interacts_item_col:
+        if not interacts_value_col:
             interacts['value'] = 1
             interacts_value_col = 'value'
 
         logger.info("Splitting interactions ...")
 
-        interactions = interacts[interact_cols.keys()]
-        interactions = interactions.rename(
+        interacts = interacts.rename(
             columns={interacts_item_col: 'item', interacts_user_col: 'user', interacts_value_col: 'value'})
 
-        config = read_config()
+        splitter = DatasetSplitter(train_split_prop, test_holdout_prop, min_user_interacts, min_item_interacts, seed)
 
-        splitter = DatasetSplitter(
-            config.dataset.train_split_prop,
-            config.dataset.test_holdout_prop,
-            config.dataset.min_user_interacts,
-            config.dataset.min_item_interacts,
-            config.seed
-        )
-
-        train_split, vad_split, test_split = splitter.split(interactions)
+        train_split, vad_split, test_split = splitter.split(interacts)
 
         train_user_ids, train_data = train_split
         vad_user_ids, vad_train_data, vad_holdout_data = vad_split
@@ -457,13 +460,15 @@ class Dataset(ABC):
 
     @tmpdir_provider
     def load(self, checkpoints_dir: str) -> None:
+        self._init_state()
+
         checkpoints = find_checkpoints(checkpoints_dir, "dataset-split-*.zip")
 
         if not checkpoints:
             raise Exception("No dataset splits were found.")
 
         split_path = checkpoints[0]
-        logger.info(f"Loading dataset from '{split_path}'")
+        logger.debug(f"Loading dataset from '{split_path}'")
 
         item_cols = self.item_cols()
         interact_cols = self.interaction_cols()
@@ -500,11 +505,11 @@ class Dataset(ABC):
 class DatasetSplitter:
     def __init__(
         self,
-        train_split_prop=0.85,
-        test_holdout_prop=0.2,
-        min_user_interacts=5,
-        min_item_interacts=0,
-        seed=1234,
+        train_split_prop,
+        test_holdout_prop,
+        min_user_interacts,
+        min_item_interacts,
+        seed,
         user_col='user',
         item_col='item',
         value_col='value'

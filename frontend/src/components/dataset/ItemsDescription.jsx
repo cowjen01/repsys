@@ -63,7 +63,7 @@ function ItemsDescription({ attributes, items }) {
                 data={[
                   {
                     x: values.map(
-                      (_, index) => `${Math.ceil(bins[index])}-${Math.ceil(bins[index + 1])}`
+                      (_, index) => `${bins[index]}-${bins[index + 1]}`
                     ),
                     y: values,
                   },

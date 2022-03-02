@@ -38,7 +38,7 @@ function ModelParams({ modelsData, model }) {
           name: `modelParams.${model}.${key}`,
           label: capitalize(key),
         };
-        if (field === 'select') {
+        if (field === 'select' && options !== null) {
           return (
             <Field key={key} displayEmpty component={SelectField} options={options} {...props} />
           );

@@ -11,7 +11,7 @@ from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
-from repsys.metrics import recall, ndcg
+from repsys.metrics import precision_recall, ndcg
 from repsys.model import Model
 
 
@@ -133,7 +133,9 @@ class ModelEvaluator:
         self._dataset = dataset
         self._user_results: Dict[str, List[DataFrame]] = {}
 
-        self.summary_metrics = [f"recall@{k}" for k in self.recall_steps] + [f"ndcg@{self.ndcg_k}"]
+        self.summary_metrics = [f"precision@{k}" for k in self.recall_steps] + [f"recall@{k}" for k in
+                                                                                self.recall_steps] + [
+                                   f"ndcg@{self.ndcg_k}"]
         self.user_metrics = self.summary_metrics + ["mae", "mse", "rmse"]
 
     @staticmethod
@@ -153,8 +155,6 @@ class ModelEvaluator:
         # use the highest K of the configured steps
         max_k = max(max_recall_k, self.ndcg_k)
 
-        x_true = np.clip(x_true, -1, 1)
-        x_predict = np.clip(x_predict, -1, 1)
         x_true_binary = (x_true > 0)
         x_true_nonzero = x_true_binary.sum(axis=1)
 
@@ -174,10 +174,10 @@ class ModelEvaluator:
         ndcg_mask = (jnp.arange(self.ndcg_k)[:, jnp.newaxis] < jnp.minimum(self.ndcg_k, x_true_nonzero)).T
 
         # iterate over the binary mask and push sorted indices as a static value
-        vmap_recall = vmap(recall, in_axes=(0, None, None), out_axes=0)
-        jitted_recall = jit(vmap_recall)
+        vmap_precision_recall = vmap(precision_recall, in_axes=(0, None, None), out_axes=0)
+        jitted_precision_recall = jit(vmap_precision_recall)
         top_recall_indices = sort_indices[:, :max_recall_k]
-        recall_results = jitted_recall(recall_k_mask, top_recall_indices, x_true_binary)
+        recall_results = jitted_precision_recall(recall_k_mask, top_recall_indices, x_true_binary)
 
         jitted_ndcg = jit(ndcg)
         ndcg_results = jitted_ndcg(ndcg_mask, sort_indices[:, :self.ndcg_k], x_true)
@@ -191,7 +191,8 @@ class ModelEvaluator:
         # also it is possible to call block_until_ready()
         results = {}
         for i, k in enumerate(self.recall_steps):
-            results[f"recall@{k}"] = np.asarray(recall_results[i])
+            results[f"precision@{k}"] = np.asarray(recall_results[0][i])
+            results[f"recall@{k}"] = np.asarray(recall_results[1][i])
 
         results[f"ndcg@{self.ndcg_k}"] = np.asarray(ndcg_results)
 

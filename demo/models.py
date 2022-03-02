@@ -5,7 +5,6 @@ from abc import ABC
 import numpy as np
 import scipy.sparse as sp
 from scipy.sparse import csr_matrix
-from sklearn.decomposition import NMF
 from sklearn.neighbors import NearestNeighbors
 
 import repsys.web as web
@@ -49,17 +48,16 @@ class BaseModel(Model, ABC):
 
             predictions[:, exclude_indexes] = 0
 
-    def web_params(self):
-        return {
-            'category': web.Select(options=self.dataset.categories.get('product_type')),
-            # 'genre': web.Select(options=self.dataset.tags('genre')),
-        }
+    # def web_params(self):
+    #     return {
+    #         # 'category': web.Select(options=self.dataset.categories.get('product_type')),
+    #         'genre': web.Select(options=self.dataset.tags.get('genre')),
+    #     }
 
 
 class KNN(BaseModel):
-    def __init__(self, k=10):
-        super().__init__()
-        self.model = NearestNeighbors(n_neighbors=k, metric="cosine")
+    def __init__(self):
+        self.model = NearestNeighbors(algorithm='brute', n_neighbors=20, metric='cosine')
 
     def name(self):
         return "knn"
@@ -72,8 +70,8 @@ class KNN(BaseModel):
         else:
             self._load_model()
 
-    def _predict_knn(self, x: csr_matrix):
-        distances, indexes = self.model.kneighbors(x)
+    def _predict_knn(self, X: csr_matrix):
+        distances, indexes = self.model.kneighbors(X)
 
         n_distances = distances[:, 1:]
         n_indexes = indexes[:, 1:]
@@ -104,82 +102,44 @@ class KNN(BaseModel):
         return predictions
 
 
-class MF(KNN):
-    def __init__(self, n=5):
-        super().__init__()
-        self.nmf = NMF(n_components=n, init='nndsvd', max_iter=100, random_state=0, verbose=2)
+class EASE(BaseModel):
+    def __init__(self, l2_lambda=0.5):
+        self.B = None
+        self.l2_lambda = l2_lambda
 
-    def name(self):
-        return "mf"
+    def name(self) -> str:
+        return "ease"
 
     def _serialize(self):
-        return {
-            'nmf': self.nmf,
-            'knn': self.model
-        }
+        return self.B
 
     def _deserialize(self, checkpoint):
-        self.nmf = checkpoint.get('nmf')
-        self.model = checkpoint.get('knn')
+        self.B = checkpoint
 
-    def fit(self, training=False):
+    def fit(self, training: bool = False) -> None:
         if training:
             X = self.dataset.get_train_data()
-            W = self.nmf.fit_transform(X)
-            self.model.fit(W)
+            G = X.T.dot(X).toarray()
+
+            diagonal_indices = np.diag_indices(G.shape[0])
+            G[diagonal_indices] += self.l2_lambda
+
+            P = np.linalg.inv(G)
+            B = P / (-np.diag(P))
+            B[diagonal_indices] = 0
+
+            self.B = B
             self._save_model()
         else:
             self._load_model()
 
-    def predict(self, x: csr_matrix, **kwargs):
-        W = self.nmf.transform(x)
-        predictions = self._predict_knn(W)
-        predictions[x.nonzero()] = 0
+    def predict(self, X: csr_matrix, **kwargs):
+        predictions = X.dot(self.B)
+        predictions[X.nonzero()] = 0
 
         self._apply_filters(predictions, **kwargs)
 
         return predictions
-
-
-# class EASE(BaseModel):
-#     def __init__(self, l2_lambda=0.5):
-#         super().__init__()
-#         self.B = None
-#         self.l2_lambda = l2_lambda
-#
-#     def name(self) -> str:
-#         return "ease"
-#
-#     def _serialize(self):
-#         return self.B
-#
-#     def _deserialize(self, checkpoint):
-#         self.B = checkpoint
-#
-#     def fit(self, training: bool = False) -> None:
-#         if training:
-#             X = self.dataset.get_train_data()
-#             G = X.T.dot(X).toarray()
-#
-#             diagonal_indices = np.diag_indices(G.shape[0])
-#             G[diagonal_indices] += self.l2_lambda
-#
-#             P = np.linalg.inv(G)
-#             B = P / (-np.diag(P))
-#             B[diagonal_indices] = 0
-#
-#             self.B = B
-#             self._save_model()
-#         else:
-#             self._load_model()
-#
-#     def predict(self, x: csr_matrix, **kwargs):
-#         predictions = x.dot(self.B)
-#         predictions[x.nonzero()] = 0
-#
-#         self._apply_filters(predictions, **kwargs)
-#
-#         return predictions
 
 
 # class VAE(BaseModel):

@@ -1,7 +1,7 @@
 from jax import numpy as jnp
 
 
-def recall(k_mask, sort_indices, x_true_bin):
+def precision_recall(k_mask, sort_indices, x_true_bin):
     k = k_mask.sum()
     # an array of row number indices
     row_indices = jnp.arange(x_true_bin.shape[0])[:, jnp.newaxis]
@@ -18,16 +18,17 @@ def recall(k_mask, sort_indices, x_true_bin):
     predict_matrix = predict_matrix[:, 1:]
     tmp = (jnp.logical_and(x_true_bin, predict_matrix).sum(axis=1)).astype(jnp.float32)
     # divide a sum of the agreed indices by a sum of the true indices
-    # to avoid dividing by zero, use the K value as a minimum
-    return tmp / jnp.minimum(k, x_true_bin.sum(axis=1))
+    precision = tmp / k
+    recall = tmp / jnp.minimum(k, x_true_bin.sum(axis=1))
+    return precision, recall
 
 
-def ndcg(ndcg_mask, sort_indices, x_true_clipped):
+def ndcg(ndcg_mask, sort_indices, x_true):
     K = sort_indices.shape[1]
-    rows_idx = jnp.arange(x_true_clipped.shape[0])[:, jnp.newaxis]
-    tp = 1.0 / jnp.log2(jnp.arange(2, K + 2))
+    rows_idx = jnp.arange(x_true.shape[0])[:, jnp.newaxis]
+    discount = 1.0 / jnp.log2(jnp.arange(2, K + 2))
     # the slowest part ...
-    dcg = (x_true_clipped[rows_idx, sort_indices] * tp).sum(axis=1)
+    dcg = (x_true[rows_idx, sort_indices] * discount).sum(axis=1)
     # null all positions, where mask is False (keep the rest)
-    idcg = jnp.where(ndcg_mask, tp, 0).sum(axis=1)
+    idcg = jnp.where(ndcg_mask, discount, 0).sum(axis=1)
     return dcg / idcg

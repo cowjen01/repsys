@@ -2,7 +2,10 @@ import logging
 from typing import Dict
 
 import click
+import coloredlogs
+from click import Context
 
+from repsys.config import read_config
 from repsys.core import train_models, evaluate_dataset, start_server, split_dataset, evaluate_models
 from repsys.dataset import Dataset
 from repsys.helpers import *
@@ -12,14 +15,20 @@ from repsys.model import Model
 logger = logging.getLogger(__name__)
 
 
-def checkpoints_dir_callback(ctx, param, value):
-    if not value:
-        return checkpoints_dir_path()
-    return value
+def setup_logging(level):
+    coloredlogs.install(
+        level=level,
+        use_chroot=False,
+        fmt="%(asctime)s %(levelname)-8s %(name)s  - %(message)s",
+    )
 
 
 def models_callback(ctx, param, value):
     return load_packages(value, Model)
+
+
+def config_callback(ctx, param, value):
+    return read_config(value)
 
 
 def dataset_callback(ctx, param, value):
@@ -50,31 +59,29 @@ def models_pkg_option(func):
     return wrapper
 
 
-def checkpoints_dir_option(func):
-    @click.option("--checkpoints-dir", callback=checkpoints_dir_callback, type=click.Path(exists=True))
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
 @click.group()
 @click.option('--debug/--no-debug', default=False)
+@click.option('-c', '--config', callback=config_callback, default='repsys.ini', type=click.Path(exists=True))
 @click.pass_context
-def repsys_group(ctx, debug):
+def repsys_group(ctx, debug, config):
     ctx.ensure_object(dict)
-    ctx.obj['DEBUG'] = debug
+    ctx.obj['CONFIG'] = config
+
+    if debug:
+        setup_logging(logging.DEBUG)
+    else:
+        setup_logging(logging.INFO)
+
     create_checkpoints_dir()
 
 
 @repsys_group.command(name='server')
 @models_pkg_option
 @dataset_pkg_option
-@checkpoints_dir_option
-def server_start_cmd(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str):
+@click.pass_context
+def server_start_cmd(ctx: Context, models: Dict[str, Model], dataset: Dataset):
     """Start server."""
-    start_server(models, dataset, checkpoints_dir)
+    start_server(ctx.obj['CONFIG'], models, dataset)
 
 
 @click.group(name='model')
@@ -98,33 +105,33 @@ repsys_group.add_command(models_group)
 @models_group.command(name='eval')
 @models_pkg_option
 @dataset_pkg_option
-@checkpoints_dir_option
+@click.pass_context
 @click.option("-s", "--split-type", default="validation", type=click.Choice(["test", "validation"]), show_default=True)
 @click.option("-m", "--model-name")
-def models_eval_cmd(models: Dict[str, Model], dataset: Dataset, split_type: str, checkpoints_dir: str, model_name: str):
-    evaluate_models(models, dataset, checkpoints_dir, split_type, model_name)
+def models_eval_cmd(ctx: Context, models: Dict[str, Model], dataset: Dataset, split_type: str, model_name: str):
+    evaluate_models(ctx.obj['CONFIG'], models, dataset, split_type, model_name)
 
 
 @models_group.command(name='train')
 @dataset_pkg_option
 @models_pkg_option
-@checkpoints_dir_option
+@click.pass_context
 @click.option("-m", "--model-name")
-def models_train_cmd(models: Dict[str, Model], dataset: Dataset, checkpoints_dir: str, model_name: str):
-    train_models(models, dataset, checkpoints_dir, model_name)
+def models_train_cmd(ctx: Context, models: Dict[str, Model], dataset: Dataset, model_name: str):
+    train_models(ctx.obj['CONFIG'], models, dataset, model_name)
 
 
 # DATASET GROUP
 @dataset_group.command(name='split')
 @dataset_pkg_option
-@checkpoints_dir_option
-def dataset_split_cmd(dataset: Dataset, checkpoints_dir: str):
-    split_dataset(dataset, checkpoints_dir)
+@click.pass_context
+def dataset_split_cmd(ctx: Context, dataset: Dataset):
+    split_dataset(ctx.obj['CONFIG'], dataset)
 
 
 @dataset_group.command(name='eval')
 @dataset_pkg_option
-@checkpoints_dir_option
+@click.pass_context
 @click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne", "custom"]), show_default=True)
-def dataset_eval_cmd(dataset: Dataset, checkpoints_dir: str, method: str):
-    evaluate_dataset(dataset, checkpoints_dir, method)
+def dataset_eval_cmd(ctx: Context, dataset: Dataset, method: str):
+    evaluate_dataset(ctx.obj['CONFIG'], dataset, method)

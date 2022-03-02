@@ -8,6 +8,7 @@ from sanic.exceptions import InvalidUsage, NotFound
 from sanic.response import json, file
 
 import repsys.dtypes as dtypes
+from repsys.config import Config
 from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
 from repsys.evaluators import DatasetEvaluator, ModelEvaluator
@@ -46,7 +47,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
 
             if type(datatype) == dtypes.Number:
                 hist = dataset.histograms.get(col)
-                attributes[col]['bins'] = hist[1].astype(int).tolist()
+                attributes[col]['bins'] = hist[1].tolist()
 
         return attributes
 
@@ -271,7 +272,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         validate_split_name(split)
 
         split_eval = dataset_eval.get(split)
-        if split_eval is None:
+        if split_eval is None or split_eval.item_embeddings is None:
             raise NotFound(f"No embeddings found for split '{split}'.")
 
         df = split_eval.item_embeddings.join(dataset.items[dataset.get_title_col()])
@@ -286,7 +287,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         validate_split_name(split)
 
         split_eval = dataset_eval.get(split)
-        if split_eval is None:
+        if split_eval is None or split_eval.user_embeddings is None:
             raise NotFound(f"No embeddings found for split '{split}'.")
 
         df = split_eval.user_embeddings.copy()
@@ -351,8 +352,8 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
     return app
 
 
-def run_server(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
+def run_server(config: Config, models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
                model_eval: ModelEvaluator) -> None:
     app = create_app(models, dataset, dataset_eval, model_eval)
     app.config.FALLBACK_ERROR_FORMAT = "json"
-    app.run(host="localhost", port=3001, debug=False, access_log=False)
+    app.run(host="localhost", port=config.server_port, debug=False, access_log=False)

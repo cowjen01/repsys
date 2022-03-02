@@ -3,7 +3,6 @@ import os
 
 import repsys.constants as const
 from repsys.errors import InvalidConfigError
-from repsys.helpers import default_config_path
 
 
 class DatasetConfig:
@@ -16,8 +15,9 @@ class DatasetConfig:
 
 
 class Config:
-    def __init__(self, seed: int, server_port: int, dataset_config: DatasetConfig):
+    def __init__(self, checkpoints_dir: str, seed: int, server_port: int, dataset_config: DatasetConfig):
         self.dataset = dataset_config
+        self.checkpoints_dir = checkpoints_dir
         self.seed = seed
         self.server_port = server_port
 
@@ -36,11 +36,8 @@ def validate_dataset_config(config: DatasetConfig):
         raise InvalidConfigError('Minimum item interactions can be negative')
 
 
-def read_config(config_path: str = None):
+def read_config(config_path: str):
     config = configparser.ConfigParser()
-
-    if not config_path:
-        config_path = default_config_path()
 
     if os.path.isfile(config_path):
         with open(config_path, 'r') as f:
@@ -55,7 +52,9 @@ def read_config(config_path: str = None):
 
     validate_dataset_config(dataset_config)
 
-    seed = config.getint('general', 'SEED', fallback=const.DEFAULT_SEED)
-    server_port = config.get('server', 'PORT', fallback=const.DEFAULT_SERVER_PORT)
-
-    return Config(seed, server_port, dataset_config)
+    return Config(
+        config.get('general', 'CHECKPOINTS_DIR', fallback=const.DEFAULT_CHECKPOINTS_DIR),
+        config.getint('general', 'SEED', fallback=const.DEFAULT_SEED),
+        config.get('server', 'PORT', fallback=const.DEFAULT_SERVER_PORT),
+        dataset_config
+    )
