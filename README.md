@@ -24,7 +24,7 @@ $ pip install --upgrade pip
 $ pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
 ```
 
-For M1 chips support, please install the CPU/CUDA package using [Conda Forge](https://anaconda.org/conda-forge/jaxlib), which currently contains the ARM version.
+For ARM architecture, please install the Jax package using [Conda Forge](https://anaconda.org/conda-forge/jaxlib).
 
 ## Getting started
 
@@ -42,4 +42,4 @@ Before you begin, please create an empty folder that will contain the project's 
 
 The development and testing of this framework are supported by the [Recombee](https://www.recombee.com) company.
 
-![Recombee logo](./assets/recombee_logo.jpeg "Recombee")
+![Recombee logo](./assets/recombee_logo.jpeg)
