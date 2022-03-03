@@ -1,0 +1,68 @@
+{
+  "name": "repsys-gui",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@emotion/react": "^11.4.1",
+    "@emotion/styled": "^11.3.0",
+    "@fontsource/roboto": "^4.5.1",
+    "@mui/icons-material": "^5.0.1",
+    "@mui/material": "^5.4.1",
+    "@reduxjs/toolkit": "^1.7.2",
+    "assert": "^2.0.0",
+    "formik": "^2.2.9",
+    "plotly.js": "^2.9.0",
+    "process": "^0.11.10",
+    "prop-types": "^15.7.2",
+    "react": "^17.0.2",
+    "react-dnd": "^14.0.4",
+    "react-dnd-html5-backend": "^14.0.2",
+    "react-dom": "^17.0.2",
+    "react-plotly.js": "^2.5.1",
+    "react-redux": "^7.2.5",
+    "react-router-dom": "^6.2.1",
+    "react-window": "^1.8.6",
+    "redux-persist": "^6.0.0",
+    "stream-browserify": "^3.0.0"
+  },
+  "devDependencies": {
+    "eslint": "^7.32.0",
+    "eslint-config-airbnb": "^18.2.1",
+    "eslint-config-prettier": "^8.3.0",
+    "eslint-plugin-import": "^2.24.0",
+    "eslint-plugin-jsx-a11y": "^6.4.1",
+    "eslint-plugin-prettier": "^3.4.0",
+    "eslint-plugin-react": "^7.24.0",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "eslint-plugin-react-redux": "^3.3.2",
+    "msw": "^0.35.0",
+    "prettier": "^2.3.2",
+    "react-app-rewired": "^2.1.11",
+    "react-scripts": "^5.0.0"
+  },
+  "scripts": {
+    "start": "react-app-rewired start",
+    "build": "react-app-rewired build",
+    "test": "react-app-rewired test",
+    "eject": "react-app-rewired eject",
+    "format": "prettier --write \"src/**/*.{js,jsx,json}\"",
+    "lint:eslint": "eslint --ext .jsx --ext .js src/",
+    "lint:prettier": "prettier --list-different \"src/**/*.{js,jsx,json}\"",
+    "lint": "npm run lint:prettier && npm run lint:eslint"
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "msw": {
+    "workerDirectory": "public"
+  }
+}
