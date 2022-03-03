@@ -15,9 +15,10 @@ class DatasetConfig:
 
 
 class Config:
-    def __init__(self, checkpoints_dir: str, seed: int, server_port: int, dataset_config: DatasetConfig):
+    def __init__(self, checkpoints_dir: str, seed: int, debug: bool, server_port: int, dataset_config: DatasetConfig):
         self.dataset = dataset_config
         self.checkpoints_dir = checkpoints_dir
+        self.debug = debug
         self.seed = seed
         self.server_port = server_port
 
@@ -36,25 +37,26 @@ def validate_dataset_config(config: DatasetConfig):
         raise InvalidConfigError('Minimum item interactions can be negative')
 
 
-def read_config(config_path: str):
+def read_config(config_path: str = None):
     config = configparser.ConfigParser()
 
-    if os.path.isfile(config_path):
+    if config_path and os.path.isfile(config_path):
         with open(config_path, 'r') as f:
             config.read_file(f)
 
     dataset_config = DatasetConfig(
-        config.getfloat('dataset', 'TEST_HOLDOUT_PROP', fallback=const.DEFAULT_TEST_HOLDOUT_PROP),
-        config.getfloat('dataset', 'TRAIN_SPLIT_PROP', fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
-        config.getint('dataset', 'MIN_USER_INTERACTS', fallback=const.DEFAULT_MIN_USER_INTERACTS),
-        config.getint('dataset', 'MIN_ITEM_INTERACTS', fallback=const.DEFAULT_MIN_ITEM_INTERACTS),
+        config.getfloat('dataset', 'test_holdout_prop', fallback=const.DEFAULT_TEST_HOLDOUT_PROP),
+        config.getfloat('dataset', 'train_split_prop', fallback=const.DEFAULT_TRAIN_SPLIT_PROP),
+        config.getint('dataset', 'min_user_interacts', fallback=const.DEFAULT_MIN_USER_INTERACTS),
+        config.getint('dataset', 'min_item_interacts', fallback=const.DEFAULT_MIN_ITEM_INTERACTS),
     )
 
     validate_dataset_config(dataset_config)
 
     return Config(
-        config.get('general', 'CHECKPOINTS_DIR', fallback=const.DEFAULT_CHECKPOINTS_DIR),
-        config.getint('general', 'SEED', fallback=const.DEFAULT_SEED),
-        config.get('server', 'PORT', fallback=const.DEFAULT_SERVER_PORT),
+        config.get('general', 'checkpoints_dir', fallback=const.DEFAULT_CHECKPOINTS_DIR),
+        config.getint('general', 'seed', fallback=const.DEFAULT_SEED),
+        config.getboolean('general', 'debug', fallback=False),
+        config.get('server', 'port', fallback=const.DEFAULT_SERVER_PORT),
         dataset_config
     )

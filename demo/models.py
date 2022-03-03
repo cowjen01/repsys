@@ -7,7 +7,6 @@ import scipy.sparse as sp
 from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 
-import repsys.web as web
 from repsys import Model
 
 
@@ -30,23 +29,18 @@ class BaseModel(Model, ABC):
         pickle.dump(self._serialize(), checkpoint)
 
     def _apply_filters(self, predictions, **kwargs):
+        items = self.dataset.items
+
+        exclude_indexes = []
         if kwargs.get("genre"):
-            genre = kwargs.get("genre")
-            items = self.dataset.items
-
-            exclude_ids = items.index[items["genre"].apply(lambda genres: genre not in genres)]
+            exclude_ids = items.index[items["genre"].apply(lambda genres: kwargs.get("genre") not in genres)]
             exclude_indexes = exclude_ids.map(self.dataset.item_id_to_index)
-
-            predictions[:, exclude_indexes] = 0
 
         if kwargs.get('category'):
-            category = kwargs.get('category')
-            items = self.dataset.items
-
-            exclude_ids = items.index[items['product_type'] != category]
+            exclude_ids = items.index[items['product_type'] != kwargs.get('category')]
             exclude_indexes = exclude_ids.map(self.dataset.item_id_to_index)
 
-            predictions[:, exclude_indexes] = 0
+        predictions[:, exclude_indexes] = 0
 
     # def web_params(self):
     #     return {
@@ -70,7 +64,7 @@ class KNN(BaseModel):
         else:
             self._load_model()
 
-    def _predict_knn(self, X: csr_matrix):
+    def predict(self, X, **kwargs):
         distances, indexes = self.model.kneighbors(X)
 
         n_distances = distances[:, 1:]
@@ -91,11 +85,7 @@ class KNN(BaseModel):
         vf = np.vectorize(f, signature='(n),(n)->(m)')
         predictions = vf(n_distances, n_indexes)
 
-        return predictions
-
-    def predict(self, x, **kwargs):
-        predictions = self._predict_knn(x)
-        predictions[x.nonzero()] = 0
+        predictions[X.nonzero()] = 0
 
         self._apply_filters(predictions, **kwargs)
 
@@ -140,7 +130,6 @@ class EASE(BaseModel):
         self._apply_filters(predictions, **kwargs)
 
         return predictions
-
 
 # class VAE(BaseModel):
 #     def __init__(self):

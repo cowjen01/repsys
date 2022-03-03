@@ -8,7 +8,7 @@ setuptools.setup(
     version="0.1.0",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
-    description="A package for modeling and testing of recommendation systems.",
+    description="Framework for developing and analyzing recommendation systems.",
     long_description=long_description,
     include_package_data=True,
     long_description_content_type="text/markdown",
@@ -34,6 +34,7 @@ setuptools.setup(
     ],
     extras_require={
         "dev": ["black", "tox", "flake8", "wheel", "setuptools", "pytest"],
+        "docs": ["myst-parser", "sphinx", "sphinx-rtd-theme"]
     },
     zip_safe=False,
 )

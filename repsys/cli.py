@@ -23,12 +23,12 @@ def setup_logging(level):
     )
 
 
-def models_callback(ctx, param, value):
-    return load_packages(value, Model)
-
-
 def config_callback(ctx, param, value):
     return read_config(value)
+
+
+def models_callback(ctx, param, value):
+    return load_packages(value, Model)
 
 
 def dataset_callback(ctx, param, value):
@@ -60,14 +60,15 @@ def models_pkg_option(func):
 
 
 @click.group()
-@click.option('--debug/--no-debug', default=False)
-@click.option('-c', '--config', callback=config_callback, default='repsys.ini', type=click.Path(exists=True))
+@click.option('--debug', default=False, help="Enable debug mode.")
+@click.option('-c', '--config', callback=config_callback, default='repsys.ini', type=click.Path(exists=True), help="Configuration file path.")
 @click.pass_context
 def repsys_group(ctx, debug, config):
+    """Command-line utility for Repsys framework."""
     ctx.ensure_object(dict)
     ctx.obj['CONFIG'] = config
 
-    if debug:
+    if debug or config.debug:
         setup_logging(logging.DEBUG)
     else:
         setup_logging(logging.INFO)
