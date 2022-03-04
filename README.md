@@ -7,11 +7,11 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 - Preview recommendations using a web application
 - Simulate user's behavior while receiving the recommendations
 
-![web preview](images/web-preview.png)
+![web preview](https://github.com/cowjen01/repsys/raw/master/images/web-preview.png)
 
 <p align="middle">
-  <img src="./images/dataset-eval.png" width="48%" />
-  <img src="./images/model-eval.png" width="48%" /> 
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/dataset-eval.png" width="48%" />
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/model-eval.png" width="48%" /> 
 </p>
 
 ## Installation
@@ -19,7 +19,7 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 Install the package using [pip](https://pypi.org/project/pip/):
 
 ```
-$ pip install repsys
+$ pip install repsys-lib
 ```
 
 ## Getting started
@@ -237,22 +237,22 @@ $ repsys server
 The application should be accessible on the default address [http://localhost:3001](http://localhost:3001). When you open the link, you will see the main screen where your recommendations appear once you finish the setup.
 The first step is defining how the items' data columns should be mapped to the item view components.
 
-![app setup](images/app-setup.png)
+![app setup](https://github.com/cowjen01/repsys/raw/master/images/app-setup.png)
 
 Then we need to switch to the build mode and add two recommenders - one without filter and the second with only comedy movies included.
 
-![add recommender](images/add-recommender.png)
+![add recommender](https://github.com/cowjen01/repsys/raw/master/images/add-recommender.png)
 
 Now we switch back from the build mode and select a user from the validation set (never seen by a model before).
 
-![user select](images/user-selection.png)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/user-selection.png)
 
 Finally, we see the user's interaction history on the right side and the recommendations made by the model on the left side.
 
-![user select](images/recoms-preview.png)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/recoms-preview.png)
 
 ## Sponsoring
 
 The development of this framework is sponsored by the [Recombee](https://www.recombee.com) company.
 
-![recombee logo](images/recombee-logo.jpeg)
+<img src="https://github.com/cowjen01/repsys/raw/master/images/recombee-logo.png" width="50%" />

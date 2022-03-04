@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="repsys",
+    name="repsys-lib",
     version="0.1.0",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
