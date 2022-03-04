@@ -20,14 +20,9 @@ class MovieLens(Dataset):
 
     def item_cols(self):
         return {
-            "itemid": dtypes.ItemID(),
-            "product_name": dtypes.Title(),
-            "description": dtypes.String(),
-            "image": dtypes.String(),
-            "director": dtypes.String(),
-            "language": dtypes.Tag(sep=", "),
-            "genre": dtypes.Tag(sep=", "),
-            "country": dtypes.Tag(sep=", "),
+            "movieId": dtypes.ItemID(),
+            "title": dtypes.Title(),
+            "genres": dtypes.Tag(sep="|"),
             "year": dtypes.Number(data_type=int),
         }
 
@@ -39,12 +34,12 @@ class MovieLens(Dataset):
         }
 
     def load_items(self):
-        df = pd.read_json("./datasets/ml-20m/items.json")
-        df["year"] = df["product_name"].str.extract(r"\((\d+)\)")
+        df = pd.read_json("./ml-20m/movies.csv")
+        df["year"] = df["title"].str.extract(r"\((\d+)\)")
         return df
 
     def load_interactions(self):
-        df = pd.read_csv("./datasets/ml-20m/ratings.csv")
+        df = pd.read_csv("./ml-20m/ratings.csv")
         df = df[df['rating'] > 3.5]
         df['rating'] = 1
         return df

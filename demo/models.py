@@ -59,10 +59,10 @@ class KNN(BaseModel):
             self._load_model()
 
     def predict(self, X, **kwargs):
-        distances, indexes = self.model.kneighbors(X)
+        distances, indices = self.model.kneighbors(X)
 
         n_distances = distances[:, 1:]
-        n_indexes = indexes[:, 1:]
+        n_indices = indices[:, 1:]
 
         n_distances = 1 - n_distances
 
@@ -75,7 +75,7 @@ class KNN(BaseModel):
             return D.dot(A).sum(axis=0)
 
         vf = np.vectorize(f, signature='(n),(n)->(m)')
-        predictions = vf(n_distances, n_indexes)
+        predictions = vf(n_distances, n_indices)
 
         predictions[X.nonzero()] = 0
 
