@@ -34,7 +34,7 @@ class MovieLens(Dataset):
         }
 
     def load_items(self):
-        df = pd.read_json("./ml-20m/movies.csv")
+        df = pd.read_csv("./ml-20m/movies.csv")
         df["year"] = df["title"].str.extract(r"\((\d+)\)")
         return df
 

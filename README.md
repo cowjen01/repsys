@@ -7,6 +7,12 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 - Preview recommendations using a web application
 - Simulate user's behavior while receiving the recommendations
 
+![web preview](./assets/web-preview.png)
+
+![dataset eval](./assets/dataset-eval.png)
+
+![model eval](./assets/model-eval.png)
+
 ## Installation
 
 Install the packages using [pip](https://pypi.org/project/pip/):
@@ -70,7 +76,7 @@ class MovieLens(Dataset):
         }
 
     def load_items(self):
-        df = pd.read_json("./ml-20m/movies.csv")
+        df = pd.read_csv("./ml-20m/movies.csv")
         df["year"] = df["title"].str.extract(r"\((\d+)\)")
         return df
 
@@ -92,6 +98,7 @@ import scipy.sparse as sp
 from sklearn.neighbors import NearestNeighbors
 
 from repsys import Model
+import repsys.web as web
 
 class KNN(Model):
     def __init__(self):
@@ -123,18 +130,32 @@ class KNN(Model):
        
         predictions = vf(distances, indices)
         predictions[X.nonzero()] = 0
+        
+        if kwargs.get("genre"):
+            selected_genre = kwargs.get("genre")
+            items = self.dataset.items
+            exclude_ids = items.index[items["genres"].apply(lambda genres: selected_genre not in genres)]
+            exclude_indices = exclude_ids.map(self.dataset.item_id_to_index)
+            predictions[:, exclude_indices] = 0
 
         return predictions
+
+    def web_params(self):
+        return {
+            'genre': web.Select(options=self.dataset.tags.get('genres')),
+        }
 ```
 
 You must define the fit method to train your model using the training data or load the previously trained model from a file.
-All models are fitted when the web application starts, or the evaluation process begins.
-
-If this is not a training phase, always load your model from a checkpoint to speed up the process. For tutorial purposes, this is omitted.
+All models are fitted when the web application starts, or the evaluation process begins. If this is not a training phase, always 
+load your model from a checkpoint to speed up the process. For tutorial purposes, this is omitted.
 
 You must also define the prediction method that receives a sparse matrix of the users' interactions on the input. 
 For each user (row of the matrix) and item (column of the matrix), the method should return a predicted score indicating 
 how much the user will enjoy the item.
+
+Additionally, you can specify some web application parameters you can set during recommender creation. The value is then accessible in 
+the `**kwargs` argument of the prediction method.  In the example, we create a select input with all unique genres and filter out only those movies that do not contain the selected genre. 
 
 ### repsys.ini
 
@@ -175,10 +196,73 @@ Now we can move to the training process. To do this, please call the following c
 $ repsys model train
 ```
 
-This command will call the fit method of each model with the training flag set to true.
+This command will call the fit method of each model with the training flag set to true. You can always limit the models using `-m` flag with the model's name as a parameter.
+
+
+### Evaluating the models
+
+When the data is prepared and the models trained, we can evaluate the performance of the models on the unseen users' interactions. Run the following command to do so.
+
+```
+$ repsys model eval
+```
+
+Again, you can limit the models using the `-m` flag. The results will be stored in the checkpoints folder when the evaluation is done.
+
+### Evaluating the dataset
+
+Before starting the web application, the final step is to evaluate the dataset's data. This procedure will create users and items embeddings of the training and validation data 
+to allow you to explore the latent space. Run the following command from the project directory.
+
+```
+$ repsys dataset eval
+```
+
+You can choose from three types of embeddings algorithm:
+1. [PyMDE](https://pymde.org) (Minimum-Distortion Embedding) is a fast library designed to distort relationships between pairs of items minimally. Use `--method pymde` (this is the default option).
+2. Combination of the PCA and TSNE algorithms (reduction of the dimensionality to 50 using PCA, then reduction to 2D space using TSNE). Use `--method tsne`.
+3. Your own implementation of the algorithm. Use `--method custom` and add the following method to the dataset's class.
+
+```python
+from sklearn.decomposition import NMF
+
+def compute_embeddings(self, X):
+    nmf = NMF(n_components=2)
+    W = nmf.fit_transform(X)
+    H = nmf.components_
+    return W, H.T
+```
+
+In the example, the negative matrix factorization is used. You have to return a user and item embeddings pair in this order. Also, it is essential to return the matrices in the shape of (n_users/n_items, n_dim). 
+If the reduced dimension is higher than 2, the PCA and TSNE are applied.
+
+### Running the application
+
+Finally, it is time to start the web application to see the results of the evaluations and preview live recommendations of your models.
+
+```
+$ repsys server
+```
+
+The application should be accessible on the default address [http://localhost:3001](http://localhost:3001). When you open the link, you will see the main screen where your recommendations appear once you finish the setup.
+The first step is defining how the items' data columns should be mapped to the item view components.
+
+![app setup](./assets/app-setup.png)
+
+Then we need to switch to the build mode and add two recommenders - one without filter and the second with only comedy movies included.
+
+![add recommender](./assets/add-recommender.png)
+
+Now we switch back from the build mode and select a user from the validation set (never seen by a model before).
+
+![user select](./assets/user-selection.png)
+
+Finally, we see the user's interaction history on the right side and the recommendations made by the model on the left side.
+
+![user select](./assets/recoms-preview.png)
 
 ## Sponsoring
 
 The development of this framework is sponsored by the [Recombee](https://www.recombee.com) company.
 
-![Recombee logo](./assets/recombee_logo.jpeg)
+![recombee logo](./assets/recombee-logo.jpeg)

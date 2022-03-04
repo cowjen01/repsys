@@ -33,13 +33,13 @@ class BaseModel(Model, ABC):
         if kwargs.get("genre"):
             selected_genre = kwargs.get("genre")
             items = self.dataset.items
-            exclude_ids = items.index[items["genre"].apply(lambda genres: selected_genre not in genres)]
-            exclude_indexes = exclude_ids.map(self.dataset.item_id_to_index)
-            predictions[:, exclude_indexes] = 0
+            exclude_ids = items.index[items["genres"].apply(lambda genres: selected_genre not in genres)]
+            exclude_indices = exclude_ids.map(self.dataset.item_id_to_index)
+            predictions[:, exclude_indices] = 0
 
     def web_params(self):
         return {
-            'genre': Select(options=self.dataset.tags.get('genre')),
+            'genre': Select(options=self.dataset.tags.get('genres')),
         }
 
 
