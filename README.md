@@ -9,9 +9,10 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 
 ![web preview](./assets/web-preview.png)
 
-![dataset eval](./assets/dataset-eval.png)
-
-![model eval](./assets/model-eval.png)
+<p align="middle">
+  <img src="./assets/dataset-eval.png" width="48%" />
+  <img src="./assets/model-eval.png" width="48%" /> 
+</p>
 
 ## Installation
 
