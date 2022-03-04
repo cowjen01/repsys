@@ -8,7 +8,7 @@ from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 
 from repsys import Model
-from repsys.web import Select
+from repsys.ui import Select
 
 
 class BaseModel(Model, ABC):

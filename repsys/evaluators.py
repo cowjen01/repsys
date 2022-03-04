@@ -2,16 +2,15 @@ from typing import Tuple, Dict, Optional, Any
 
 import pandas as pd
 import pymde
-from jax import numpy as jnp, vmap, jit, default_backend
 from numpy import ndarray
 from pandas import DataFrame
-from scipy.sparse import csr_matrix, issparse
+from scipy.sparse import issparse
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
-from repsys.metrics import precision_recall, ndcg
+from repsys.metrics import get_precision_recall, get_ndcg, get_accuracy_metrics
 from repsys.model import Model
 
 
@@ -122,83 +121,54 @@ class DatasetEvaluator:
         self.user_embeddings = read_df(users_path)
 
 
-class ModelEvaluator:
-    def __init__(self, dataset: Dataset, recall_steps: List[int] = None, ndcg_k: int = 100):
-        if recall_steps is None:
-            recall_steps = [20, 50]
+def partially_sort(X: ndarray, k: int) -> ndarray:
+    row_indices = np.arange(X.shape[0])[:, np.newaxis]
+    top_k_indices = np.argpartition(X, k, axis=1)[:, :k]
+    top_k_predicts = X[row_indices, top_k_indices]
+    sorted_indices = np.argsort(top_k_predicts, axis=1)
+    return top_k_indices[row_indices, sorted_indices]
 
-        self.recall_steps = recall_steps
+
+class ModelEvaluator:
+    def __init__(self, dataset: Dataset, precision_recall_k: List[int] = None, ndcg_k: List[int] = None):
+        if precision_recall_k is None:
+            precision_recall_k = [20, 50]
+
+        if ndcg_k is None:
+            ndcg_k = [100]
+
+        self.precision_recall_k = precision_recall_k
         self.ndcg_k = ndcg_k
         self.evaluated_models: List[str] = []
+
         self._dataset = dataset
         self._user_results: Dict[str, List[DataFrame]] = {}
 
-        self.summary_metrics = [f"precision@{k}" for k in self.recall_steps] + [f"recall@{k}" for k in
-                                                                                self.recall_steps] + [
-                                   f"ndcg@{self.ndcg_k}"]
+        recall_metrics = [f"recall@{k}" for k in self.precision_recall_k]
+        precision_metrics = [f"precision@{k}" for k in self.precision_recall_k]
+        ndcg_metrics = [f"ndcg@{k}" for k in self.ndcg_k]
+
+        self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics
         self.user_metrics = self.summary_metrics + ["mae", "mse", "rmse"]
 
-    @staticmethod
-    def _partial_sort(x_predict: csr_matrix, k: int):
-        row_indices = np.arange(x_predict.shape[0])[:, np.newaxis]
-        # put indices lower than K on the left side of array
-        top_k_indices = np.argpartition(x_predict, k, axis=1)[:, :k]
-        # select unordered top-K predictions
-        top_k_predicts = x_predict[row_indices, top_k_indices]
-        # sort selected predictions by their value
-        sorted_indices = np.argsort(top_k_predicts, axis=1)
-        # get indices of the highest predictions
-        return top_k_indices[row_indices, sorted_indices]
+    def compute_user_metrics(self, X_predict: ndarray, X_true: ndarray) -> Dict[str, ndarray]:
+        max_k = max(max(self.precision_recall_k), max(self.ndcg_k))
 
-    def compute_user_metrics(self, x_predict: ndarray, x_true: ndarray) -> Dict[str, ndarray]:
-        max_recall_k = max(self.recall_steps)
-        # use the highest K of the configured steps
-        max_k = max(max_recall_k, self.ndcg_k)
+        predict_sort = partially_sort(-X_predict, k=max_k)
+        true_sort = partially_sort(-X_true, k=max_k)
 
-        x_true_binary = (x_true > 0)
-        x_true_nonzero = x_true_binary.sum(axis=1)
-
-        if default_backend() == "cpu":
-            # at this time there is no jax implementation of the arg partition
-            # at cpu we switch to the classical numpy for a moment to sort the array
-            sort_indices = self._partial_sort(-x_predict, max_k)
-        else:
-            # on gpu sorting of an array is much faster, so we sort it all
-            # once jax arg partition will be implemented, it should appear here
-            sort_indices = jnp.argsort(-x_predict, axis=1)
-
-        # create a binary mask for each K starting with K true values nad following false values
-        # this way we lately mask only the top-k values and ignore the rest
-        # [[T, T, F, F, ...], [T, T, T, T, F, ...]]
-        recall_k_mask = (jnp.arange(max_recall_k)[:, jnp.newaxis] < jnp.array(self.recall_steps)).T
-        ndcg_mask = (jnp.arange(self.ndcg_k)[:, jnp.newaxis] < jnp.minimum(self.ndcg_k, x_true_nonzero)).T
-
-        # iterate over the binary mask and push sorted indices as a static value
-        vmap_precision_recall = vmap(precision_recall, in_axes=(0, None, None), out_axes=0)
-        jitted_precision_recall = jit(vmap_precision_recall)
-        top_recall_indices = sort_indices[:, :max_recall_k]
-        recall_results = jitted_precision_recall(recall_k_mask, top_recall_indices, x_true_binary)
-
-        jitted_ndcg = jit(ndcg)
-        ndcg_results = jitted_ndcg(ndcg_mask, sort_indices[:, :self.ndcg_k], x_true)
-
-        diff = x_true - x_predict
-        mae = jnp.abs(diff).mean(axis=1)
-        mse = jnp.square(diff).mean(axis=1)
-        rmse = jnp.sqrt(mse)
-
-        # converting the device array to a numpy array we enforce to wait for the results
-        # also it is possible to call block_until_ready()
         results = {}
-        for i, k in enumerate(self.recall_steps):
-            results[f"precision@{k}"] = np.asarray(recall_results[0][i])
-            results[f"recall@{k}"] = np.asarray(recall_results[1][i])
+        for k in self.precision_recall_k:
+            precision, recall = get_precision_recall(X_predict, X_true, predict_sort, k)
+            results[f"precision@{k}"] = precision
+            results[f"recall@{k}"] = recall
 
-        results[f"ndcg@{self.ndcg_k}"] = np.asarray(ndcg_results)
+        for k in self.ndcg_k:
+            ndcg = get_ndcg(X_predict, X_true, predict_sort, true_sort, k)
+            results[f"ndcg@{k}"] = ndcg
 
-        results["mae"] = mae
-        results["mse"] = mse
-        results["rmse"] = rmse
+        mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
+        results["mae"], results["mse"], results["rmse"] = mae, mse, rmse
 
         return results
 

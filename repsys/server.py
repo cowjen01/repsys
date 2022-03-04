@@ -19,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
                model_eval: ModelEvaluator) -> Sanic:
-    app = Sanic(__name__)
+    app = Sanic('repsys', configure_logging=False)
 
-    static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "build")
     app.static("/", static_folder, pattern=r"/^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/")
 
     def serialize_items(items: DataFrame):
@@ -344,10 +344,6 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         df["id"] = df.index
 
         return json(df.to_dict("records"))
-
-    @app.listener("after_server_stop")
-    def on_shutdown(current_app, loop):
-        logger.info("Server has been shut down.")
 
     return app
 

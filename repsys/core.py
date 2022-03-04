@@ -11,30 +11,39 @@ logger = logging.getLogger(__name__)
 
 
 def split_dataset(config: Config, dataset: Dataset):
-    logger.info("Creating splits of the input data ...")
+    logger.info("Splitting dataset to train/validation/test set")
     dataset.fit(config.dataset.train_split_prop, config.dataset.test_holdout_prop, config.dataset.min_user_interacts,
                 config.dataset.min_item_interacts, config.seed)
 
-    logger.info(f"Saving the split into '{config.checkpoints_dir}'")
+    logger.info(f"Saving splits into '{config.checkpoints_dir}'")
     dataset.save(config.checkpoints_dir)
 
+    logger.info("Splitting successfully finished")
     logger.warning("DON'T FORGET TO RETRAIN YOUR MODELS! ")
 
 
 def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
     for model in models.values():
-        logger.info(f"Fitting model '{model.name()}' ...")
+        if training:
+            logger.info(f"Training '{model.name()}' model")
+        else:
+            logger.info(f"Fitting '{model.name()}' model")
+
         model.update_dataset(dataset)
         model.fit(training=training)
 
 
 def start_server(config: Config, models: Dict[str, Model], dataset: Dataset):
+    logger.info("Starting web application server")
+
     dataset.load(config.checkpoints_dir)
     fit_models(models, dataset, training=False)
 
+    logger.info("Loading embeddings (train split)")
     dataset_eval_train = DatasetEvaluator(dataset, split='train')
     dataset_eval_train.load(config.checkpoints_dir)
 
+    logger.info("Loading embeddings (validation split)")
     dataset_eval_vad = DatasetEvaluator(dataset, split='validation')
     dataset_eval_vad.load(config.checkpoints_dir)
 
@@ -43,6 +52,7 @@ def start_server(config: Config, models: Dict[str, Model], dataset: Dataset):
         'validation': dataset_eval_vad
     }
 
+    logger.info("Loading models evaluation")
     model_eval = ModelEvaluator(dataset)
     model_eval.load(config.checkpoints_dir, list(models.keys()), history=2)
 
@@ -50,25 +60,33 @@ def start_server(config: Config, models: Dict[str, Model], dataset: Dataset):
 
 
 def train_models(config: Config, models: Dict[str, Model], dataset: Dataset, model_name: str = None):
-    dataset.load(config.checkpoints_dir)
+    logger.info("Training implemented models")
 
     if model_name is not None:
         model = models.get(model_name)
         models = {model_name: model}
 
+    dataset.load(config.checkpoints_dir)
+
     fit_models(models, dataset, training=True)
 
 
 def evaluate_dataset(config: Config, dataset: Dataset, method: str):
+    logger.info("Evaluating implemented dataset")
+
     dataset.load(config.checkpoints_dir)
 
     for split in ['train', 'validation']:
         evaluator = DatasetEvaluator(dataset, split)
+
+        logger.info(f"Computing embeddings ({split} split)")
         evaluator.compute_embeddings(method=method, max_samples=10000)
         evaluator.save(config.checkpoints_dir)
 
 
 def evaluate_models(config: Config, models: Dict[str, Model], dataset: Dataset, split_type: str, model_name: str):
+    logger.info("Evaluating implemented models")
+
     dataset.load(config.checkpoints_dir)
 
     if model_name is not None:
@@ -79,7 +97,7 @@ def evaluate_models(config: Config, models: Dict[str, Model], dataset: Dataset, 
     evaluator = ModelEvaluator(dataset)
 
     for model in models.values():
-        logger.info(f"Evaluating model '{model.name()}' ...")
+        logger.info(f"Evaluating '{model.name()}' model")
         evaluator.evaluate(model, split_type)
 
     evaluator.print()

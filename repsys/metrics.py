@@ -1,34 +1,45 @@
-from jax import numpy as jnp
+from typing import Tuple
+
+import numpy as np
+from numpy import ndarray
 
 
-def precision_recall(k_mask, sort_indices, x_true_bin):
-    k = k_mask.sum()
-    # an array of row number indices
-    row_indices = jnp.arange(x_true_bin.shape[0])[:, jnp.newaxis]
-    # increase col indices by 1 to make zero index available as a null value
-    sort_indices = sort_indices + 1
-    # keep only first K cols for each row, the rest set to zero
-    col_indices = jnp.where(k_mask, sort_indices, 0)
-    # create a binary matrix from indices
-    # the matrix has an increased dimension by 1 to hold the increased indices
-    predict_matrix_shape = (x_true_bin.shape[0], x_true_bin.shape[1] + 1)
-    predict_matrix = jnp.zeros(predict_matrix_shape, dtype=bool)
-    predict_matrix = predict_matrix.at[row_indices, col_indices].set(True)
-    # remove the first column that holds unused indices
-    predict_matrix = predict_matrix[:, 1:]
-    tmp = (jnp.logical_and(x_true_bin, predict_matrix).sum(axis=1)).astype(jnp.float32)
-    # divide a sum of the agreed indices by a sum of the true indices
-    precision = tmp / k
-    recall = tmp / jnp.minimum(k, x_true_bin.sum(axis=1))
+def get_precision_recall(X_predict: ndarray, X_true: ndarray, predict_sort: ndarray, k: int) -> Tuple[ndarray, ndarray]:
+    row_indices = np.arange(X_predict.shape[0])[:, np.newaxis]
+
+    X_true_bin = X_true > 0
+    X_true_nonzero = (X_true > 0).sum(axis=1)
+
+    X_predict_bin = np.zeros_like(X_predict, dtype=bool)
+    X_predict_bin[row_indices, predict_sort[:, :k]] = True
+
+    hits = (np.logical_and(X_true_bin, X_predict_bin).sum(axis=1)).astype(np.float32)
+
+    precision = hits / k
+    recall = hits / np.minimum(k, X_true_nonzero)
+
     return precision, recall
 
 
-def ndcg(ndcg_mask, sort_indices, x_true):
-    K = sort_indices.shape[1]
-    rows_idx = jnp.arange(x_true.shape[0])[:, jnp.newaxis]
-    discount = 1.0 / jnp.log2(jnp.arange(2, K + 2))
-    # the slowest part ...
-    dcg = (x_true[rows_idx, sort_indices] * discount).sum(axis=1)
-    # null all positions, where mask is False (keep the rest)
-    idcg = jnp.where(ndcg_mask, discount, 0).sum(axis=1)
+def get_ndcg(X_predict: ndarray, X_true: ndarray, predict_sort: ndarray, true_sort: ndarray, k: int) -> ndarray:
+    row_indices = np.arange(X_predict.shape[0])[:, np.newaxis]
+
+    X_true_bin = X_true > 0
+    X_true_nonzero = X_true_bin.sum(axis=1)
+
+    discount = 1.0 / np.log2(np.arange(2, k + 2))
+    dcg = (X_true[row_indices, predict_sort[:, :k]] * discount).sum(axis=1)
+
+    mask = np.transpose(np.arange(k)[:, np.newaxis] < np.minimum(k, X_true_nonzero))
+    idcg = np.where(mask, (X_true[row_indices, true_sort] * discount), 0).sum(axis=1)
+
     return dcg / idcg
+
+
+def get_accuracy_metrics(X_predict, X_true):
+    diff = X_true - X_predict
+    mae = np.abs(diff).mean(axis=1)
+    mse = np.square(diff).mean(axis=1)
+    rmse = np.sqrt(mse)
+
+    return mae, mse, rmse

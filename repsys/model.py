@@ -6,16 +6,12 @@ import numpy as np
 from scipy.sparse import csr_matrix
 
 from repsys.dataset import Dataset
-from repsys.web import WebParam
+from repsys.ui import WebParam
 
 logger = logging.getLogger(__name__)
 
 
 class Model(ABC):
-    # def __init__(self):
-    #     self.dataset: Optional[Dataset] = None
-    #     self._updated = False
-
     @abstractmethod
     def name(self) -> str:
         """Get a unique name of the model."""

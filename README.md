@@ -7,31 +7,20 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 - Preview recommendations using a web application
 - Simulate user's behavior while receiving the recommendations
 
-![web preview](./assets/web-preview.png)
+![web preview](images/web-preview.png)
 
 <p align="middle">
-  <img src="./assets/dataset-eval.png" width="48%" />
-  <img src="./assets/model-eval.png" width="48%" /> 
+  <img src="./images/dataset-eval.png" width="48%" />
+  <img src="./images/model-eval.png" width="48%" /> 
 </p>
 
 ## Installation
 
-Install the packages using [pip](https://pypi.org/project/pip/):
+Install the package using [pip](https://pypi.org/project/pip/):
 
 ```
 $ pip install repsys
 ```
-
-The framework uses the [Jax](https://jax.readthedocs.io/en/latest/) library to speed up the computation of models 
-evaluation by allowing to run these processes on GPU. The CPU version of the library is a part of the framework package.
-To use the CUDA version, please follow [this guide](https://github.com/google/jax#pip-installation-gpu-cuda). 
-
-```
-$ pip install --upgrade pip
-$ pip install --upgrade "jax[cuda]" -f https://storage.googleapis.com/jax-releases/jax_releases.html
-```
-
-For ARM architecture, please install the Jax package using [Conda Forge](https://anaconda.org/conda-forge/jaxlib).
 
 ## Getting started
 
@@ -248,22 +237,22 @@ $ repsys server
 The application should be accessible on the default address [http://localhost:3001](http://localhost:3001). When you open the link, you will see the main screen where your recommendations appear once you finish the setup.
 The first step is defining how the items' data columns should be mapped to the item view components.
 
-![app setup](./assets/app-setup.png)
+![app setup](images/app-setup.png)
 
 Then we need to switch to the build mode and add two recommenders - one without filter and the second with only comedy movies included.
 
-![add recommender](./assets/add-recommender.png)
+![add recommender](images/add-recommender.png)
 
 Now we switch back from the build mode and select a user from the validation set (never seen by a model before).
 
-![user select](./assets/user-selection.png)
+![user select](images/user-selection.png)
 
 Finally, we see the user's interaction history on the right side and the recommendations made by the model on the left side.
 
-![user select](./assets/recoms-preview.png)
+![user select](images/recoms-preview.png)
 
 ## Sponsoring
 
 The development of this framework is sponsored by the [Recombee](https://www.recombee.com) company.
 
-![recombee logo](./assets/recombee-logo.jpeg)
+![recombee logo](images/recombee-logo.jpeg)
