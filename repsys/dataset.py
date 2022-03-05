@@ -174,6 +174,17 @@ def get_top_categories(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str
 
 
 class Dataset(ABC):
+    items: DataFrame = None
+    item_index: frozenbidict = None
+    tags = {}
+    histograms = {}
+    categories = {}
+    splits: Dict[str, Split] = {
+        'train': None,
+        'validation': None,
+        'test': None
+    }
+
     @abstractmethod
     def name(self):
         pass
@@ -357,22 +368,8 @@ class Dataset(ABC):
         self._update_categories()
         self._update_histograms()
 
-    def _init_state(self):
-        self.items: Optional[DataFrame] = None
-        self.item_index: Optional[frozenbidict] = None
-        self.tags = {}
-        self.histograms = {}
-        self.categories = {}
-        self.splits: Dict[str, Optional[Split]] = {
-            'train': None,
-            'validation': None,
-            'test': None
-        }
-
     def fit(self, train_split_prop=0.85, test_holdout_prop=0.2, min_user_interacts=0, min_item_interacts=0,
             seed=1234) -> None:
-        self._init_state()
-
         logger.info("Loading dataset ...")
 
         items = self.load_items()
@@ -460,8 +457,6 @@ class Dataset(ABC):
 
     @tmpdir_provider
     def load(self, checkpoints_dir: str) -> None:
-        self._init_state()
-
         checkpoints = find_checkpoints(checkpoints_dir, "dataset-split-*.zip")
 
         if not checkpoints:

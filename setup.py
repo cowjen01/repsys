@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="repsys-framework",
-    version="0.1.0",
+    version="0.1.1",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
     description="Framework for developing and analyzing recommendation systems.",
@@ -14,7 +14,7 @@ setuptools.setup(
     include_package_data=True,
     long_description_content_type="text/markdown",
     packages=["repsys"],
-    license="Apache License 2.0",
+    license="GPLv3",
     python_requires=">=3.7",
     entry_points={
         "console_scripts": [

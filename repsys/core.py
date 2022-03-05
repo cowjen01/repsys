@@ -22,14 +22,15 @@ def split_dataset(config: Config, dataset: Dataset):
     logger.warning("DON'T FORGET TO RETRAIN YOUR MODELS! ")
 
 
-def fit_models(models: Dict[str, Model], dataset: Dataset, training: bool):
+def fit_models(models: Dict[str, Model], dataset: Dataset, config: Config, training: bool):
     for model in models.values():
         if training:
             logger.info(f"Training '{model.name()}' model")
         else:
             logger.info(f"Fitting '{model.name()}' model")
 
-        model.update_dataset(dataset)
+        model.config = config
+        model.dataset = dataset
         model.fit(training=training)
 
 
@@ -37,7 +38,7 @@ def start_server(config: Config, models: Dict[str, Model], dataset: Dataset):
     logger.info("Starting web application server")
 
     dataset.load(config.checkpoints_dir)
-    fit_models(models, dataset, training=False)
+    fit_models(models, dataset, config, training=False)
 
     logger.info("Loading embeddings (train split)")
     dataset_eval_train = DatasetEvaluator(dataset, split='train')
@@ -68,7 +69,7 @@ def train_models(config: Config, models: Dict[str, Model], dataset: Dataset, mod
 
     dataset.load(config.checkpoints_dir)
 
-    fit_models(models, dataset, training=True)
+    fit_models(models, dataset, config, training=True)
 
 
 def evaluate_dataset(config: Config, dataset: Dataset, method: str):
@@ -92,7 +93,7 @@ def evaluate_models(config: Config, models: Dict[str, Model], dataset: Dataset, 
     if model_name is not None:
         models = {model_name: models.get(model_name)}
 
-    fit_models(models, dataset, training=False)
+    fit_models(models, dataset, config, training=False)
 
     evaluator = ModelEvaluator(dataset)
 

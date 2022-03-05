@@ -16,7 +16,7 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 
 ## Installation
 
-Install the package using [pip](https://pypi.org/project/pip/):
+Install the package using [pip](https://pypi.org/project/repsys-framework/):
 
 ```
 $ pip install repsys-framework
@@ -224,7 +224,7 @@ def compute_embeddings(self, X):
 ```
 
 In the example, the negative matrix factorization is used. You have to return a user and item embeddings pair in this order. Also, it is essential to return the matrices in the shape of (n_users/n_items, n_dim). 
-If the reduced dimension is higher than 2, the PCA and TSNE are applied.
+If the reduced dimension is higher than 2, the PyMDE method is applied.
 
 ### Running the application
 
