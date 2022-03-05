@@ -19,7 +19,7 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 Install the package using [pip](https://pypi.org/project/pip/):
 
 ```
-$ pip install repsys-lib
+$ pip install repsys-framework
 ```
 
 ## Getting started
