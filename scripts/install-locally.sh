@@ -1,5 +1,5 @@
 #!/bin/bash
 
-./build-frontend.sh
+./scripts/build-frontend.sh
 
 pip install -e .
