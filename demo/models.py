@@ -66,6 +66,9 @@ class KNN(BaseModel):
             self._load_model()
 
     def predict(self, X, **kwargs):
+        if X.count_nonzero() == 0:
+            return np.random.uniform(size=X.shape)
+
         distances, indices = self.model.kneighbors(X)
 
         n_distances = distances[:, 1:]
