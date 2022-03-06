@@ -1,5 +1,5 @@
+repsys-framework==1.0.3
 sklearn
-repsys
 pandas
 scipy
 numpy

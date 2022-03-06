@@ -1,5 +1,7 @@
 # Repsys
 
+[![PyPI version](https://badge.fury.io/py/repsys-framework.svg)](https://badge.fury.io/py/repsys-framework)
+
 The Repsys is a framework for developing and analyzing recommendation systems, and it allows you to:
 - Add your own dataset and recommendation models
 - Visually evaluate the models on various metrics
