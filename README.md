@@ -9,11 +9,11 @@ The Repsys is a framework for developing and analyzing recommendation systems, a
 - Preview recommendations using a web application
 - Simulate user's behavior while receiving the recommendations
 
-![web preview](https://github.com/cowjen01/repsys/raw/master/images/web-preview.png)
+![web preview](https://github.com/cowjen01/repsys/raw/master/images/web-preview.jpg)
 
 <p align="middle">
-  <img src="https://github.com/cowjen01/repsys/raw/master/images/dataset-eval.png" width="48%" />
-  <img src="https://github.com/cowjen01/repsys/raw/master/images/model-eval.png" width="48%" /> 
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/dataset-eval.jpg" width="48%" />
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/model-eval.jpg" width="48%" /> 
 </p>
 
 ## Installation
@@ -248,19 +248,19 @@ $ repsys server
 The application should be accessible on the default address [http://localhost:3001](http://localhost:3001). When you open the link, you will see the main screen where your recommendations appear once you finish the setup.
 The first step is defining how the items' data columns should be mapped to the item view components.
 
-![app setup](https://github.com/cowjen01/repsys/raw/master/images/app-setup.png)
+![app setup](https://github.com/cowjen01/repsys/raw/master/images/app-setup.jpg)
 
 Then we need to switch to the build mode and add two recommenders - one without filter and the second with only comedy movies included.
 
-![add recommender](https://github.com/cowjen01/repsys/raw/master/images/add-recommender.png)
+![add recommender](https://github.com/cowjen01/repsys/raw/master/images/add-recommender.jpg)
 
 Now we switch back from the build mode and select a user from the validation set (never seen by a model before).
 
-![user select](https://github.com/cowjen01/repsys/raw/master/images/user-selection.png)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/user-selection.jpg)
 
 Finally, we see the user's interaction history on the right side and the recommendations made by the model on the left side.
 
-![user select](https://github.com/cowjen01/repsys/raw/master/images/recoms-preview.png)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/recoms-preview.jpg)
 
 ## Contribution
 
