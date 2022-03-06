@@ -1,5 +1,4 @@
 #!/bin/bash
 
-./scripts/build-frontend.sh
-
-pip install -e .
+pip install --upgrade pip
+pip install --upgrade --no-cache-dir -e .

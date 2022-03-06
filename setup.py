@@ -32,8 +32,5 @@ setuptools.setup(
         "pymde==0.1.14",
         "bidict==0.21.4"
     ],
-    extras_require={
-        "dev": ["black", "tox", "flake8", "wheel", "setuptools", "pytest", "build"]
-    },
     zip_safe=False,
 )
