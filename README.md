@@ -163,6 +163,11 @@ test_holdout_prop=0.2
 min_user_interacts=5
 min_item_interacts=5
 
+[evaluation]
+recall_precision_k=20,50
+ndcg_k=100
+coverage_k=20,50
+
 [server]
 port=3001
 ```
