@@ -24,7 +24,10 @@ $ pip install repsys-framework
 
 ## Getting started
 
-Before you begin, please create an empty folder that will contain the project's source code and add the following files:
+If you want to skip this tutorial and try the framework, you can pull the content of the [demo](https://github.com/cowjen01/repsys/tree/master/demo) folder located at the repository.
+As mentioned in the [next step](https://github.com/cowjen01/repsys#datasetpy), you still have to download the dataset before you begin.
+
+Otherwise, please create an empty project folder that will contain the dataset and models implementation.
 
 ```
 ├── __init__.py
