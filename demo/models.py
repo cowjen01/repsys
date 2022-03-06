@@ -33,11 +33,10 @@ class BaseModel(Model, ABC):
 
     def _apply_filters(self, predictions, **kwargs):
         if kwargs.get("genre"):
-            selected_genre = kwargs.get("genre")
             items = self.dataset.items
-            exclude_ids = items.index[items["genres"].apply(lambda genres: selected_genre not in genres)]
-            exclude_indices = exclude_ids.map(self.dataset.item_id_to_index)
-            predictions[:, exclude_indices] = 0
+            items = items[items["genres"].apply(lambda x: kwargs.get("genre") not in x)]
+            indices = items.index.map(self.dataset.item_id_to_index)
+            predictions[:, indices] = 0
 
     def web_params(self):
         return {

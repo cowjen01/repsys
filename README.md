@@ -88,7 +88,7 @@ import scipy.sparse as sp
 from sklearn.neighbors import NearestNeighbors
 
 from repsys import Model
-import repsys.web as web
+from repsys.ui import Select
 
 class KNN(Model):
     def __init__(self):
@@ -116,23 +116,22 @@ class KNN(Model):
             D = sp.diags(dist)
             return D.dot(A).sum(axis=0)
 
-        vf = np.vectorize(f, signature='(n),(n)->(m)')
+        vf = np.vectorize(f, signature="(n),(n)->(m)")
        
         predictions = vf(distances, indices)
         predictions[X.nonzero()] = 0
         
         if kwargs.get("genre"):
-            selected_genre = kwargs.get("genre")
             items = self.dataset.items
-            exclude_ids = items.index[items["genres"].apply(lambda genres: selected_genre not in genres)]
-            exclude_indices = exclude_ids.map(self.dataset.item_id_to_index)
-            predictions[:, exclude_indices] = 0
+            items = items[items["genres"].apply(lambda x: kwargs.get("genre") not in x)]
+            indices = items.index.map(self.dataset.item_id_to_index)
+            predictions[:, indices] = 0
 
         return predictions
 
     def web_params(self):
         return {
-            'genre': web.Select(options=self.dataset.tags.get('genres')),
+            "genre": Select(options=self.dataset.tags.get("genres")),
         }
 ```
 
