@@ -1,4 +1,6 @@
 #!/bin/bash
 
-pip install --upgrade pip
-pip install --upgrade --no-cache-dir -e .
+./scripts/build-frontend.sh
+
+python3 -m pip install --upgrade pip
+python3 -m pip install --upgrade --no-cache-dir -e .

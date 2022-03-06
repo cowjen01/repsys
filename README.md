@@ -265,10 +265,9 @@ Finally, we see the user's interaction history on the right side and the recomme
 ## Contribution
 
 To build the package from the source, you first need to install Node.js and npm library as documented [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
-Then you can run the following scripts from the root directory to build the web application and install the package locally.
+Then you can run the following script from the root directory to build the web application and install the package locally.
 
 ```
-$ ./scripts/build-frontend.sh
 $ ./scripts/install-locally.sh
 ```
 
