@@ -107,6 +107,9 @@ class KNN(Model):
         self.model.fit(X)
 
     def predict(self, X, **kwargs):
+        if X.count_nonzero() == 0:
+            return np.random.uniform(size=X.shape)
+    
         distances, indices = self.model.kneighbors(X)
         
         distances = distances[:, 1:]
