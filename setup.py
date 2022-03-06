@@ -33,8 +33,7 @@ setuptools.setup(
         "bidict==0.21.4"
     ],
     extras_require={
-        "dev": ["black", "tox", "flake8", "wheel", "setuptools", "pytest"],
-        "docs": ["myst-parser", "sphinx", "sphinx-rtd-theme"]
+        "dev": ["black", "tox", "flake8", "wheel", "setuptools", "pytest", "build"]
     },
     zip_safe=False,
 )
