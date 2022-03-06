@@ -255,6 +255,15 @@ Finally, we see the user's interaction history on the right side and the recomme
 
 ![user select](https://github.com/cowjen01/repsys/raw/master/images/recoms-preview.png)
 
+## Contribution
+
+To build the package from the source, you first need to install Node.js and npm library as documented [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
+Then you can run the following script from the root directory to build the web application and install the package locally.
+
+```
+$ ./scripts/install-locally.sh
+```
+
 ## Sponsoring
 
 The development of this framework is sponsored by the [Recombee](https://www.recombee.com) company.
