@@ -32,13 +32,24 @@ function SettingsDialog() {
 
   const dataset = useGetDatasetQuery();
 
+  const fields = ['title', 'subtitle', 'caption', 'image', 'content'];
+
   const handleClose = () => {
     dispatch(closeSettingsDialog());
   };
 
   const handleSubmit = (values) => {
+    const viewData = Object.entries(values.itemView).reduce((acc, [field, attribute]) => {
+      if (dataset.data.attributes[attribute]) {
+        acc[field] = attribute;
+      } else {
+        acc[field] = '';
+      }
+      return acc;
+    }, {});
+
+    dispatch(setItemView(viewData));
     dispatch(setDarkMode(values.darkMode));
-    dispatch(setItemView(values.itemView));
     dispatch(
       openSnackbar({
         message: 'All settings successfully applied!',
@@ -47,7 +58,7 @@ function SettingsDialog() {
     handleClose();
   };
 
-  const columnOptions = useMemo(() => {
+  const attributeOptions = useMemo(() => {
     if (!dataset.data) {
       return [];
     }
@@ -87,14 +98,14 @@ function SettingsDialog() {
                     <Typography variant="subtitle2" component="div">
                       Recommenders
                     </Typography>
-                    {['title', 'subtitle', 'caption', 'image', 'content'].map((field) => (
+                    {fields.map((field) => (
                       <Field
                         key={field}
                         name={`itemView.${field}`}
                         label={`${capitalize(field)} attribute`}
                         fullWidth
                         component={SelectField}
-                        options={columnOptions}
+                        options={attributeOptions}
                       />
                     ))}
                   </Grid>

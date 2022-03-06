@@ -62,9 +62,7 @@ function ItemsDescription({ attributes, items }) {
                 height={150}
                 data={[
                   {
-                    x: values.map(
-                      (_, index) => `${bins[index]}-${bins[index + 1]}`
-                    ),
+                    x: values.map((_, index) => `${bins[index]}-${bins[index + 1]}`),
                     y: values,
                   },
                 ]}

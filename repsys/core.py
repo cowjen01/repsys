@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 
 
 def split_dataset(config: Config, dataset: Dataset):
-    logger.info("Splitting dataset to train/validation/test set")
+    logger.info("Creating train/validation/test split")
     dataset.fit(config.dataset.train_split_prop, config.dataset.test_holdout_prop, config.dataset.min_user_interacts,
                 config.dataset.min_item_interacts, config.seed)
 

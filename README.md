@@ -157,10 +157,9 @@ framework behavior, etc.
 ```ini
 [general]
 seed=123
-debug=true
 
 [dataset]
-train_split_prop=0.8
+train_split_prop=0.85
 test_holdout_prop=0.2
 min_user_interacts=5
 min_item_interacts=5
