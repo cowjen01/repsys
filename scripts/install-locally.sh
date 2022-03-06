@@ -1,7 +1,5 @@
 #!/bin/bash
 
-if [ ! -d "./repsys/web/build" ]; then
-  ./scripts/build-frontend.sh
-fi
+./scripts/build-frontend.sh
 
 pip install -e .
