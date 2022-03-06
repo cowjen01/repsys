@@ -316,10 +316,10 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
 
         results = {}
         for model in model_eval.evaluated_models:
-            model_summary = model_eval.get_eval_summary(model)
+            model_summary = model_eval.summary(model)
             if model_summary:
                 results[model] = {'current': model_summary}
-                prev_summary = model_eval.get_eval_summary(model, history=1)
+                prev_summary = model_eval.summary(model, history=1)
                 if prev_summary:
                     results[model]['previous'] = prev_summary
 

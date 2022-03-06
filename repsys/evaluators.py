@@ -10,7 +10,7 @@ from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
-from repsys.metrics import get_precision_recall, get_ndcg, get_accuracy_metrics
+from repsys.metrics import get_precision_recall, get_ndcg, get_accuracy_metrics, get_coverage
 from repsys.model import Model
 
 
@@ -30,6 +30,181 @@ def write_df(df: DataFrame, file_name: str) -> None:
 
 def read_df(file_path: str) -> DataFrame:
     return pd.read_csv(file_path, dtype={'id': str}).set_index('id')
+
+
+def sort_partially(X: ndarray, k: int) -> ndarray:
+    row_indices = np.arange(X.shape[0])[:, np.newaxis]
+    top_k_indices = np.argpartition(X, k, axis=1)[:, :k]
+    top_k_predicts = X[row_indices, top_k_indices]
+    sorted_indices = np.argsort(top_k_predicts, axis=1)
+    return top_k_indices[row_indices, sorted_indices]
+
+
+class ModelEvaluator:
+    def __init__(self, dataset: Dataset, rp_k: List[int] = None, ndcg_k: List[int] = None,
+                 coverage_k: List[int] = None):
+        if rp_k is None:
+            rp_k = [20, 50]
+
+        if ndcg_k is None:
+            ndcg_k = [100]
+
+        if coverage_k is None:
+            coverage_k = [20, 50]
+
+        self.rp_k = rp_k
+        self.ndcg_k = ndcg_k
+        self.coverage_k = coverage_k
+
+        self.evaluated_models: List[str] = []
+
+        self._dataset = dataset
+        self._user_results: Dict[str, List[DataFrame]] = {}
+        self._item_results: Dict[str, List[DataFrame]] = {}
+
+        recall_metrics = [f"recall@{k}" for k in self.rp_k]
+        precision_metrics = [f"precision@{k}" for k in self.rp_k]
+        ndcg_metrics = [f"ndcg@{k}" for k in self.ndcg_k]
+        coverage_metrics = [f"coverage@{k}" for k in self.coverage_k]
+
+        self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics + coverage_metrics
+        self.user_metrics = recall_metrics + precision_metrics + ndcg_metrics + ["mae", "mse", "rmse"]
+
+    def compute_metrics(self, X_predict: ndarray, X_true: ndarray) -> Tuple[Dict[str, ndarray], Dict[str, float]]:
+        max_k = max(max(self.rp_k), max(self.ndcg_k))
+
+        predict_sort = sort_partially(-X_predict, k=max_k)
+        true_sort = sort_partially(-X_true, k=max_k)
+
+        user_results = {}
+        for k in self.rp_k:
+            precision, recall = get_precision_recall(X_predict, X_true, predict_sort, k)
+            user_results[f"precision@{k}"] = precision
+            user_results[f"recall@{k}"] = recall
+
+        for k in self.ndcg_k:
+            ndcg = get_ndcg(X_predict, X_true, predict_sort, true_sort, k)
+            user_results[f"ndcg@{k}"] = ndcg
+
+        mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
+        user_results["mae"], user_results["mse"], user_results["rmse"] = mae, mse, rmse
+
+        item_results = {}
+        for k in self.coverage_k:
+            item_results[f"coverage@{k}"] = get_coverage(X_predict, predict_sort, k)
+
+        return user_results, item_results
+
+    def print(self) -> None:
+        for model in self.evaluated_models:
+            print(f'\n{model.upper()} MODEL:')
+            print('-----------------------------')
+            user_results = self._user_results.get(model)
+            item_results = self._item_results.get(model)
+            print('User Metrics:')
+            for i, df in enumerate(user_results):
+                print(f'- history {i + 1}:')
+                print(df.describe())
+                print('\n')
+            print('Item Metrics:')
+            for i, df in enumerate(item_results):
+                print(f'- history {i + 1}:')
+                print(df.describe())
+                print('\n')
+
+    def get_user_results(self, model_name: str, history: int = 0) -> Optional[DataFrame]:
+        results = self._user_results.get(model_name)
+        if not results or len(results) - 1 < history:
+            return None
+
+        return results[history]
+
+    def get_item_results(self, model_name: str, history: int = 0) -> Optional[DataFrame]:
+        results = self._item_results.get(model_name)
+        if not results or len(results) - 1 < history:
+            return None
+
+        return results[history]
+
+    def summary(self, model_name: str, history: int = 0) -> Optional[Dict[str, float]]:
+        user_results = self.get_user_results(model_name, history)
+        item_results = self.get_item_results(model_name, history)
+
+        user_summary = {}
+        if user_results is not None:
+            user_summary = user_results.mean().to_dict()
+            user_summary = {metric: user_summary[metric] for metric in self.user_metrics if
+                            metric not in ["mae", "mse", "rmse"]}
+
+        item_summary = {}
+        if item_results is not None:
+            item_summary = item_results.mean().to_dict()
+
+        summary = {**user_summary, **item_summary}
+
+        return summary
+
+    def evaluate(self, model: Model, split: str = 'validation'):
+        test_split = self._dataset.splits.get(split)
+        x_true = test_split.holdout_matrix.toarray()
+        x_predict = model.predict(test_split.train_matrix)
+
+        user_results, item_results = self.compute_metrics(x_predict, x_true)
+        user_ids = list(test_split.user_index.keys())
+        user_df = results_to_df(user_results, user_ids)
+
+        item_df = pd.DataFrame(item_results, index=[0])
+
+        if model.name() not in self.evaluated_models:
+            self.evaluated_models.append(model.name())
+            self._user_results[model.name()] = [user_df]
+            self._item_results[model.name()] = [item_df]
+        else:
+            self._user_results.get(model.name()).append(user_df)
+            self._item_results.get(model.name()).append(item_df)
+
+    @tmpdir_provider
+    def _save_latest_eval(self, model_name: str, checkpoints_dir: str):
+        user_results = self._user_results.get(model_name)[-1]
+        item_results = self._item_results.get(model_name)[-1]
+
+        write_df(user_results, 'user-metrics.csv')
+        write_df(item_results, 'item-metrics.csv')
+
+        filename = f'model-eval-{model_name}-{current_ts()}.zip'
+        file_path = os.path.join(checkpoints_dir, filename)
+        zip_dir(file_path, tmp_dir_path())
+
+    def save(self, checkpoints_dir: str) -> None:
+        for model in self.evaluated_models:
+            self._save_latest_eval(model, checkpoints_dir)
+
+    @tmpdir_provider
+    def _load_model_eval(self, model_name: str, zip_path: str):
+        unzip_dir(zip_path, tmp_dir_path())
+
+        user_path = os.path.join(tmp_dir_path(), 'user-metrics.csv')
+        item_path = os.path.join(tmp_dir_path(), 'item-metrics.csv')
+
+        user_results = read_df(user_path)
+        item_results = pd.read_csv(item_path)
+
+        self._user_results[model_name].append(user_results)
+        self._item_results[model_name].append(item_results)
+
+    def load(self, checkpoints_dir: str, models: List[str], history: int = 1) -> None:
+        self.evaluated_models = []
+        for model in models:
+            pattern = f'model-eval-{model}-*.zip'
+            checkpoints = find_checkpoints(checkpoints_dir, pattern, history)
+
+            if checkpoints:
+                self._user_results[model] = []
+                self._item_results[model] = []
+                self.evaluated_models.append(model)
+
+            for zip_path in checkpoints:
+                self._load_model_eval(model, zip_path)
 
 
 class DatasetEvaluator:
@@ -119,131 +294,3 @@ class DatasetEvaluator:
 
         users_path = os.path.join(tmp_dir_path(), 'user-embeds.csv')
         self.user_embeddings = read_df(users_path)
-
-
-def partially_sort(X: ndarray, k: int) -> ndarray:
-    row_indices = np.arange(X.shape[0])[:, np.newaxis]
-    top_k_indices = np.argpartition(X, k, axis=1)[:, :k]
-    top_k_predicts = X[row_indices, top_k_indices]
-    sorted_indices = np.argsort(top_k_predicts, axis=1)
-    return top_k_indices[row_indices, sorted_indices]
-
-
-class ModelEvaluator:
-    def __init__(self, dataset: Dataset, precision_recall_k: List[int] = None, ndcg_k: List[int] = None):
-        if precision_recall_k is None:
-            precision_recall_k = [20, 50]
-
-        if ndcg_k is None:
-            ndcg_k = [100]
-
-        self.precision_recall_k = precision_recall_k
-        self.ndcg_k = ndcg_k
-        self.evaluated_models: List[str] = []
-
-        self._dataset = dataset
-        self._user_results: Dict[str, List[DataFrame]] = {}
-
-        recall_metrics = [f"recall@{k}" for k in self.precision_recall_k]
-        precision_metrics = [f"precision@{k}" for k in self.precision_recall_k]
-        ndcg_metrics = [f"ndcg@{k}" for k in self.ndcg_k]
-
-        self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics
-        self.user_metrics = self.summary_metrics + ["mae", "mse", "rmse"]
-
-    def compute_user_metrics(self, X_predict: ndarray, X_true: ndarray) -> Dict[str, ndarray]:
-        max_k = max(max(self.precision_recall_k), max(self.ndcg_k))
-
-        predict_sort = partially_sort(-X_predict, k=max_k)
-        true_sort = partially_sort(-X_true, k=max_k)
-
-        results = {}
-        for k in self.precision_recall_k:
-            precision, recall = get_precision_recall(X_predict, X_true, predict_sort, k)
-            results[f"precision@{k}"] = precision
-            results[f"recall@{k}"] = recall
-
-        for k in self.ndcg_k:
-            ndcg = get_ndcg(X_predict, X_true, predict_sort, true_sort, k)
-            results[f"ndcg@{k}"] = ndcg
-
-        mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
-        results["mae"], results["mse"], results["rmse"] = mae, mse, rmse
-
-        return results
-
-    def print(self) -> None:
-        for model in self.evaluated_models:
-            print('-----------------------')
-            print(f'MODEL {model.upper()}:')
-            user_results = self._user_results.get(model)
-            print('User Metrics:')
-            for i, df in enumerate(user_results):
-                print(f'History {i}:')
-                print(df.describe())
-
-    def get_user_results(self, model_name: str, history: int = 0) -> Optional[DataFrame]:
-        results = self._user_results.get(model_name)
-        if not results or len(results) - 1 < history:
-            return None
-
-        return results[history]
-
-    def get_eval_summary(self, model_name: str, history: int = 0) -> Optional[Dict[str, float]]:
-        user_results = self.get_user_results(model_name, history)
-
-        user_summary = {}
-        if user_results is not None:
-            user_summary = user_results.mean().to_dict()
-            user_summary = {metric: user_summary[metric] for metric in self.summary_metrics}
-
-        summary = {**user_summary}
-
-        return summary
-
-    def evaluate(self, model: Model, split: str = 'validation'):
-        test_split = self._dataset.splits.get(split)
-        x_true = test_split.holdout_matrix.toarray()
-        x_predict = model.predict(test_split.train_matrix)
-
-        user_results = self.compute_user_metrics(x_predict, x_true)
-        user_ids = list(test_split.user_index.keys())
-        df = results_to_df(user_results, user_ids)
-
-        if model.name() not in self.evaluated_models:
-            self.evaluated_models.append(model.name())
-            self._user_results[model.name()] = [df]
-        else:
-            self._user_results.get(model.name()).append(df)
-
-    @tmpdir_provider
-    def _save_latest_eval(self, model_name: str, checkpoints_dir: str):
-        user_results = self._user_results.get(model_name)[-1]
-        write_df(user_results, 'user-metrics.csv')
-        filename = f'model-eval-{model_name}-{current_ts()}.zip'
-        file_path = os.path.join(checkpoints_dir, filename)
-        zip_dir(file_path, tmp_dir_path())
-
-    def save(self, checkpoints_dir: str) -> None:
-        for model in self.evaluated_models:
-            self._save_latest_eval(model, checkpoints_dir)
-
-    @tmpdir_provider
-    def _load_model_eval(self, model_name: str, zip_path: str):
-        unzip_dir(zip_path, tmp_dir_path())
-        user_results_path = os.path.join(tmp_dir_path(), 'user-metrics.csv')
-        user_results = read_df(user_results_path)
-        self._user_results[model_name].append(user_results)
-
-    def load(self, checkpoints_dir: str, models: List[str], history: int = 1) -> None:
-        self.evaluated_models = []
-        for model in models:
-            pattern = f'model-eval-{model}-*.zip'
-            checkpoints = find_checkpoints(checkpoints_dir, pattern, history)
-
-            if checkpoints:
-                self._user_results[model] = []
-                self.evaluated_models.append(model)
-
-            for zip_path in checkpoints:
-                self._load_model_eval(model, zip_path)

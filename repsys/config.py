@@ -1,5 +1,6 @@
 import configparser
 import os
+from typing import List
 
 import repsys.constants as const
 from repsys.errors import InvalidConfigError
@@ -14,9 +15,18 @@ class DatasetConfig:
         self.min_item_interacts = min_item_interacts
 
 
+class EvaluationConfig:
+    def __init__(self, rp_k: List[int], ndcg_k: List[int], coverage_k: List[int]):
+        self.rp_k = rp_k
+        self.ndcg_k = ndcg_k
+        self.coverage_k = coverage_k
+
+
 class Config:
-    def __init__(self, checkpoints_dir: str, seed: int, debug: bool, server_port: int, dataset_config: DatasetConfig):
+    def __init__(self, checkpoints_dir: str, seed: int, debug: bool, server_port: int, dataset_config: DatasetConfig,
+                 eval_config: EvaluationConfig):
         self.dataset = dataset_config
+        self.eval = eval_config
         self.checkpoints_dir = checkpoints_dir
         self.debug = debug
         self.seed = seed
@@ -37,6 +47,12 @@ def validate_dataset_config(config: DatasetConfig):
         raise InvalidConfigError('Minimum item interactions can be negative')
 
 
+def parse_list(arg: str, sep: str = ','):
+    if type(arg) == str:
+        return [int(x.strip()) for x in arg.split(sep)]
+    return arg
+
+
 def read_config(config_path: str = None):
     config = configparser.ConfigParser()
 
@@ -53,10 +69,17 @@ def read_config(config_path: str = None):
 
     validate_dataset_config(dataset_config)
 
+    evaluator_config = EvaluationConfig(
+        parse_list(config.get('evaluation', 'recall_precision_k', fallback=const.DEFAULT_EVAL_RECALL_PRECISION_K)),
+        parse_list(config.get('evaluation', 'ndcg_k', fallback=const.DEFAULT_EVAL_NDCG_K)),
+        parse_list(config.get('evaluation', 'coverage_k', fallback=const.DEFAULT_EVAL_COVERAGE_K))
+    )
+
     return Config(
         config.get('general', 'checkpoints_dir', fallback=const.DEFAULT_CHECKPOINTS_DIR),
         config.getint('general', 'seed', fallback=const.DEFAULT_SEED),
         config.getboolean('general', 'debug', fallback=False),
         config.get('server', 'port', fallback=const.DEFAULT_SERVER_PORT),
-        dataset_config
+        dataset_config,
+        evaluator_config
     )

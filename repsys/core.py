@@ -95,7 +95,9 @@ def evaluate_models(config: Config, models: Dict[str, Model], dataset: Dataset, 
 
     fit_models(models, dataset, config, training=False)
 
-    evaluator = ModelEvaluator(dataset)
+    evaluator = ModelEvaluator(dataset, rp_k=config.eval.rp_k, ndcg_k=config.eval.ndcg_k,
+                               coverage_k=config.eval.coverage_k)
+    evaluator.load(config.checkpoints_dir, list(models.keys()), history=1)
 
     for model in models.values():
         logger.info(f"Evaluating '{model.name()}' model")

@@ -36,6 +36,13 @@ def get_ndcg(X_predict: ndarray, X_true: ndarray, predict_sort: ndarray, true_so
     return dcg / idcg
 
 
+def get_coverage(X_predict: ndarray, predict_sort: ndarray, k: int) -> float:
+    n_covered_items = len(np.unique(np.concatenate(predict_sort[:, :k])))
+    n_items = X_predict.shape[1]
+
+    return n_covered_items / n_items
+
+
 def get_accuracy_metrics(X_predict, X_true):
     diff = X_true - X_predict
     mae = np.abs(diff).mean(axis=1)

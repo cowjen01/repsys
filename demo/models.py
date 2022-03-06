@@ -47,7 +47,7 @@ class BaseModel(Model, ABC):
 
 class KNN(BaseModel):
     def __init__(self):
-        self.model = NearestNeighbors(algorithm='brute', n_neighbors=100, metric='cosine')
+        self.model = NearestNeighbors(algorithm='brute', n_neighbors=5, metric='cosine')
 
     def name(self):
         return "knn"
