@@ -21,6 +21,19 @@ function randomInt(min, max) {
   return Math.floor(Math.random() * (max - min + 1) + min);
 }
 
+function randomItemsDescription() {
+  const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 4);
+  const randCountries = shuffle(dataset.attributes.country.options).slice(0, 4);
+  itemsDescription.description.genres.labels = randGenres;
+  itemsDescription.description.country.labels = randCountries;
+  itemsDescription.description.genres.values = Array(5)
+    .fill()
+    .map(() => randomInt(100, 1000));
+  itemsDescription.description.country.values = Array(5)
+    .fill()
+    .map(() => randomInt(100, 1000));
+}
+
 export const handlers = [
   rest.get('/api/users', (req, res, ctx) => {
     // train, validation, test
@@ -43,7 +56,9 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/users/describe', (req, res, ctx) => {
-    usersDescription.topItems = shuffle(items).slice(0, 10);
+    usersDescription.topItems = shuffle(items).slice(0, 5);
+    randomItemsDescription();
+    usersDescription.itemsDescription = itemsDescription.description;
     return res(ctx.delay(1000), ctx.json(usersDescription));
   }),
   rest.get('/api/users/:userID', (req, res, ctx) => {
@@ -83,16 +98,7 @@ export const handlers = [
     return res(ctx.delay(1000), ctx.json(randIds));
   }),
   rest.post('/api/items/describe', (req, res, ctx) => {
-    const randGenres = shuffle(dataset.attributes.genres.options).slice(0, 4);
-    const randCountries = shuffle(dataset.attributes.country.options).slice(0, 4);
-    itemsDescription.attributes.genres.labels = randGenres;
-    itemsDescription.attributes.country.labels = randCountries;
-    itemsDescription.attributes.genres.values = Array(5)
-      .fill()
-      .map(() => randomInt(100, 1000));
-    itemsDescription.attributes.country.values = Array(5)
-      .fill()
-      .map(() => randomInt(100, 1000));
+    randomItemsDescription();
     return res(ctx.delay(1000), ctx.json(itemsDescription));
   }),
   rest.get('/api/items/embeddings', (req, res, ctx) => {

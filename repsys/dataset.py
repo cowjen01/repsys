@@ -293,7 +293,7 @@ class Dataset(ABC):
 
         transformer = TfidfTransformer()
         transformer.fit_transform(matrix_copy)
-        sort_indices = (-transformer.idf_).argsort()[:n]
+        sort_indices = transformer.idf_.argsort()[:n]
         item_ids = list(map(self.item_index_to_id, sort_indices))
 
         return self.items.loc[item_ids]

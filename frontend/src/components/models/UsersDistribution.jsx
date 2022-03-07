@@ -10,7 +10,7 @@ import { CategoryFilter } from '../filters';
 import TabPanel from '../TabPanel';
 import { PlotLoader } from '../loaders';
 
-function UsersDistribution({ metricsData }) {
+function UsersDistribution({ attributes, metricsData }) {
   const models = Object.keys(metricsData.results);
   const metrics = metricsData.metrics.user;
 
@@ -138,7 +138,11 @@ function UsersDistribution({ metricsData }) {
                   index={1}
                   sx={{ p: 2, overflow: 'auto', height: 'calc(100% - 48px)' }}
                 >
-                  <UsersDescription split="validation" users={selectedData.users} />
+                  <UsersDescription
+                    attributes={attributes}
+                    split="validation"
+                    users={selectedData.users}
+                  />
                 </TabPanel>
               </Paper>
             )}
@@ -152,6 +156,7 @@ function UsersDistribution({ metricsData }) {
 UsersDistribution.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   metricsData: pt.any.isRequired,
+  attributes: pt.any.isRequired,
 };
 
 export default UsersDistribution;

@@ -73,8 +73,7 @@ class ModelEvaluator:
         diversity_metrics = [f"diversity@{k}" for k in self.diversity_k]
 
         self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics + coverage_metrics + diversity_metrics
-        self.user_metrics = diversity_metrics + recall_metrics + precision_metrics + ndcg_metrics + ["mae", "mse",
-                                                                                                     "rmse"]
+        self.user_metrics = recall_metrics + precision_metrics + ndcg_metrics + diversity_metrics + ["mae", "mse", "rmse"]
 
     def compute_metrics(self, X_predict: ndarray, X_true: ndarray) -> Tuple[Dict[str, ndarray], Dict[str, float]]:
         max_k = max(max(self.rp_k), max(self.ndcg_k))

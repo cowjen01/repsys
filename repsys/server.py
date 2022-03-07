@@ -1,6 +1,6 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Any
 
 from pandas import DataFrame
 from sanic import Sanic
@@ -90,6 +90,35 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
                 items = items[items[col].apply(lambda x: set(values_filter).issubset(set(x)))]
 
         return items
+
+    def get_items_description(items: DataFrame) -> Dict[str, Dict[str, Any]]:
+        attributes = {}
+
+        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
+        for col in tag_cols:
+            labels, counts = get_top_tags(items, col, n=5)
+            attributes[col] = {
+                'labels': labels,
+                'values': counts
+            }
+
+        category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
+        for col in category_cols:
+            labels, counts = get_top_categories(items, col, n=5)
+            attributes[col] = {
+                'labels': labels,
+                'values': counts
+            }
+
+        number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
+        for col in number_cols:
+            values, bins = dataset.compute_histogram_by_col(items, col)
+            attributes[col] = {
+                'values': values.tolist(),
+                'bins': bins.tolist()
+            }
+
+        return attributes
 
     @app.route('/')
     @app.route('/dataset')
@@ -211,35 +240,10 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
             raise InvalidUsage('A list of items must be specified.')
 
         items = dataset.items.loc[item_ids]
-
-        attributes = {}
-
-        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
-        for col in tag_cols:
-            labels, counts = get_top_tags(items, col, n=5)
-            attributes[col] = {
-                'labels': labels,
-                'values': counts
-            }
-
-        category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
-        for col in category_cols:
-            labels, counts = get_top_categories(items, col, n=5)
-            attributes[col] = {
-                'labels': labels,
-                'values': counts
-            }
-
-        number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
-        for col in number_cols:
-            values, bins = dataset.compute_histogram_by_col(items, col)
-            attributes[col] = {
-                'values': values.tolist(),
-                'bins': bins.tolist()
-            }
+        description = get_items_description(items)
 
         return json({
-            'attributes': attributes
+            'description': description
         })
 
     @app.route("/api/users/describe", methods=["POST"])
@@ -260,10 +264,12 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         if None in user_indices:
             raise InvalidUsage(f"Some of the input users not found.")
 
-        items = dataset.get_top_items_by_users(user_indices, split)
+        items = dataset.get_top_items_by_users(user_indices, split, n=50)
+        description = get_items_description(items)
 
         return json({
-            'topItems': serialize_items(items)
+            'topItems': serialize_items(items.iloc[:5]),
+            'itemsDescription': description
         })
 
     @app.route("/api/items/embeddings", methods=["GET"])

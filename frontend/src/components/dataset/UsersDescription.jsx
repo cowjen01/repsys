@@ -6,8 +6,9 @@ import { PanelLoader } from '../loaders';
 import { ItemListView } from '../items';
 import ErrorAlert from '../ErrorAlert';
 import { useDescribeUsersMutation } from '../../api';
+import AttributesPlot from './AttributesPlot';
 
-function UsersDescription({ users, split }) {
+function UsersDescription({ attributes, users, split }) {
   const [describeUsers, { data, error, isError, isLoading, isUninitialized }] =
     useDescribeUsersMutation();
 
@@ -43,16 +44,8 @@ function UsersDescription({ users, split }) {
             <ItemListView key={item.id} item={item} style={{ paddingLeft: 5 }} />
           ))}
         </List>
+        <AttributesPlot attributes={attributes} description={data.itemsDescription} />
       </Box>
-      {/* <Box>
-        <Typography variant="h6" sx={{ fontSize: '1rem' }}>
-          Interactions Distribution
-        </Typography>
-        <Typography variant="body2" sx={{ fontSize: '0.8rem' }}>
-          A distribution of the interaction values
-        </Typography>
-        <BarPlotHistogram bins={distribution.bins} values={distribution.values} />
-      </Box> */}
     </Stack>
   );
 }
@@ -63,6 +56,7 @@ UsersDescription.defaultProps = {
 
 UsersDescription.propTypes = {
   split: pt.string,
+  attributes: pt.any.isRequired,
   users: pt.arrayOf(pt.number).isRequired,
 };
 

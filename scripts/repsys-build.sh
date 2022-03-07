@@ -1,6 +1,6 @@
 #!/bin/bash
 
-./scripts/build-frontend.sh
+./scripts/frontend-build.sh
 
 python3 -m pip install --upgrade pip
 python3 -m pip install --upgrade build setuptools wheel

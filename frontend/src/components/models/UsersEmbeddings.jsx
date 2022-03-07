@@ -8,7 +8,7 @@ import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
 import { PlotLoader } from '../loaders';
 
-function UsersEmbeddings({ metricsData }) {
+function UsersEmbeddings({ attributes, metricsData }) {
   const models = Object.keys(metricsData.results);
   const metrics = metricsData.metrics.user;
 
@@ -103,7 +103,11 @@ function UsersEmbeddings({ metricsData }) {
           <Grid item xs={4} sx={{ height: '100%' }}>
             {selectedUsers.length > 0 && (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
-                <UsersDescription split="validation" users={selectedUsers} />
+                <UsersDescription
+                  attributes={attributes}
+                  split="validation"
+                  users={selectedUsers}
+                />
               </Paper>
             )}
           </Grid>
@@ -114,8 +118,8 @@ function UsersEmbeddings({ metricsData }) {
 }
 
 UsersEmbeddings.propTypes = {
-  // eslint-disable-next-line react/forbid-prop-types
   metricsData: pt.any.isRequired,
+  attributes: pt.any.isRequired,
 };
 
 export default UsersEmbeddings;

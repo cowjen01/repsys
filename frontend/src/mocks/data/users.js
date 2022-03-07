@@ -1,5 +1,6 @@
 export const usersDescription = {
   topItems: [],
+  itemsDescription: null,
 };
 
 export const trainUsers = [

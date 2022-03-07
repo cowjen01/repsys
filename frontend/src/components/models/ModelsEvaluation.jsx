@@ -5,18 +5,24 @@ import UsersDistribution from './UsersDistribution';
 import MetricsSummary from './MetricsSummary';
 import ErrorAlert from '../ErrorAlert';
 import UsersEmbeddings from './UsersEmbeddings';
-import { useGetModelsMetricsQuery } from '../../api';
+import { useGetModelsMetricsQuery, useGetDatasetQuery } from '../../api';
 
 function ModelsEvaluation() {
   const metrics = useGetModelsMetricsQuery();
+  const dataset = useGetDatasetQuery();
 
-  if (metrics.isLoading) {
+  if (metrics.isLoading || dataset.isLoading) {
     return <LinearProgress />;
   }
 
   if (metrics.isError) {
     return <ErrorAlert error={metrics.error} />;
   }
+
+  if (dataset.isError) {
+    return <ErrorAlert error={dataset.error} />;
+  }
+
   return (
     <Grid container spacing={4}>
       <Grid item xs={12}>
@@ -29,13 +35,13 @@ function ModelsEvaluation() {
         <Typography component="div" variant="h6" gutterBottom>
           Metrics Distribution
         </Typography>
-        <UsersDistribution metricsData={metrics.data} />
+        <UsersDistribution attributes={dataset.data.attributes} metricsData={metrics.data} />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
           Users Embeddings
         </Typography>
-        <UsersEmbeddings metricsData={metrics.data} />
+        <UsersEmbeddings attributes={dataset.data.attributes} metricsData={metrics.data} />
       </Grid>
     </Grid>
   );
