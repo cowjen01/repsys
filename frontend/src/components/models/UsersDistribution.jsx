@@ -129,6 +129,7 @@ function UsersDistribution({ metricsData }) {
                     x={scatterPoints.x}
                     y={scatterPoints.y}
                     highlighted={selectedData.indices}
+                    markerSize={3}
                     dragMode="pan"
                   />
                 </TabPanel>

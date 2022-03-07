@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple, Dict, Optional, Any
 
 import pandas as pd
@@ -10,8 +11,10 @@ from sklearn.manifold import TSNE
 
 from repsys.dataset import Dataset
 from repsys.helpers import *
-from repsys.metrics import get_precision_recall, get_ndcg, get_accuracy_metrics, get_coverage
+from repsys.metrics import get_pr, get_ndcg, get_accuracy_metrics, get_coverage, get_diversity
 from repsys.model import Model
+
+logger = logging.getLogger(__name__)
 
 
 def embeddings_to_df(embeds: ndarray, ids: ndarray) -> DataFrame:
@@ -55,6 +58,7 @@ class ModelEvaluator:
         self.rp_k = rp_k
         self.ndcg_k = ndcg_k
         self.coverage_k = coverage_k
+        self.diversity_k = [5, 10]
 
         self.evaluated_models: List[str] = []
 
@@ -66,29 +70,41 @@ class ModelEvaluator:
         precision_metrics = [f"precision@{k}" for k in self.rp_k]
         ndcg_metrics = [f"ndcg@{k}" for k in self.ndcg_k]
         coverage_metrics = [f"coverage@{k}" for k in self.coverage_k]
+        diversity_metrics = [f"diversity@{k}" for k in self.diversity_k]
 
-        self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics + coverage_metrics
-        self.user_metrics = recall_metrics + precision_metrics + ndcg_metrics + ["mae", "mse", "rmse"]
+        self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics + coverage_metrics + diversity_metrics
+        self.user_metrics = diversity_metrics + recall_metrics + precision_metrics + ndcg_metrics + ["mae", "mse",
+                                                                                                     "rmse"]
 
     def compute_metrics(self, X_predict: ndarray, X_true: ndarray) -> Tuple[Dict[str, ndarray], Dict[str, float]]:
         max_k = max(max(self.rp_k), max(self.ndcg_k))
 
+        logger.info(f"Sorting predictions for maximal K={max_k}")
         predict_sort = sort_partially(-X_predict, k=max_k)
         true_sort = sort_partially(-X_true, k=max_k)
 
+        logger.info("Computing precision and recall")
         user_results = {}
         for k in self.rp_k:
-            precision, recall = get_precision_recall(X_predict, X_true, predict_sort, k)
+            precision, recall = get_pr(X_predict, X_true, predict_sort, k)
             user_results[f"precision@{k}"] = precision
             user_results[f"recall@{k}"] = recall
 
+        logger.info("Computing NDCG")
         for k in self.ndcg_k:
             ndcg = get_ndcg(X_predict, X_true, predict_sort, true_sort, k)
             user_results[f"ndcg@{k}"] = ndcg
 
+        logger.info("Computing diversity")
+        X_train = self._dataset.get_train_data()
+        for k in self.diversity_k:
+            user_results[f"diversity@{k}"] = get_diversity(X_train, predict_sort, k)
+
+        logger.info("Computing MAE, MSE and RMSE")
         mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
         user_results["mae"], user_results["mse"], user_results["rmse"] = mae, mse, rmse
 
+        logger.info("Computing coverage")
         item_results = {}
         for k in self.coverage_k:
             item_results[f"coverage@{k}"] = get_coverage(X_predict, predict_sort, k)
@@ -133,8 +149,6 @@ class ModelEvaluator:
         user_summary = {}
         if user_results is not None:
             user_summary = user_results.mean().to_dict()
-            user_summary = {metric: user_summary[metric] for metric in self.user_metrics if
-                            metric not in ["mae", "mse", "rmse"]}
 
         item_summary = {}
         if item_results is not None:
@@ -147,6 +161,8 @@ class ModelEvaluator:
     def evaluate(self, model: Model, split: str = 'validation'):
         test_split = self._dataset.splits.get(split)
         x_true = test_split.holdout_matrix.toarray()
+
+        logger.info("Computing predictions")
         x_predict = model.predict(test_split.train_matrix)
 
         user_results, item_results = self.compute_metrics(x_predict, x_true)

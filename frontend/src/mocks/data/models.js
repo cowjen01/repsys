@@ -42,6 +42,10 @@ export const modelsMetrics = {
         'Coverage@50': 0.8,
         'Coverage@100': 0.2,
         'Novelty@10': 0.65,
+        MAE: 0.01,
+        RMSE: 0.003,
+        'Diversity@20': 0.56,
+        'Diversity@50': 0.7,
       },
       previous: {
         'Recall@20': 0.2,

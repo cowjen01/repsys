@@ -13,6 +13,7 @@ function UsersEmbeddings({ metricsData }) {
   const metrics = metricsData.metrics.user;
 
   const [selectedUsers, setSelectedUsers] = useState([]);
+  const [selectedMarkerSize, setSelectedMarkerSize] = useState(4);
   const [selectedModel, setSelectedModel] = useState(models[0]);
   const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
@@ -72,6 +73,12 @@ function UsersEmbeddings({ metricsData }) {
             onChange={setSelectedColorScale}
             options={['Picnic', 'Bluered', 'Jet', 'RdBu']}
           />
+          <CategoryFilter
+            label="Marker size"
+            value={selectedMarkerSize}
+            onChange={setSelectedMarkerSize}
+            options={[2, 3, 4, 5, 6]}
+          />
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -87,6 +94,7 @@ function UsersEmbeddings({ metricsData }) {
                   color={embeddingsColor}
                   resetIndex={plotResetIndex}
                   colorScale={selectedColorScale}
+                  markerSize={selectedMarkerSize}
                   showScale
                 />
               </Paper>

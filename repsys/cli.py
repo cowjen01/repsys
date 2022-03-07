@@ -62,7 +62,7 @@ def models_pkg_option(func):
 
 
 @click.group()
-@click.option('--debug', default=False, show_default=True, help="Enable debug mode.")
+@click.option('--debug/--no-debug', default=False, show_default=True, help="Enable debug mode.")
 @click.option('-c', '--config', callback=config_callback, default='repsys.ini', show_default=True,
               type=click.Path(exists=True), help="Configuration file path.")
 @click.pass_context

@@ -21,6 +21,7 @@ function ScatterPlot({
   showScale,
   colorScale,
   layoutProps,
+  markerSize,
   ...props
 }) {
   const theme = useTheme();
@@ -71,22 +72,22 @@ function ScatterPlot({
           customdata: meta,
           unselected: {
             marker: {
-              opacity: 0.7,
+              opacity: 0.3,
               color: plotColors.unselectedMarker,
             },
           },
           selected: {
             marker: {
-              opacity: 0.7,
+              opacity: 0.3,
               color: plotColors.selectedMarker,
             },
           },
           marker: {
-            size: 6 - Math.log10(x.length),
+            size: markerSize,
             color: finalColor,
             showscale: showScale,
             colorscale: colorScale,
-            opacity: 0.7,
+            opacity: 0.3,
           },
         },
       ]}
@@ -126,6 +127,7 @@ ScatterPlot.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
   dragMode: pt.string,
+  markerSize: pt.number,
   showScale: pt.bool,
   // eslint-disable-next-line react/forbid-prop-types
   layoutProps: pt.any,
@@ -140,6 +142,7 @@ ScatterPlot.defaultProps = {
   showScale: false,
   innerRef: null,
   highlighted: [],
+  markerSize: 2,
   dragMode: 'lasso',
   layoutProps: {},
   colorScale: 'Bluered',

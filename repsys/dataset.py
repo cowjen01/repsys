@@ -12,6 +12,7 @@ from bidict import frozenbidict
 from numpy import ndarray
 from pandas import DataFrame, Series, Index
 from scipy.sparse import csr_matrix
+from sklearn.feature_extraction.text import TfidfTransformer
 
 import repsys.dtypes as dtypes
 from repsys.dtypes import (
@@ -289,8 +290,10 @@ class Dataset(ABC):
         matrix = self.splits.get(split).complete_matrix
         matrix_copy = matrix[indices].copy()
         matrix_copy[matrix_copy > 0] = 1
-        interactions = matrix_copy.sum(axis=0).A1
-        sort_indices = (-interactions).argsort()[:n]
+
+        transformer = TfidfTransformer()
+        transformer.fit_transform(matrix_copy)
+        sort_indices = (-transformer.idf_).argsort()[:n]
         item_ids = list(map(self.item_index_to_id, sort_indices))
 
         return self.items.loc[item_ids]

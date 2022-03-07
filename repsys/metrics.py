@@ -2,9 +2,11 @@ from typing import Tuple
 
 import numpy as np
 from numpy import ndarray
+from scipy.sparse import csr_matrix
+from sklearn.metrics import pairwise_distances
 
 
-def get_precision_recall(X_predict: ndarray, X_true: ndarray, predict_sort: ndarray, k: int) -> Tuple[ndarray, ndarray]:
+def get_pr(X_predict: ndarray, X_true: ndarray, predict_sort: ndarray, k: int) -> Tuple[ndarray, ndarray]:
     row_indices = np.arange(X_predict.shape[0])[:, np.newaxis]
 
     X_true_bin = X_true > 0
@@ -41,6 +43,21 @@ def get_coverage(X_predict: ndarray, predict_sort: ndarray, k: int) -> float:
     n_items = X_predict.shape[1]
 
     return n_covered_items / n_items
+
+
+def get_diversity(X_train: csr_matrix, predict_sort: ndarray, k: int) -> ndarray:
+    X_train = X_train.T
+    X_distances = pairwise_distances(X_train, metric='cosine')
+
+    def f(idx):
+        pairs = np.array(np.meshgrid(idx, idx)).T.reshape(-1, 2)
+        dist = X_distances[pairs[:, 0], pairs[:, 1]]
+        return dist.sum()
+
+    vf = np.vectorize(f, signature='(n)->()')
+    distances = vf(predict_sort[:, :k])
+
+    return distances / (k * (k - 1))
 
 
 def get_accuracy_metrics(X_predict, X_true):
