@@ -73,7 +73,8 @@ class ModelEvaluator:
         diversity_metrics = [f"diversity@{k}" for k in self.diversity_k]
 
         self.summary_metrics = recall_metrics + precision_metrics + ndcg_metrics + coverage_metrics + diversity_metrics
-        self.user_metrics = recall_metrics + precision_metrics + ndcg_metrics + diversity_metrics + ["mae", "mse", "rmse"]
+        self.user_metrics = recall_metrics + precision_metrics + ndcg_metrics + diversity_metrics + ["mae", "mse",
+                                                                                                     "rmse"]
 
     def compute_metrics(self, X_predict: ndarray, X_true: ndarray) -> Tuple[Dict[str, ndarray], Dict[str, float]]:
         max_k = max(max(self.rp_k), max(self.ndcg_k))
@@ -223,7 +224,8 @@ class ModelEvaluator:
 
 
 class DatasetEvaluator:
-    def __init__(self, dataset: Dataset, split: str = 'train', seed: int = 1234, verbose: bool = True):
+    def __init__(self, dataset: Dataset, split: str = 'train', seed: int = 1234, verbose: bool = True,
+                 pymde_neighbors: int = 10):
         self._dataset = dataset
         self._split = split
         self._verbose = verbose
@@ -232,6 +234,7 @@ class DatasetEvaluator:
         self._pca = PCA(n_components=50)
         self.item_embeddings: Optional[DataFrame] = None
         self.user_embeddings: Optional[DataFrame] = None
+        self.pymde_neighbors = pymde_neighbors
 
     def _sample_data(self, X: ndarray, max_samples: int) -> Tuple[ndarray, ndarray]:
         set_seed(self._seed)
@@ -241,7 +244,7 @@ class DatasetEvaluator:
 
     def _pymde_embeddings(self, X: Any) -> ndarray:
         pymde.seed(self._seed)
-        mde = pymde.preserve_neighbors(X, init='random', n_neighbors=10, verbose=self._verbose)
+        mde = pymde.preserve_neighbors(X, init='random', n_neighbors=self.pymde_neighbors, verbose=self._verbose)
         embeddings = mde.embed(verbose=self._verbose, max_iter=1000, memory_size=50, eps=1e-6)
         embeddings = embeddings.cpu().numpy()
         return embeddings
@@ -266,9 +269,9 @@ class DatasetEvaluator:
         else:
             user_embeds, item_embeds = self._dataset.compute_embeddings(X)
             if user_embeds.shape[1] > 2:
-                user_embeds = self._pymde_embeddings(user_embeds)
+                user_embeds = self._tsne_embeddings(user_embeds)
             if item_embeds.shape[1] > 2:
-                item_embeds = self._pymde_embeddings(item_embeds)
+                item_embeds = self._tsne_embeddings(item_embeds)
 
         if max_samples is not None:
             user_embeds, user_indices = self._sample_data(user_embeds, max_samples)

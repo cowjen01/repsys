@@ -331,6 +331,14 @@ class Dataset(ABC):
 
         return values, bins
 
+    def filter_items_by_tags(self, col: str, tags: List[str]):
+        items = self.items[self.items[col].apply(lambda x: set(tags).issubset(set(x)))]
+        return items.index.map(self.item_id_to_index)
+
+    def filter_items_by_number(self, col: str, range: Tuple[int, int]):
+        items = self.items[(self.items[col] >= range[0]) & (self.items[col] <= range[1])]
+        return items.index.map(self.item_id_to_index)
+
     def _update_tags(self) -> None:
         cols = filter_columns_by_type(self.item_cols(), dtypes.Tag)
         for col in cols:

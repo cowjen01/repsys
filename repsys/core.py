@@ -72,16 +72,20 @@ def train_models(config: Config, models: Dict[str, Model], dataset: Dataset, mod
     fit_models(models, dataset, config, training=True)
 
 
-def evaluate_dataset(config: Config, dataset: Dataset, method: str):
+def evaluate_dataset(config: Config, dataset: Dataset, method: str, split: str):
     logger.info("Evaluating implemented dataset")
 
     dataset.load(config.checkpoints_dir)
 
-    for split in ['train', 'validation']:
-        evaluator = DatasetEvaluator(dataset, split)
+    splits = ['train', 'validation']
+    if split is not None:
+        splits = [split]
+
+    for split in splits:
+        evaluator = DatasetEvaluator(dataset, split, pymde_neighbors=config.eval.pymde_neighbors)
 
         logger.info(f"Computing embeddings ({split} split)")
-        evaluator.compute_embeddings(method=method, max_samples=10000)
+        evaluator.compute_embeddings(method=method, max_samples=10000 if split == 'train' else None)
         evaluator.save(config.checkpoints_dir)
 
 

@@ -297,6 +297,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
             raise NotFound(f"No embeddings found for split '{split}'.")
 
         df = split_eval.user_embeddings.copy()
+        df = df.sort_index()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
@@ -347,6 +348,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
             raise NotFound(f"Model '{model_name}' not evaluated.")
 
         df = results.copy()
+        df = df.sort_index()
         df["id"] = df.index
 
         return json(df.to_dict("records"))

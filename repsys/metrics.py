@@ -46,8 +46,7 @@ def get_coverage(X_predict: ndarray, predict_sort: ndarray, k: int) -> float:
 
 
 def get_diversity(X_train: csr_matrix, predict_sort: ndarray, k: int) -> ndarray:
-    X_train = X_train.T
-    X_distances = pairwise_distances(X_train, metric='cosine')
+    X_distances = pairwise_distances(X_train.T, metric='cosine')
 
     def f(idx):
         pairs = np.array(np.meshgrid(idx, idx)).T.reshape(-1, 2)

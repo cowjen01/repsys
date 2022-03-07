@@ -141,6 +141,7 @@ def dataset_split_cmd(ctx: Context, dataset: Dataset):
 @click.pass_context
 @click.option("--method", default="pymde", type=click.Choice(["pymde", "tsne", "custom"]), show_default=True,
               help="Embeddings algorithm.")
-def dataset_eval_cmd(ctx: Context, dataset: Dataset, method: str):
+@click.option("-s", "--split", type=click.Choice(["train", "validation"]), show_default=True, help="Evaluation split.")
+def dataset_eval_cmd(ctx: Context, dataset: Dataset, method: str, split: str):
     """Compute dataset embeddings."""
-    evaluate_dataset(ctx.obj['CONFIG'], dataset, method)
+    evaluate_dataset(ctx.obj['CONFIG'], dataset, method, split)

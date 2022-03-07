@@ -16,10 +16,11 @@ class DatasetConfig:
 
 
 class EvaluationConfig:
-    def __init__(self, rp_k: List[int], ndcg_k: List[int], coverage_k: List[int]):
+    def __init__(self, rp_k: List[int], ndcg_k: List[int], coverage_k: List[int], pymde_neighbors: int):
         self.rp_k = rp_k
         self.ndcg_k = ndcg_k
         self.coverage_k = coverage_k
+        self.pymde_neighbors = pymde_neighbors
 
 
 class Config:
@@ -70,9 +71,10 @@ def read_config(config_path: str = None):
     validate_dataset_config(dataset_config)
 
     evaluator_config = EvaluationConfig(
-        parse_list(config.get('evaluation', 'recall_precision_k', fallback=const.DEFAULT_EVAL_RECALL_PRECISION_K)),
-        parse_list(config.get('evaluation', 'ndcg_k', fallback=const.DEFAULT_EVAL_NDCG_K)),
-        parse_list(config.get('evaluation', 'coverage_k', fallback=const.DEFAULT_EVAL_COVERAGE_K))
+        parse_list(config.get('evaluation', 'recall_precision_k', fallback=const.DEFAULT_RECALL_PRECISION_K)),
+        parse_list(config.get('evaluation', 'ndcg_k', fallback=const.DEFAULT_NDCG_K)),
+        parse_list(config.get('evaluation', 'coverage_k', fallback=const.DEFAULT_COVERAGE_K)),
+        config.getint('evaluation', 'pymde_neighbors', fallback=const.DEFAULT_PYMDE_NEIGHBORS)
     )
 
     return Config(
