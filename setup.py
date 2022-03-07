@@ -30,7 +30,8 @@ setuptools.setup(
         "matplotlib==3.5.1",
         "pandas==1.3.5",
         "pymde==0.1.14",
-        "bidict==0.21.4"
+        "bidict==0.21.4",
+        "scikit-learn==1.0.2"
     ],
     zip_safe=False,
 )
