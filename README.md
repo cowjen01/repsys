@@ -222,7 +222,7 @@ $ repsys dataset eval
 You can choose from three types of embeddings algorithm:
 1. [PyMDE](https://pymde.org) (Minimum-Distortion Embedding) is a fast library designed to distort relationships between pairs of items minimally. Use `--method pymde` (this is the default option).
 2. Combination of the PCA and TSNE algorithms (reduction of the dimensionality to 50 using PCA, then reduction to 2D space using TSNE). Use `--method tsne`.
-3. Your own implementation of the algorithm. Use `--method custom` and add the following method to the dataset's class.
+3. Your own implementation of the algorithm. Use `--method custom` and add the following method to the model's class of your choice. In this case, you must also specify the model's name using `-m` parameter.
 
 ```python
 from sklearn.decomposition import NMF
@@ -235,7 +235,7 @@ def compute_embeddings(self, X):
 ```
 
 In the example, the negative matrix factorization is used. You have to return a user and item embeddings pair in this order. Also, it is essential to return the matrices in the shape of (n_users/n_items, n_dim). 
-If the reduced dimension is higher than 2, the PyMDE method is applied.
+If the reduced dimension is higher than 2, the TSNE method is applied.
 
 ### Running the application
 

@@ -1,8 +1,9 @@
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict
+from typing import Dict, Tuple
 
 import numpy as np
+from numpy import ndarray
 from scipy.sparse import csr_matrix
 
 from repsys.config import Config
@@ -28,6 +29,9 @@ class Model(ABC):
     def predict(self, X: csr_matrix, **kwargs):
         pass
 
+    def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:
+        raise Exception("You must implement your custom embeddings method.")
+
     def web_params(self) -> Dict[str, WebParam]:
         return {}
 
@@ -37,9 +41,7 @@ class Model(ABC):
         return np.vectorize(self.dataset.item_index_to_id)(indices)
 
     def to_dict(self):
-        return {"params": {
-            key: param.to_dict() for key, param in self.web_params().items()
-        }}
+        return {"params": {key: param.to_dict() for key, param in self.web_params().items()}}
 
     def __str__(self) -> str:
         return f"Model '{self.name()}'"

@@ -8,7 +8,7 @@ from repsys.dataset import Dataset
 
 class MovieLens(Dataset):
     def __init__(self):
-        self.nmf = NMF(n_components=10, init='nndsvd', max_iter=100, random_state=0, verbose=2)
+        self.nmf = NMF(n_components=10, init="nndsvd", max_iter=100, random_state=0, verbose=2)
 
     def name(self):
         return "ml20m"
@@ -40,6 +40,6 @@ class MovieLens(Dataset):
 
     def load_interactions(self):
         df = pd.read_csv("./ml-20m/ratings.csv")
-        df = df[df['rating'] > 3.5]
-        df['rating'] = 1
+        df = df[df["rating"] > 3.5]
+        df["rating"] = 1
         return df

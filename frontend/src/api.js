@@ -51,6 +51,9 @@ export const repsysApi = createApi({
     getUserMetricsByModel: builder.query({
       query: (model) => `/models/${model}/metrics/user`,
     }),
+    getItemMetricsByModel: builder.query({
+      query: (model) => `/models/${model}/metrics/item`,
+    }),
     predictItemsByModel: builder.mutation({
       query: ({ model, ...body }) => ({
         url: `/models/${model}/predict`,
@@ -70,10 +73,10 @@ export const repsysApi = createApi({
         },
       }),
     }),
-    getUsersEmbeddings: builder.query({
+    getUserEmbeddings: builder.query({
       query: (split = 'train') => `/users/embeddings?split=${split}`,
     }),
-    getItemsEmbeddings: builder.query({
+    getItemEmbeddings: builder.query({
       query: (split = 'train') => `/items/embeddings?split=${split}`,
     }),
   }),
@@ -82,16 +85,17 @@ export const repsysApi = createApi({
 export const {
   useGetDatasetQuery,
   useGetItemsByTitleQuery,
-  useGetItemsEmbeddingsQuery,
+  useGetItemEmbeddingsQuery,
   useGetUserMetricsByModelQuery,
   useGetModelsMetricsQuery,
   useGetModelsQuery,
   useGetUserByIDQuery,
-  useGetUsersEmbeddingsQuery,
+  useGetUserEmbeddingsQuery,
   useGetUsersQuery,
   useDescribeItemsMutation,
   useDescribeUsersMutation,
   useSearchItemsMutation,
   useSearchUsersMutation,
   usePredictItemsByModelMutation,
+  useGetItemMetricsByModelQuery,
 } = repsysApi;

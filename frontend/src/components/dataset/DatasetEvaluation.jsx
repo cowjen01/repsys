@@ -21,13 +21,13 @@ function DatasetEvaluation() {
     <Grid container spacing={4}>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Items Embeddings
+          Item Embeddings
         </Typography>
         <ItemsEmbeddings attributes={dataset.data.attributes} />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Users Embeddings
+          User Embeddings
         </Typography>
         <UsersEmbeddings attributes={dataset.data.attributes} />
       </Grid>

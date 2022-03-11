@@ -2,7 +2,7 @@
 import { rest } from 'msw';
 
 import { dataset } from './data/dataset';
-import { models, modelsMetricsFull, modelsMetrics } from './data/models';
+import { models, userMetrics, summaryMetrics, itemMetrics } from './data/models';
 import { items, itemsDescription, itemsEmbeddings } from './data/items';
 import {
   vadUsers,
@@ -74,11 +74,15 @@ export const handlers = [
   rest.get('/api/models', (req, res, ctx) => res(ctx.json(models))),
   rest.get('/api/models/metrics', (req, res, ctx) =>
     // summary of the current and previous metrics
-    res(ctx.delay(800), ctx.json(modelsMetrics))
+    res(ctx.delay(800), ctx.json(summaryMetrics))
   ),
   rest.get('/api/models/:modelName/metrics/user', (req, res, ctx) => {
     const { modelName } = req.params;
-    return res(ctx.delay(1000), ctx.json(modelsMetricsFull[modelName]));
+    return res(ctx.delay(1000), ctx.json(userMetrics[modelName]));
+  }),
+  rest.get('/api/models/:modelName/metrics/item', (req, res, ctx) => {
+    const { modelName } = req.params;
+    return res(ctx.delay(1000), ctx.json(itemMetrics[modelName]));
   }),
   rest.post('/api/models/:modelName/predict', (req, res, ctx) => {
     const { limit } = req.body;

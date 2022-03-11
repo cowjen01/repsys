@@ -1,10 +1,10 @@
 import React from 'react';
 import { Grid, Typography, LinearProgress } from '@mui/material';
 
-import UsersDistribution from './UsersDistribution';
+import MetricsDistribution from './MetricsDistribution';
 import MetricsSummary from './MetricsSummary';
 import ErrorAlert from '../ErrorAlert';
-import UsersEmbeddings from './UsersEmbeddings';
+import MetricsEmbeddings from './MetricsEmbeddings';
 import { useGetModelsMetricsQuery, useGetDatasetQuery } from '../../api';
 
 function ModelsEvaluation() {
@@ -23,25 +23,55 @@ function ModelsEvaluation() {
     return <ErrorAlert error={dataset.error} />;
   }
 
+  const evaluatedModels = Object.keys(metrics.data.results);
+
   return (
     <Grid container spacing={4}>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Models Performance
+          Metrics Summary
         </Typography>
         <MetricsSummary metricsData={metrics.data} />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Metrics Distribution
+          User Metrics Distribution
         </Typography>
-        <UsersDistribution attributes={dataset.data.attributes} metricsData={metrics.data} />
+        <MetricsDistribution
+          metricsType="user"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Users Embeddings
+          User Metrics Embeddings
         </Typography>
-        <UsersEmbeddings attributes={dataset.data.attributes} metricsData={metrics.data} />
+        <MetricsEmbeddings
+          metricsType="user"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography component="div" variant="h6" gutterBottom>
+          Item Metrics Distribution
+        </Typography>
+        <MetricsDistribution
+          metricsType="item"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography component="div" variant="h6" gutterBottom>
+          Item Metrics Embeddings
+        </Typography>
+        <MetricsEmbeddings
+          metricsType="item"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
       </Grid>
     </Grid>
   );

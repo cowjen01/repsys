@@ -13,7 +13,7 @@ from repsys.dtypes import (
     Interaction,
     Tag,
     Title,
-    find_column_by_type
+    find_column_by_type,
 )
 from repsys.errors import InvalidDatasetError
 
@@ -61,8 +61,12 @@ def validate_interact_cols(cols: ColumnDict) -> None:
     _check_required_dtypes(cols, required_dtypes)
 
 
-def validate_interact_data(interacts: DataFrame, items: DataFrame, interact_cols: ColumnDict,
-                           item_cols: ColumnDict) -> None:
+def validate_interact_data(
+    interacts: DataFrame,
+    items: DataFrame,
+    interact_cols: ColumnDict,
+    item_cols: ColumnDict,
+) -> None:
     _check_df_columns(interacts, interact_cols)
 
     interacts_item_id_col = find_column_by_type(interact_cols, ItemID)
@@ -75,12 +79,16 @@ def validate_interact_data(interacts: DataFrame, items: DataFrame, interact_cols
 
     if len(diff) > 0:
         raise InvalidDatasetError(
-            "Some of the items are included in the interactions data "
-            f"but not in the items data: {list(diff)}."
+            "Some of the items are included in the interactions data " f"but not in the items data: {list(diff)}."
         )
 
 
-def validate_dataset(items: DataFrame, item_cols: ColumnDict, interacts: DataFrame, interact_cols: ColumnDict):
+def validate_dataset(
+    items: DataFrame,
+    item_cols: ColumnDict,
+    interacts: DataFrame,
+    interact_cols: ColumnDict,
+):
     validate_item_cols(item_cols)
     validate_item_data(items, item_cols)
     validate_interact_cols(interact_cols)

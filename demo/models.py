@@ -46,13 +46,13 @@ class BaseModel(Model, ABC):
 
     def web_params(self):
         return {
-            'genre': Select(options=self.dataset.tags.get('genres')),
+            "genre": Select(options=self.dataset.tags.get("genres")),
         }
 
 
 class KNN(BaseModel):
     def __init__(self):
-        self.model = NearestNeighbors(algorithm='brute', n_neighbors=5, metric='cosine')
+        self.model = NearestNeighbors(algorithm="brute", n_neighbors=5, metric="cosine")
 
     def name(self):
         return "knn"
@@ -84,7 +84,7 @@ class KNN(BaseModel):
             D = sp.diags(dist)
             return D.dot(A).sum(axis=0)
 
-        vf = np.vectorize(f, signature='(n),(n)->(m)')
+        vf = np.vectorize(f, signature="(n),(n)->(m)")
         predictions = vf(n_distances, n_indices)
 
         predictions[X.nonzero()] = 0
@@ -139,6 +139,7 @@ class Rand(BaseModel):
         self._apply_filters(X_predict, **kwargs)
 
         return X_predict
+
 
 # class EASE(BaseModel):
 #     def __init__(self, l2_lambda=0.5):
