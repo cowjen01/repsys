@@ -75,7 +75,7 @@ function UsersEmbeddings({ attributes, split }) {
                   selectedIds={users.data}
                   onComputeStarted={() => setIsPlotLoading(true)}
                   onComputeFinished={() => setIsPlotLoading(false)}
-                  markerSize={3}
+                  markerSize={2}
                   markerOpacity={0.5}
                 />
               </Paper>

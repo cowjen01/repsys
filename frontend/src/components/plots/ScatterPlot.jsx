@@ -86,8 +86,8 @@ function ScatterPlot({
             showscale: showScale,
             colorscale: colorScale,
             opacity: markerOpacity,
-            cmin: 0,
-            cmax: 1,
+            // cmin: 0,
+            // cmax: 1,
           },
         },
       ]}
@@ -149,7 +149,7 @@ ScatterPlot.defaultProps = {
   layoutProps: {},
   colorScale: 'Bluered',
   unselectedColor: '#dcdcdc',
-  selectedColor: '#636EFA',
+  selectedColor: '#0613ff',
 };
 
 export default ScatterPlot;

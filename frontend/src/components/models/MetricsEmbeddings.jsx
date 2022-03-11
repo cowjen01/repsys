@@ -100,7 +100,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             label="Color scale"
             value={selectedColorScale}
             onChange={setSelectedColorScale}
-            options={['Picnic', 'Bluered', 'Jet', 'RdBu', 'YlGnBu']}
+            options={['Picnic', 'Bluered', 'Jet', 'YlGnBu']}
           />
           <CategoryFilter
             label="Marker size"

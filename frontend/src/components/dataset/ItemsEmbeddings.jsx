@@ -71,7 +71,7 @@ function ItemsEmbeddings({ attributes }) {
                   selectedIds={items.data}
                   onComputeStarted={() => setIsPlotLoading(true)}
                   onComputeFinished={() => setIsPlotLoading(false)}
-                  markerSize={3}
+                  markerSize={2}
                   markerOpacity={0.5}
                 />
               </Paper>

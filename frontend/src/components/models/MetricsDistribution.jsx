@@ -157,10 +157,9 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
                     x={scatterPoints.x}
                     y={scatterPoints.y}
                     highlighted={selectedData.indices}
-                    markerSize={3}
+                    markerSize={2}
                     markerOpacity={0.5}
                     dragMode="pan"
-                    unselectedColor="#efeeff"
                   />
                 </TabPanel>
                 <TabPanel

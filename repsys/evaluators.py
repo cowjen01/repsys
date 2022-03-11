@@ -56,36 +56,59 @@ def sort_partially(X: ndarray, k: int) -> ndarray:
     return top_k_indices[row_indices, sorted_indices]
 
 
+def split_by_popularity(item_popularity: ndarray, short_head_ratio: float = 0.2) -> Tuple[ndarray, ndarray]:
+    total_interactions = item_popularity.sum()
+    sort_indices = np.argsort(-item_popularity)
+    sorted_popularity = item_popularity[sort_indices]
+    cum_popularity = np.cumsum(sorted_popularity)
+    percentage_volume = cum_popularity / total_interactions
+    short_head_mask = percentage_volume <= short_head_ratio
+    short_head_items = sort_indices[short_head_mask]
+    long_tail_items = sort_indices[~short_head_mask]
+
+    return short_head_items, long_tail_items
+
+
 class ModelEvaluator:
     def __init__(
         self,
         dataset: Dataset,
-        rp_k: List[int] = None,
+        precision_recall_k: List[int] = None,
         ndcg_k: List[int] = None,
         coverage_k: List[int] = None,
         diversity_k: List[int] = None,
         novelty_k: List[int] = None,
+        percentage_lt_k: List[int] = None,
+        coverage_lt_k: List[int] = None,
     ):
-        if rp_k is None:
-            rp_k = [20, 50]
+        if precision_recall_k is None:
+            precision_recall_k = [20, 50]
 
         if ndcg_k is None:
             ndcg_k = [100]
 
         if coverage_k is None:
-            coverage_k = [20, 50]
+            coverage_k = [10]
 
         if diversity_k is None:
-            diversity_k = [5, 10]
+            diversity_k = [10]
 
         if novelty_k is None:
-            novelty_k = [5, 10]
+            novelty_k = [10]
 
-        self.rp_k = rp_k
+        if percentage_lt_k is None:
+            percentage_lt_k = [10]
+
+        if coverage_lt_k is None:
+            coverage_lt_k = [10]
+
+        self.pr_k = precision_recall_k
         self.ndcg_k = ndcg_k
         self.coverage_k = coverage_k
         self.diversity_k = diversity_k
         self.novelty_k = novelty_k
+        self.plt_k = percentage_lt_k
+        self.clt_k = coverage_lt_k
 
         self.evaluated_models: List[str] = []
 
@@ -98,16 +121,23 @@ class ModelEvaluator:
     def compute_metrics(
         self, X_predict: ndarray, X_true: ndarray
     ) -> Tuple[Dict[str, float], Dict[str, ndarray], Dict[str, ndarray]]:
-        max_k = max(max(self.rp_k), max(self.ndcg_k))
-
-        logger.info(f"Sorting predictions for maximal K={max_k}")
-        predict_sort = sort_partially(-X_predict, k=max_k)
-        true_sort = sort_partially(-X_true, k=max_k)
-
         X_train = self._dataset.get_train_data()
+        max_k = max(
+            self.pr_k + self.ndcg_k + self.coverage_k + self.diversity_k + self.novelty_k + self.plt_k + self.clt_k
+        )
+
+        logger.info(f"Sorting item predictions for the maximal K={max_k}")
+        predict_sort_indices = sort_partially(-X_predict, k=max_k)
+
+        logger.info(f"Sorting true interactions for the maximal K={max_k}")
+        true_sort_indices = sort_partially(-X_true, k=max_k)
 
         logger.info("Computing item distances")
         X_distances = pairwise_distances(X_train.T, metric="cosine")
+
+        logger.info("Computing short-head/long-tail items")
+        item_popularity = np.asarray((X_train > 0).sum(axis=0)).squeeze()
+        _, long_tail_items = split_by_popularity(item_popularity)
 
         summary_results = {}
         user_results = {}
@@ -115,32 +145,48 @@ class ModelEvaluator:
 
         logger.info("Computing precision and recall")
         precision_dict, recall_dict = dict(), dict()
-        for k in self.rp_k:
-            precision_dict[k], recall_dict[k] = get_pr(X_predict, X_true, predict_sort, k)
+        for k in self.pr_k:
+            precision_dict[k], recall_dict[k] = get_precision_recall(X_predict, X_true, predict_sort_indices, k)
 
-        for k in self.rp_k:
+        for k in self.pr_k:
             user_results[f"recall@{k}"] = recall_dict.get(k)
             summary_results[f"recall@{k}"] = recall_dict.get(k).mean()
 
         logger.info("Computing NDCG")
         for k in self.ndcg_k:
-            ndcg = get_ndcg(X_predict, X_true, predict_sort, true_sort, k)
+            ndcg = get_ndcg(X_predict, X_true, predict_sort_indices, true_sort_indices, k)
             user_results[f"ndcg@{k}"] = ndcg
-            summary_results[f"ndcg"] = ndcg.mean()
+            summary_results[f"ndcg@{k}"] = ndcg.mean()
 
-        logger.info("Computing diversity")
+        logger.info("Computing catalog coverage")
+        for k in self.coverage_k:
+            coverage = get_coverage(X_predict, predict_sort_indices, k)
+            summary_results[f"coverage@{k}"] = coverage
+
+        logger.info("Computing user diversity")
         for k in self.diversity_k:
-            diversity = get_diversity(X_distances, predict_sort, k)
+            diversity = get_diversity(X_distances, predict_sort_indices, k)
             user_results[f"diversity@{k}"] = diversity
             summary_results[f"diversity@{k}"] = diversity.mean()
 
-        logger.info("Computing novelty")
+        logger.info("Computing user novelty")
         for k in self.novelty_k:
-            novelty = get_novelty(X_train, predict_sort, k)
+            novelty = get_novelty(X_train, predict_sort_indices, k)
             user_results[f"novelty@{k}"] = novelty
             summary_results[f"novelty@{k}"] = novelty.mean()
 
-        for k in self.rp_k:
+        logger.info("Computing percentage of long-tail items")
+        for k in self.plt_k:
+            plt = get_plt(predict_sort_indices, long_tail_items, k)
+            user_results[f"plt@{k}"] = plt
+            summary_results[f"plt@{k}"] = plt.mean()
+
+        logger.info("Computing coverage of long-tail items")
+        for k in self.clt_k:
+            clt = get_clt(predict_sort_indices, long_tail_items, k)
+            summary_results[f"clt@{k}"] = clt
+
+        for k in self.pr_k:
             user_results[f"precision@{k}"] = precision_dict.get(k)
             summary_results[f"precision@{k}"] = precision_dict.get(k).mean()
 
@@ -148,13 +194,8 @@ class ModelEvaluator:
         mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
         user_results["mae"], user_results["mse"], user_results["rmse"] = mae, mse, rmse
 
-        logger.info("Computing coverage")
-        for k in self.coverage_k:
-            coverage = get_coverage(X_predict, predict_sort, k)
-            summary_results[f"coverage@{k}"] = coverage
-
         logger.info("Computing item popularity")
-        item_results["popularity"] = get_popularity(X_predict)
+        item_results["popularity"] = get_item_pop(X_predict)
 
         return summary_results, user_results, item_results
 

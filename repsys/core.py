@@ -83,7 +83,7 @@ def evaluate_dataset(
 
     fit_models(models, dataset, config)
 
-    evaluator = DatasetEvaluator(dataset, pymde_neighbors=config.eval.pymde_neighbors)
+    evaluator = DatasetEvaluator(dataset)
 
     model = models.get(model_name)
 
@@ -114,11 +114,13 @@ def evaluate_models(
 
     evaluator = ModelEvaluator(
         dataset,
-        rp_k=config.eval.rp_k,
+        precision_recall_k=config.eval.precision_recall_k,
         ndcg_k=config.eval.ndcg_k,
         coverage_k=config.eval.coverage_k,
         diversity_k=config.eval.diversity_k,
         novelty_k=config.eval.novelty_k,
+        coverage_lt_k=config.eval.coverage_lt_k,
+        percentage_lt_k=config.eval.percentage_lt_k,
     )
 
     for model in models.values():

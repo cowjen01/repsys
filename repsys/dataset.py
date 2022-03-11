@@ -294,10 +294,7 @@ class Dataset(ABC):
         if len(user_indices) == 0:
             return []
 
-        def mapper_func(x):
-            return self.user_index_to_id(x, split)
-
-        user_ids = np.vectorize(mapper_func)(user_indices)
+        user_ids = np.vectorize(self.user_index_iterator(split))(user_indices)
 
         return user_ids.tolist()
 
