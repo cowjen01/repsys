@@ -170,9 +170,13 @@ min_user_interacts=5
 min_item_interacts=5
 
 [evaluation]
-recall_precision_k=20,50
+precision_recall_k=20,50
 ndcg_k=100
-coverage_k=20,50
+coverage_k=10
+diversity_k=10
+novelty_k=10
+percentage_lt_k=10
+coverage_lt_k=10
 
 [server]
 port=3001
