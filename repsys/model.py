@@ -32,6 +32,10 @@ class Model(ABC):
     def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:
         raise Exception("You must implement your custom embeddings method.")
 
+    def update(self, dataset: Dataset, config: Config):
+        self.dataset = dataset
+        self.config = config
+
     def web_params(self) -> Dict[str, WebParam]:
         return {}
 

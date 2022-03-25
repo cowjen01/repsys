@@ -52,19 +52,15 @@ class BaseModel(Model, ABC):
 
 
 class KNN(BaseModel):
-    def __init__(self):
-        self.model = NearestNeighbors(algorithm="brute", n_neighbors=5, metric="cosine")
+    def __init__(self, n: int = 5):
+        self.model = NearestNeighbors(algorithm="brute", n_neighbors=n, metric="cosine")
 
     def name(self):
         return "knn"
 
     def fit(self, training=False):
-        if training:
-            X = self.dataset.get_train_data()
-            self.model.fit(X)
-            self._save_model()
-        else:
-            self._load_model()
+        X = self.dataset.get_train_data()
+        self.model.fit(X)
 
     def predict(self, X, **kwargs):
         if X.count_nonzero() == 0:
@@ -143,10 +139,8 @@ class Rand(BaseModel):
 
 
 class PureSVD(BaseModel):
-    def __init__(self, n_factors: int = 50, alfa: float = 0):
+    def __init__(self, n_factors: int = 50):
         self.n_factors = n_factors
-        self.alfa = alfa
-        self.W = None
         self.U = None  # user embeddings
         self.V = None  # item embeddings
         self.sim = None  # item-item similarity
@@ -155,41 +149,57 @@ class PureSVD(BaseModel):
         return "svd"
 
     def _serialize(self):
-        return {"U": self.U, "V": self.V, "W": self.W, "sim": self.sim}
+        return {"U": self.U, "V": self.V, "sim": self.sim}
 
     def _deserialize(self, checkpoint):
         self.U = checkpoint.get("U")
         self.V = checkpoint.get("V")
-        self.W = checkpoint.get("W")
         self.sim = checkpoint.get("sim")
 
     def fit(self, training=False):
-        if training:
-            X = self.dataset.get_train_data()
+        X = self.dataset.get_train_data()
 
-            U, sigma, VT = randomized_svd(X, self.n_factors, random_state=self.config.seed)
-            sigma = sp.diags(sigma, 0)
+        U, sigma, VT = randomized_svd(X, self.n_factors, random_state=self.config.seed)
+        sigma = sp.diags(sigma, 0)
 
-            self.U = U * sigma
-            self.V = VT.T
-            self.sim = VT.T.dot(VT)
-
-            item_pop = np.asarray((X > 0).sum(axis=0)).squeeze()
-            self.W = 1.0 / np.log(item_pop)
-
-            self._save_model()
-        else:
-            self._load_model()
+        self.U = U * sigma
+        self.V = VT.T
+        self.sim = VT.T.dot(VT)
 
     def predict(self, X: csr_matrix, **kwargs):
         X_predict = X.dot(self.sim)
-
-        if self.alfa > 0:
-            X_predict = ((1 - self.alfa) * X_predict) + (self.alfa * self.W)
-
         X_predict[X.nonzero()] = 0
 
         self._apply_filters(X_predict, **kwargs)
+
+        return X_predict
+
+
+class Ensemble(BaseModel):
+    def __init__(self):
+        self.svd_ratio = 0.5
+        self.svd = PureSVD(n_factors=150)
+        self.knn = KNN(n=100)
+
+    def name(self) -> str:
+        return "ens"
+
+    def _update_model(self, model):
+        model.config = self.config
+        model.dataset = self.dataset
+
+    def fit(self, training: bool = False) -> None:
+        self._update_model(self.svd)
+        self.svd.fit(training)
+
+        self._update_model(self.knn)
+        self.knn.fit(training)
+
+    def predict(self, X: csr_matrix, **kwargs):
+        knn_predict = self.knn.predict(X, **kwargs)
+        svd_predict = self.svd.predict(X, **kwargs)
+
+        X_predict = (1 - self.svd_ratio) * knn_predict + self.svd_ratio * svd_predict
 
         return X_predict
 
