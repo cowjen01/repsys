@@ -1,17 +1,42 @@
 import logging
-from typing import Dict, Optional, Any, Callable
+import os
+from typing import Dict, Optional, Any, Callable, Tuple, List
 
 import pandas as pd
+from numpy import ndarray
+import numpy as np
 import pymde
+import umap
 from pandas import DataFrame
-from scipy.sparse import issparse
+from scipy.sparse import issparse, csr_matrix
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
 from sklearn.metrics import pairwise_distances
 
 from repsys.dataset import Dataset
-from repsys.helpers import *
-from repsys.metrics import *
+from repsys.constants import CURRENT_VERSION
+from repsys.helpers import (
+    tmp_dir_path,
+    unzip_dir,
+    read_version,
+    tmpdir_provider,
+    find_checkpoints,
+    set_seed,
+    current_ts,
+    write_version,
+    zip_dir,
+)
+from repsys.metrics import (
+    get_precision_recall,
+    get_error_metrics,
+    get_plt,
+    get_diversity,
+    get_coverage,
+    get_clt,
+    get_ndcg,
+    get_novelty,
+    get_item_pop,
+)
 from repsys.model import Model
 
 logger = logging.getLogger(__name__)
@@ -191,7 +216,7 @@ class ModelEvaluator:
             summary_results[f"precision@{k}"] = precision_dict.get(k).mean()
 
         logger.info("Computing MAE, MSE and RMSE")
-        mae, mse, rmse = get_accuracy_metrics(X_predict, X_true)
+        mae, mse, rmse = get_error_metrics(X_predict, X_true)
         user_results["mae"], user_results["mse"], user_results["rmse"] = mae, mse, rmse
 
         logger.info("Computing item popularity")
@@ -227,12 +252,19 @@ class ModelEvaluator:
 
     def evaluate(self, model: Model, split: str = "validation"):
         test_split = self._dataset.splits.get(split)
-        x_true = test_split.holdout_matrix.toarray()
+        X_true = test_split.holdout_matrix.toarray()
 
         logger.info("Computing predictions")
-        x_predict = model.predict(test_split.train_matrix)
+        X_predict = model.predict(test_split.train_matrix)
 
-        summary_results, user_results, item_results = self.compute_metrics(x_predict, x_true)
+        if np.any(np.isinf(X_predict)):
+            logger.warning("The predictions should not contain infinite values")
+            logger.warning("They will be replaced by 0 and 1 for the purpose of the evaluation.")
+
+        X_predict[X_predict == -np.inf] = 0
+        X_predict[X_predict == np.inf] = 1
+
+        summary_results, user_results, item_results = self.compute_metrics(X_predict, X_true)
 
         user_ids = list(test_split.user_index.keys())
         user_df = results_to_df(user_results, user_ids)
@@ -315,21 +347,17 @@ class DatasetEvaluator:
         seed: int = 1234,
         verbose: bool = True,
         pymde_neighbors: int = 10,
+        umap_neighbors: int = 10,
     ):
         self._dataset = dataset
         self._verbose = verbose
         self._seed = seed
-        self._tsne = TSNE(
-            n_iter=1500,
-            n_components=2,
-            metric="cosine",
-            init="random",
-            verbose=self._verbose,
-        )
+        self._tsne = TSNE(n_iter=1500, n_components=2, metric="cosine", init="random", verbose=self._verbose)
         self._pca = PCA(n_components=50)
+        self._umap = umap.UMAP(random_state=seed, n_neighbors=umap_neighbors, verbose=self._verbose)
         self.item_embeddings: Optional[DataFrame] = None
         self.user_embeddings: Dict[str, DataFrame] = {}
-        self.pymde_neighbors = pymde_neighbors
+        self._pymde_neighbors = pymde_neighbors
         self._version: str = CURRENT_VERSION
 
     def _sample_data(self, X: ndarray, max_samples: int) -> Tuple[ndarray, ndarray]:
@@ -340,7 +368,7 @@ class DatasetEvaluator:
 
     def _pymde_embeddings(self, X: Any) -> ndarray:
         pymde.seed(self._seed)
-        mde = pymde.preserve_neighbors(X, init="random", n_neighbors=self.pymde_neighbors, verbose=self._verbose)
+        mde = pymde.preserve_neighbors(X, init="random", n_neighbors=self._pymde_neighbors, verbose=self._verbose)
         embeddings = mde.embed(verbose=self._verbose, max_iter=1000, memory_size=50, eps=1e-6)
         embeddings = embeddings.cpu().numpy()
         return embeddings
@@ -353,11 +381,17 @@ class DatasetEvaluator:
         embeddings = self._tsne.fit_transform(X)
         return embeddings
 
+    def _umap_embeddings(self, X: Any) -> ndarray:
+        embeddings = self._umap.fit_transform(X)
+        return embeddings
+
     def _compute_embeddings(self, X: csr_matrix, method: str, custom_embeddings: Callable = None):
         if method == "pymde":
             embeds = self._pymde_embeddings(X)
         elif method == "tsne":
             embeds = self._tsne_embeddings(X)
+        elif method == "umap":
+            embeds = self._umap_embeddings(X)
         elif method == "custom" and custom_embeddings is not None:
             embeds = custom_embeddings(X)
             if embeds.shape[1] > 2:

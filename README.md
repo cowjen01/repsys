@@ -226,7 +226,8 @@ $ repsys dataset eval
 You can choose from three types of embeddings algorithm:
 1. [PyMDE](https://pymde.org) (Minimum-Distortion Embedding) is a fast library designed to distort relationships between pairs of items minimally. Use `--method pymde` (this is the default option).
 2. Combination of the PCA and TSNE algorithms (reduction of the dimensionality to 50 using PCA, then reduction to 2D space using TSNE). Use `--method tsne`.
-3. Your own implementation of the algorithm. Use `--method custom` and add the following method to the model's class of your choice. In this case, you must also specify the model's name using `-m` parameter.
+3. [UMAP](https://umap-learn.readthedocs.io/en/latest/index.html) (Uniform Manifold Approximation and Projection for Dimension Reduction) is a dimensionality reduction technique similar to t-SNE. Use `--method umap`.
+4. Your own implementation of the algorithm. Use `--method custom` and add the following method to the model's class of your choice. In this case, you must also specify the model's name using `-m` parameter.
 
 ```python
 from sklearn.decomposition import NMF

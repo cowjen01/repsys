@@ -81,13 +81,13 @@ def evaluate_dataset(
     if model_name is not None:
         models = {model_name: models.get(model_name)}
 
-    fit_models(models, dataset, config)
-
-    evaluator = DatasetEvaluator(dataset)
+    if method == "custom":
+        fit_models(models, dataset, config)
 
     model = models.get(model_name)
 
     logger.info(f"Computing embeddings")
+    evaluator = DatasetEvaluator(dataset)
     evaluator.compute_user_embeddings("train", method, model, max_samples=10000)
     evaluator.compute_user_embeddings("validation", method, model)
 

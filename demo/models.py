@@ -7,6 +7,7 @@ import scipy.sparse as sp
 from scipy.sparse import csr_matrix
 from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import MinMaxScaler
+from sklearn.utils.extmath import randomized_svd
 
 from repsys import Model
 from repsys.helpers import set_seed
@@ -85,13 +86,13 @@ class KNN(BaseModel):
             return D.dot(A).sum(axis=0)
 
         vf = np.vectorize(f, signature="(n),(n)->(m)")
-        predictions = vf(n_distances, n_indices)
+        X_predict = vf(n_distances, n_indices)
 
-        predictions[X.nonzero()] = 0
+        X_predict[X.nonzero()] = 0
 
-        self._apply_filters(predictions, **kwargs)
+        self._apply_filters(X_predict, **kwargs)
 
-        return predictions
+        return X_predict
 
 
 class TopPopular(BaseModel):
@@ -105,7 +106,7 @@ class TopPopular(BaseModel):
     def fit(self, training: bool = False) -> None:
         X = self.dataset.get_train_data()
 
-        item_popularity = np.asarray(X.sum(axis=0)).reshape(-1, 1)
+        item_popularity = np.asarray((X > 0).sum(axis=0)).reshape(-1, 1)
         item_ratings = self.scaler.fit_transform(item_popularity)
 
         self.item_ratings = item_ratings.reshape(1, -1)
@@ -135,6 +136,58 @@ class Rand(BaseModel):
         set_seed(self.config.seed)
         item_ratings = np.random.uniform(size=X.shape)
         X_predict = X_predict * item_ratings
+
+        self._apply_filters(X_predict, **kwargs)
+
+        return X_predict
+
+
+class PureSVD(BaseModel):
+    def __init__(self, n_factors: int = 50, alfa: float = 0):
+        self.n_factors = n_factors
+        self.alfa = alfa
+        self.W = None
+        self.U = None  # user embeddings
+        self.V = None  # item embeddings
+        self.sim = None  # item-item similarity
+
+    def name(self) -> str:
+        return "svd"
+
+    def _serialize(self):
+        return {"U": self.U, "V": self.V, "W": self.W, "sim": self.sim}
+
+    def _deserialize(self, checkpoint):
+        self.U = checkpoint.get("U")
+        self.V = checkpoint.get("V")
+        self.W = checkpoint.get("W")
+        self.sim = checkpoint.get("sim")
+
+    def fit(self, training=False):
+        if training:
+            X = self.dataset.get_train_data()
+
+            U, sigma, VT = randomized_svd(X, self.n_factors, random_state=self.config.seed)
+            sigma = sp.diags(sigma, 0)
+
+            self.U = U * sigma
+            self.V = VT.T
+            self.sim = VT.T.dot(VT)
+
+            item_pop = np.asarray((X > 0).sum(axis=0)).squeeze()
+            self.W = 1.0 / np.log(item_pop)
+
+            self._save_model()
+        else:
+            self._load_model()
+
+    def predict(self, X: csr_matrix, **kwargs):
+        X_predict = X.dot(self.sim)
+
+        if self.alfa > 0:
+            X_predict = ((1 - self.alfa) * X_predict) + (self.alfa * self.W)
+
+        X_predict[X.nonzero()] = 0
 
         self._apply_filters(X_predict, **kwargs)
 

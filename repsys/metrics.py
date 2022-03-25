@@ -76,7 +76,7 @@ def get_novelty(X_train: csr_matrix, sort_indices: ndarray, k: int) -> ndarray:
     return novelty / (k * max_novelty)
 
 
-def get_accuracy_metrics(X_predict: ndarray, X_true: ndarray) -> Tuple[float, float, float]:
+def get_error_metrics(X_predict: ndarray, X_true: ndarray) -> Tuple[float, float, float]:
     diff = X_true - X_predict
 
     mae = np.abs(diff).mean(axis=1)
