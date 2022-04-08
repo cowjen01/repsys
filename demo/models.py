@@ -52,7 +52,7 @@ class BaseModel(Model, ABC):
 
 
 class KNN(BaseModel):
-    def __init__(self, n: int = 5):
+    def __init__(self, n: int = 50):
         self.model = NearestNeighbors(algorithm="brute", n_neighbors=n, metric="cosine")
 
     def name(self):
@@ -175,70 +175,70 @@ class PureSVD(BaseModel):
         return X_predict
 
 
-class Ensemble(BaseModel):
-    def __init__(self):
-        self.svd_ratio = 0.5
-        self.svd = PureSVD(n_factors=150)
-        self.knn = KNN(n=100)
-
-    def name(self) -> str:
-        return "ens"
-
-    def _update_model(self, model):
-        model.config = self.config
-        model.dataset = self.dataset
-
-    def fit(self, training: bool = False) -> None:
-        self._update_model(self.svd)
-        self.svd.fit(training)
-
-        self._update_model(self.knn)
-        self.knn.fit(training)
-
-    def predict(self, X: csr_matrix, **kwargs):
-        knn_predict = self.knn.predict(X, **kwargs)
-        svd_predict = self.svd.predict(X, **kwargs)
-
-        X_predict = (1 - self.svd_ratio) * knn_predict + self.svd_ratio * svd_predict
-
-        return X_predict
+# class Ensemble(BaseModel):
+#     def __init__(self):
+#         self.svd_ratio = 0.5
+#         self.svd = PureSVD(n_factors=150)
+#         self.knn = KNN(n=100)
+#
+#     def name(self) -> str:
+#         return "ens"
+#
+#     def _update_model(self, model):
+#         model.config = self.config
+#         model.dataset = self.dataset
+#
+#     def fit(self, training: bool = False) -> None:
+#         self._update_model(self.svd)
+#         self.svd.fit(training)
+#
+#         self._update_model(self.knn)
+#         self.knn.fit(training)
+#
+#     def predict(self, X: csr_matrix, **kwargs):
+#         knn_predict = self.knn.predict(X, **kwargs)
+#         svd_predict = self.svd.predict(X, **kwargs)
+#
+#         X_predict = (1 - self.svd_ratio) * knn_predict + self.svd_ratio * svd_predict
+#
+#         return X_predict
 
 
 # class EASE(BaseModel):
 #     def __init__(self, l2_lambda=0.5):
 #         self.B = None
 #         self.l2_lambda = l2_lambda
-#
+
 #     def name(self) -> str:
 #         return "ease"
-#
+
 #     def _serialize(self):
 #         return self.B
-#
+
 #     def _deserialize(self, checkpoint):
 #         self.B = checkpoint
-#
+
 #     def fit(self, training: bool = False) -> None:
 #         if training:
 #             X = self.dataset.get_train_data()
 #             G = X.T.dot(X).toarray()
-#
+
 #             diagonal_indices = np.diag_indices(G.shape[0])
 #             G[diagonal_indices] += self.l2_lambda
-#
+
 #             P = np.linalg.inv(G)
 #             B = P / (-np.diag(P))
 #             B[diagonal_indices] = 0
-#
+
 #             self.B = B
 #             self._save_model()
 #         else:
 #             self._load_model()
-#
+
 #     def predict(self, X: csr_matrix, **kwargs):
 #         predictions = X.dot(self.B)
 #         predictions[X.nonzero()] = 0
-#
+
 #         self._apply_filters(predictions, **kwargs)
-#
+
 #         return predictions

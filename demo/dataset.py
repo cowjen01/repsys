@@ -33,3 +33,38 @@ class MovieLens(Dataset):
         df = df[df["rating"] > 3.5]
         df["rating"] = 1
         return df
+
+
+# class BookCrossing(Dataset):
+#     def __init__(self) -> None:
+#         self.books = pd.read_csv("./bx-csv/BX-Books.csv", sep=";", escapechar="\\", encoding="CP1252")
+
+#     def name(self):
+#         return "bx"
+
+#     def item_cols(self):
+#         return {
+#             "ISBN": dtypes.ItemID(),
+#             "Book-Title": dtypes.Title(),
+#             "Book-Author": dtypes.Category(),
+#             "Year-Of-Publication": dtypes.Number(data_type=int),
+#             "Publisher": dtypes.Category(),
+#             "Image-URL-L": dtypes.String()
+#         }
+
+#     def interaction_cols(self):
+#         return {
+#             "ISBN": dtypes.ItemID(),
+#             "User-ID": dtypes.UserID(),
+#         }
+
+#     def load_items(self):
+#         return self.books
+
+#     def load_interactions(self):
+#         df = pd.read_csv("./bx-csv/BX-Book-Ratings.csv", sep=";", escapechar="\\", encoding="CP1252")
+
+#         df = df[df["ISBN"].isin(self.books["ISBN"].unique())]
+#         df = df[df["Book-Rating"] >= 6]
+
+#         return df

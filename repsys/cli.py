@@ -183,11 +183,11 @@ def dataset_split_cmd(ctx: Context, dataset: Dataset):
 @click.option(
     "--method",
     default="pymde",
-    type=click.Choice(["pymde", "tsne", "umap", "custom"]),
+    type=click.Choice(["pymde", "umap", "tsne", "custom"]),
     show_default=True,
     help="Embeddings method.",
 )
-@click.option("-m", "--model-name", help="Model for custom method.")
+@click.option("-m", "--model-name", help="Embeddings model.")
 def dataset_eval_cmd(
     ctx: Context,
     dataset: Dataset,
@@ -196,7 +196,4 @@ def dataset_eval_cmd(
     model_name: str,
 ):
     """Compute dataset embeddings."""
-    if method == "custom" and model_name is None:
-        raise BadOptionUsage("method", "You must specify model's name for the custom method.")
-
     evaluate_dataset(ctx.obj["CONFIG"], models, dataset, method, model_name)

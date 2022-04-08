@@ -78,13 +78,10 @@ def evaluate_dataset(
 
     dataset.load(config.checkpoints_dir)
 
-    if model_name is not None:
-        models = {model_name: models.get(model_name)}
-
-    if method == "custom":
-        fit_models(models, dataset, config)
-
-    model = models.get(model_name)
+    model = None
+    if method == "custom" and model_name is not None:
+        model = models.get(model_name)
+        fit_models({model_name: model}, dataset, config)
 
     logger.info(f"Computing embeddings")
     evaluator = DatasetEvaluator(dataset)

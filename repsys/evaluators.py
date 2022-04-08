@@ -346,15 +346,15 @@ class DatasetEvaluator:
         dataset: Dataset,
         seed: int = 1234,
         verbose: bool = True,
-        pymde_neighbors: int = 10,
-        umap_neighbors: int = 10,
+        pymde_neighbors: int = 15,
+        umap_neighbors: int = 15,
     ):
         self._dataset = dataset
         self._verbose = verbose
         self._seed = seed
         self._tsne = TSNE(n_iter=1500, n_components=2, metric="cosine", init="random", verbose=self._verbose)
         self._pca = PCA(n_components=50)
-        self._umap = umap.UMAP(random_state=seed, n_neighbors=umap_neighbors, verbose=self._verbose)
+        self._umap = umap.UMAP(random_state=seed, metric="cosine", n_neighbors=umap_neighbors, verbose=self._verbose)
         self.item_embeddings: Optional[DataFrame] = None
         self.user_embeddings: Dict[str, DataFrame] = {}
         self._pymde_neighbors = pymde_neighbors
@@ -395,7 +395,7 @@ class DatasetEvaluator:
         elif method == "custom" and custom_embeddings is not None:
             embeds = custom_embeddings(X)
             if embeds.shape[1] > 2:
-                embeds = self._tsne_embeddings(embeds)
+                embeds = self._umap_embeddings(embeds)
         else:
             raise Exception("Unsupported item embeddings option.")
 
@@ -405,6 +405,9 @@ class DatasetEvaluator:
         X = self._dataset.splits.get(split).complete_matrix
 
         def custom_embeddings(A: csr_matrix):
+            if model is None:
+                return self._dataset.compute_embeddings(A)[0]
+
             return model.compute_embeddings(A)[0]
 
         embeds = self._compute_embeddings(X, method, custom_embeddings)
@@ -421,6 +424,9 @@ class DatasetEvaluator:
         X = self._dataset.splits.get("train").complete_matrix.T
 
         def custom_embeddings(A: csr_matrix):
+            if model is None:
+                return self._dataset.compute_embeddings(A)[0]
+
             return model.compute_embeddings(A.T)[1]
 
         embeds = self._compute_embeddings(X, method, custom_embeddings)

@@ -203,6 +203,9 @@ class Dataset(ABC):
     def load_interactions(self) -> DataFrame:
         pass
 
+    def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:
+        raise Exception("You must implement your custom embeddings method.")
+
     def get_split_by_user(self, uid: str) -> Optional[str]:
         for key, split in self.splits.items():
             if split.user_index.get(uid) is not None:
