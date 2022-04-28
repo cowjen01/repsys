@@ -113,19 +113,19 @@ class ModelEvaluator:
             ndcg_k = [100]
 
         if coverage_k is None:
-            coverage_k = [10]
+            coverage_k = [20]
 
         if diversity_k is None:
-            diversity_k = [10]
+            diversity_k = [20]
 
         if novelty_k is None:
-            novelty_k = [10]
+            novelty_k = [20]
 
         if percentage_lt_k is None:
-            percentage_lt_k = [10]
+            percentage_lt_k = [20]
 
         if coverage_lt_k is None:
-            coverage_lt_k = [10]
+            coverage_lt_k = [20]
 
         self.pr_k = precision_recall_k
         self.ndcg_k = ndcg_k
