@@ -348,13 +348,28 @@ class DatasetEvaluator:
         verbose: bool = True,
         pymde_neighbors: int = 15,
         umap_neighbors: int = 15,
+        tsne_perplexity: int = 30,
+        umap_min_dist: float = 0.1,
     ):
         self._dataset = dataset
         self._verbose = verbose
         self._seed = seed
-        self._tsne = TSNE(n_iter=1500, n_components=2, metric="cosine", init="random", verbose=self._verbose)
+        self._tsne = TSNE(
+            perplexity=tsne_perplexity,
+            n_iter=1500,
+            n_components=2,
+            metric="cosine",
+            init="random",
+            verbose=self._verbose,
+        )
         self._pca = PCA(n_components=50)
-        self._umap = umap.UMAP(random_state=seed, metric="cosine", n_neighbors=umap_neighbors, verbose=self._verbose)
+        self._umap = umap.UMAP(
+            random_state=seed,
+            min_dist=umap_min_dist,
+            metric="cosine",
+            n_neighbors=umap_neighbors,
+            verbose=self._verbose,
+        )
         self.item_embeddings: Optional[DataFrame] = None
         self.user_embeddings: Dict[str, DataFrame] = {}
         self._pymde_neighbors = pymde_neighbors
@@ -395,7 +410,7 @@ class DatasetEvaluator:
         elif method == "custom" and custom_embeddings is not None:
             embeds = custom_embeddings(X)
             if embeds.shape[1] > 2:
-                embeds = self._umap_embeddings(embeds)
+                embeds = self._pymde_embeddings(embeds)
         else:
             raise Exception("Unsupported item embeddings option.")
 

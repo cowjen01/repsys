@@ -8,11 +8,7 @@ from repsys.errors import InvalidConfigError
 
 class DatasetConfig:
     def __init__(
-        self,
-        test_holdout_prop: float,
-        train_split_prop: float,
-        min_user_interacts: int,
-        min_item_interacts: int,
+        self, test_holdout_prop: float, train_split_prop: float, min_user_interacts: int, min_item_interacts: int,
     ):
         self.test_holdout_prop = test_holdout_prop
         self.train_split_prop = train_split_prop
@@ -40,6 +36,14 @@ class EvaluationConfig:
         self.coverage_lt_k = coverage_lt_k
 
 
+class VisualizationConfig:
+    def __init__(self, pymde_neighbors: int, umap_neighbors: int, umap_min_dist: float, tsne_perplexity: int):
+        self.pymde_neighbors = pymde_neighbors
+        self.umap_neighbors = umap_neighbors
+        self.umap_min_dist = umap_min_dist
+        self.tsne_perplexity = tsne_perplexity
+
+
 class Config:
     def __init__(
         self,
@@ -49,6 +53,7 @@ class Config:
         server_port: int,
         dataset_config: DatasetConfig,
         eval_config: EvaluationConfig,
+        visual_config: VisualizationConfig
     ):
         self.dataset = dataset_config
         self.eval = eval_config
@@ -56,6 +61,7 @@ class Config:
         self.debug = debug
         self.seed = seed
         self.server_port = server_port
+        self.visual = visual_config
 
 
 def validate_dataset_config(config: DatasetConfig):
@@ -95,19 +101,20 @@ def read_config(config_path: str = None):
     validate_dataset_config(dataset_config)
 
     evaluator_config = EvaluationConfig(
-        parse_list(
-            config.get(
-                "evaluation",
-                "precision_recall_k",
-                fallback=const.DEFAULT_PRECISION_RECALL_K,
-            )
-        ),
+        parse_list(config.get("evaluation", "precision_recall_k", fallback=const.DEFAULT_PRECISION_RECALL_K,)),
         parse_list(config.get("evaluation", "ndcg_k", fallback=const.DEFAULT_NDCG_K)),
         parse_list(config.get("evaluation", "coverage_k", fallback=const.DEFAULT_COVERAGE_K)),
         parse_list(config.get("evaluation", "diversity_k", fallback=const.DEFAULT_DIVERSITY_K)),
         parse_list(config.get("evaluation", "novelty_k", fallback=const.DEFAULT_NOVELTY_K)),
         parse_list(config.get("evaluation", "percentage_lt_k", fallback=const.DEFAULT_PERCENTAGE_LT_K)),
         parse_list(config.get("evaluation", "coverage_lt_k", fallback=const.DEFAULT_COVERAGE_LT_K)),
+    )
+
+    visual_config = VisualizationConfig(
+        config.getint("visualization", "pymde_neighbors", fallback=const.DEFAULT_PYMDE_NEIGHBORS),
+        config.getint("visualization", "umap_neighbors", fallback=const.DEFAULT_UMAP_NEIGHBORS),
+        config.getfloat("visualization", "umap_min_dist", fallback=const.DEFAULT_UMAP_MIN_DIST),
+        config.getint("visualization", "tsne_perplexity", fallback=const.DEFAULT_TSNE_PERPLEXITY),
     )
 
     return Config(
@@ -117,4 +124,5 @@ def read_config(config_path: str = None):
         config.get("server", "port", fallback=const.DEFAULT_SERVER_PORT),
         dataset_config,
         evaluator_config,
+        visual_config
     )

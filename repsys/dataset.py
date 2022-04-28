@@ -1,5 +1,3 @@
-# credits: https://github.com/dawenl/vae_cf/blob/master/VAE_ML20M_WWW2018.ipynb
-
 import logging
 import os
 import typing
@@ -373,14 +371,14 @@ class Dataset(ABC):
         min_item_interacts=0,
         seed=1234,
     ) -> None:
-        logger.info("Loading dataset ...")
+        logger.info("Loading dataset")
 
         items = self.load_items()
         item_cols = self.item_cols()
         interacts = self.load_interactions()
         interact_cols = self.interaction_cols()
 
-        logger.info("Validating dataset ...")
+        logger.info("Validating dataset")
 
         validate_dataset(items, item_cols, interacts, interact_cols)
 
@@ -397,7 +395,7 @@ class Dataset(ABC):
             interacts["value"] = 1
             interacts_value_col = "value"
 
-        logger.info("Splitting interactions ...")
+        logger.info("Splitting interactions")
 
         interacts = interacts.rename(
             columns={

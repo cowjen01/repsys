@@ -68,11 +68,7 @@ def train_models(config: Config, models: Dict[str, Model], dataset: Dataset, mod
 
 
 def evaluate_dataset(
-    config: Config,
-    models: Dict[str, Model],
-    dataset: Dataset,
-    method: str,
-    model_name: str,
+    config: Config, models: Dict[str, Model], dataset: Dataset, method: str, model_name: str,
 ):
     logger.info(f"Evaluating implemented dataset using '{method}' method")
 
@@ -84,7 +80,13 @@ def evaluate_dataset(
         fit_models({model_name: model}, dataset, config)
 
     logger.info(f"Computing embeddings")
-    evaluator = DatasetEvaluator(dataset)
+    evaluator = DatasetEvaluator(
+        dataset,
+        pymde_neighbors=config.visual.pymde_neighbors,
+        umap_neighbors=config.visual.umap_neighbors,
+        umap_min_dist=config.visual.umap_min_dist,
+        tsne_perplexity=config.visual.tsne_perplexity,
+    )
     evaluator.compute_user_embeddings("train", method, model, max_samples=10000)
     evaluator.compute_user_embeddings("validation", method, model)
 
@@ -94,11 +96,7 @@ def evaluate_dataset(
 
 
 def evaluate_models(
-    config: Config,
-    models: Dict[str, Model],
-    dataset: Dataset,
-    split_type: str,
-    model_name: str,
+    config: Config, models: Dict[str, Model], dataset: Dataset, split_type: str, model_name: str,
 ):
     logger.info("Evaluating implemented models")
 
