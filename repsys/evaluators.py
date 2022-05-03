@@ -174,53 +174,53 @@ class ModelEvaluator:
             precision_dict[k], recall_dict[k] = get_precision_recall(X_predict, X_true, predict_sort_indices, k)
 
         for k in self.pr_k:
-            user_results[f"recall@{k}"] = recall_dict.get(k)
-            summary_results[f"recall@{k}"] = recall_dict.get(k).mean()
+            user_results[f"Recall@{k}"] = recall_dict.get(k)
+            summary_results[f"Recall@{k}"] = recall_dict.get(k).mean()
 
         logger.info("Computing NDCG")
         for k in self.ndcg_k:
             ndcg = get_ndcg(X_predict, X_true, predict_sort_indices, true_sort_indices, k)
-            user_results[f"ndcg@{k}"] = ndcg
-            summary_results[f"ndcg@{k}"] = ndcg.mean()
+            user_results[f"NDCG@{k}"] = ndcg
+            summary_results[f"NDCG@{k}"] = ndcg.mean()
 
         logger.info("Computing catalog coverage")
         for k in self.coverage_k:
             coverage = get_coverage(X_predict, predict_sort_indices, k)
-            summary_results[f"coverage@{k}"] = coverage
+            summary_results[f"Coverage@{k}"] = coverage
 
         logger.info("Computing user diversity")
         for k in self.diversity_k:
             diversity = get_diversity(X_distances, predict_sort_indices, k)
-            user_results[f"diversity@{k}"] = diversity
-            summary_results[f"diversity@{k}"] = diversity.mean()
+            user_results[f"Diversity@{k}"] = diversity
+            summary_results[f"Diversity@{k}"] = diversity.mean()
 
         logger.info("Computing user novelty")
         for k in self.novelty_k:
             novelty = get_novelty(X_train, predict_sort_indices, k)
-            user_results[f"novelty@{k}"] = novelty
-            summary_results[f"novelty@{k}"] = novelty.mean()
+            user_results[f"Novelty@{k}"] = novelty
+            summary_results[f"Novelty@{k}"] = novelty.mean()
 
         logger.info("Computing percentage of long-tail items")
         for k in self.plt_k:
             plt = get_plt(predict_sort_indices, long_tail_items, k)
-            user_results[f"plt@{k}"] = plt
-            summary_results[f"plt@{k}"] = plt.mean()
+            user_results[f"APL@{k}"] = plt
+            summary_results[f"APL@{k}"] = plt.mean()
 
         logger.info("Computing coverage of long-tail items")
         for k in self.clt_k:
             clt = get_clt(predict_sort_indices, long_tail_items, k)
-            summary_results[f"clt@{k}"] = clt
+            summary_results[f"LCC@{k}"] = clt
 
         for k in self.pr_k:
-            user_results[f"precision@{k}"] = precision_dict.get(k)
-            summary_results[f"precision@{k}"] = precision_dict.get(k).mean()
+            user_results[f"Precision@{k}"] = precision_dict.get(k)
+            summary_results[f"Precision@{k}"] = precision_dict.get(k).mean()
 
         logger.info("Computing MAE, MSE and RMSE")
         mae, mse, rmse = get_error_metrics(X_predict, X_true)
-        user_results["mae"], user_results["mse"], user_results["rmse"] = mae, mse, rmse
+        user_results["MAE"], user_results["MSE"], user_results["RMSE"] = mae, mse, rmse
 
         logger.info("Computing item popularity")
-        item_results["popularity"] = get_item_pop(X_predict)
+        item_results["Popularity"] = get_item_pop(X_predict)
 
         return summary_results, user_results, item_results
 

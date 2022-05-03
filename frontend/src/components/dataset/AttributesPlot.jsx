@@ -32,7 +32,7 @@ function AttributesPlot({ description, attributes }) {
           {attributes[key].dtype === 'number' && (
             <>
               <Typography sx={{ fontSize: '0.8rem' }} variant="body2">
-                Attribute&#39;s values distribution
+                Attribute values distribution
               </Typography>
               <BarPlot
                 height={150}

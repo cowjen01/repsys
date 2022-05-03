@@ -32,6 +32,7 @@ function HistogramPlot({ data, meta, innerRef, layoutProps, height, ...props }) 
         xaxis: {
           zeroline: false,
           gridcolor,
+          range: [0, 1],
         },
         yaxis: {
           zeroline: false,

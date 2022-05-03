@@ -104,17 +104,17 @@ def create_app(
 
         tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
         for col in tag_cols:
-            labels, counts = get_top_tags(items, col, n=5)
+            labels, counts = get_top_tags(items, col, n=4)
             attributes[col] = {"labels": labels, "values": counts}
 
         category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
         for col in category_cols:
-            labels, counts = get_top_categories(items, col, n=5)
+            labels, counts = get_top_categories(items, col, n=4)
             attributes[col] = {"labels": labels, "values": counts}
 
         number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
         for col in number_cols:
-            values, bins = dataset.compute_histogram_by_col(items, col)
+            values, bins = dataset.compute_histogram_by_col(items, col, bins=4)
             attributes[col] = {"values": values.tolist(), "bins": bins.tolist()}
 
         return attributes
@@ -261,7 +261,7 @@ def create_app(
         if None in user_indices:
             raise InvalidUsage(f"Some of the input users not found.")
 
-        items = dataset.get_top_items_by_users(user_indices, split, n=50)
+        items = dataset.get_top_items_by_users(user_indices, split, n=100)
         description = get_items_description(items)
 
         return json(

@@ -55,7 +55,7 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
 
   const handleModelChange = (newValue) => {
     setSelectedModel(newValue);
-    setSelectedMetric('');
+    // setSelectedMetric('');
     resetSelection();
   };
 
@@ -103,7 +103,7 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
   }, [metrics.data, selectedModel]);
 
   useEffect(() => {
-    if (metricsOptions.length > 0) {
+    if (!selectedMetric && metricsOptions.length > 0) {
       setSelectedMetric(metricsOptions[0]);
     }
   }, [metricsOptions]);

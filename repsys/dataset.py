@@ -277,8 +277,7 @@ class Dataset(ABC):
 
     def get_top_items_by_users(self, indices: List[int], split: str, n: int = 10) -> DataFrame:
         matrix = self.splits.get(split).train_matrix
-        transformer = TfidfTransformer()
-        tfidf = transformer.fit_transform(matrix[indices])
+        tfidf = self.weight_transformer.transform(matrix[indices])
         weights = np.asarray(tfidf.sum(axis=0)).squeeze()
         sort_indices = (-weights).argsort()[:n]
         item_ids = list(map(self.item_index_to_id, sort_indices))
@@ -341,6 +340,11 @@ class Dataset(ABC):
             values, bins = self.compute_histogram_by_col(self.items, col)
             self.histograms[col] = values, bins
 
+    def _update_weighting(self):
+        transformer = TfidfTransformer()
+        transformer.fit(self.splits.get("train").train_matrix)
+        self.weight_transformer = transformer
+
     def _update_data(self, splits, items: DataFrame, item_index: frozenbidict) -> None:
         n_items = items.shape[0]
 
@@ -362,6 +366,7 @@ class Dataset(ABC):
         self._update_tags()
         self._update_categories()
         self._update_histograms()
+        self._update_weighting()
 
     def fit(
         self,
