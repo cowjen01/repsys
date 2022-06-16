@@ -366,4 +366,4 @@ def run_server(
 ) -> None:
     app = create_app(models, dataset, dataset_eval, model_eval)
     app.config.FALLBACK_ERROR_FORMAT = "json"
-    app.run(port=config.server_port, debug=False, access_log=False)
+    app.run(host="0.0.0.0", port=config.server_port, debug=False, access_log=False)
