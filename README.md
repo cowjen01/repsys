@@ -1,19 +1,19 @@
-# Repsys
+# RepSys
 
 [![PyPI version](https://badge.fury.io/py/repsys-framework.svg)](https://badge.fury.io/py/repsys-framework)
 
-The Repsys is a framework for developing and analyzing recommendation systems, and it allows you to:
+The RepSys is a framework for developing and analyzing recommendation systems, and it allows you to:
 - Add your own dataset and recommendation models
 - Visually evaluate the models on various metrics
 - Quickly create dataset embeddings to explore the data
 - Preview recommendations using a web application
 - Simulate user's behavior while receiving the recommendations
 
-![web preview](https://github.com/cowjen01/repsys/raw/master/images/web-preview.jpg)
+![web preview](https://github.com/cowjen01/repsys/raw/master/images/demos/simulator-preview.png)
 
 <p align="middle">
-  <img src="https://github.com/cowjen01/repsys/raw/master/images/dataset-eval.jpg" width="48%" />
-  <img src="https://github.com/cowjen01/repsys/raw/master/images/model-eval.jpg" width="48%" /> 
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/demos/eval-space.png" width="48%" />
+  <img src="https://github.com/cowjen01/repsys/raw/master/images/demos/dataset-users.png" width="48%" /> 
 </p>
 
 ## Installation
@@ -128,19 +128,8 @@ class KNN(Model):
        
         predictions = vf(distances, indices)
         predictions[X.nonzero()] = 0
-        
-        if kwargs.get("genre"):
-            items = self.dataset.items
-            items = items[items["genres"].apply(lambda x: kwargs.get("genre") not in x)]
-            indices = items.index.map(self.dataset.item_id_to_index)
-            predictions[:, indices] = 0
 
         return predictions
-
-    def web_params(self):
-        return {
-            "genre": Select(options=self.dataset.tags.get("genres")),
-        }
 ```
 
 You must define the fit method to train your model using the training data or load the previously trained model from a file.
@@ -167,16 +156,22 @@ seed=123
 train_split_prop=0.85
 test_holdout_prop=0.2
 min_user_interacts=5
-min_item_interacts=5
+min_item_interacts=0
 
 [evaluation]
 precision_recall_k=20,50
 ndcg_k=100
-coverage_k=10
-diversity_k=10
-novelty_k=10
-percentage_lt_k=10
-coverage_lt_k=10
+coverage_k=20
+diversity_k=20
+novelty_k=20
+percentage_lt_k=20
+coverage_lt_k=20
+
+[visualization]
+pymde_neighbors=15
+umap_neighbors=15
+umap_min_dist=0.1
+tsne_perplexity=30
 
 [server]
 port=3001
@@ -190,7 +185,7 @@ Before we train our models, we need to split the data into train, validation, an
 $ repsys dataset split
 ```
 
-This will hold out 80% of the users as training data, and the rest 20% will be used as validation/test data with 10% of users each. For both validation 
+This will hold out 85% of the users as training data, and the rest 15% will be used as validation/test data with 7.5% of users each. For both validation 
 and test set, 20% of the interactions will also be held out for evaluation purposes. The split dataset will be stored in the default checkpoints folder.
 
 ### Training the models
@@ -253,19 +248,19 @@ $ repsys server
 The application should be accessible on the default address [http://localhost:3001](http://localhost:3001). When you open the link, you will see the main screen where your recommendations appear once you finish the setup.
 The first step is defining how the items' data columns should be mapped to the item view components.
 
-![app setup](https://github.com/cowjen01/repsys/raw/master/images/app-setup.jpg)
+![app setup](https://github.com/cowjen01/repsys/raw/master/images/tutorial/app-setup.jpg)
 
 Then we need to switch to the build mode and add two recommenders - one without filter and the second with only comedy movies included.
 
-![add recommender](https://github.com/cowjen01/repsys/raw/master/images/add-recommender.jpg)
+![add recommender](https://github.com/cowjen01/repsys/raw/master/images/tutorial/add-recommender.jpg)
 
 Now we switch back from the build mode and select a user from the validation set (never seen by a model before).
 
-![user select](https://github.com/cowjen01/repsys/raw/master/images/user-selection.jpg)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/tutorial/user-selection.jpg)
 
 Finally, we see the user's interaction history on the right side and the recommendations made by the model on the left side.
 
-![user select](https://github.com/cowjen01/repsys/raw/master/images/recoms-preview.jpg)
+![user select](https://github.com/cowjen01/repsys/raw/master/images/tutorial/recoms-preview.jpg)
 
 ## Contribution
 

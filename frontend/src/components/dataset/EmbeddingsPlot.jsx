@@ -110,7 +110,7 @@ EmbeddingsPlot.defaultProps = {
   markerSize: 3,
   markerOpacity: 1,
   showScale: false,
-  colorScale: 'Bluered',
+  colorScale: 'Jet',
   onSelect: () => {},
   onUnselect: () => {},
   onComputeStarted: () => {},

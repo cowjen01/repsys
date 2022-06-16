@@ -150,7 +150,7 @@ function RecEditDialog() {
 
   return (
     <Dialog open={open} transitionDuration={0} fullWidth maxWidth="sm" onClose={handleClose}>
-      <DialogTitle>Recommender settings</DialogTitle>
+      <DialogTitle>Recommender Settings</DialogTitle>
       <Formik
         initialValues={initialValues}
         enableReinitialize
@@ -183,9 +183,9 @@ function RecEditDialog() {
                 <Grid container direction="column" spacing={2}>
                   <Grid item>
                     <Typography variant="subtitle2" component="div">
-                      Appearance
+                      Panel appearance
                     </Typography>
-                    <Field name="name" label="Name" fullWidth component={TextField} />
+                    <Field name="name" label="Name" required fullWidth component={TextField} />
                     <Grid container spacing={2}>
                       <Grid item xs={6}>
                         <Field
@@ -212,6 +212,7 @@ function RecEditDialog() {
                     <Field
                       name="model"
                       label="Model"
+                      required
                       component={SelectField}
                       options={Object.keys(models.data)}
                       displayEmpty

@@ -125,12 +125,16 @@ def create_app(
     def index(request):
         return file(f"{static_folder}/index.html")
 
+    @app.route("/api/web/config", methods=["GET"])
+    async def get_web_config(request):
+        return json(dataset.default_web_config())
+
     @app.route("/api/models", methods=["GET"])
-    def get_models(request):
+    async def get_models(request):
         return json({model.name(): model.to_dict() for model in models.values()})
 
     @app.route("/api/dataset", methods=["GET"])
-    def get_dataset(request):
+    async def get_dataset(request):
         return json(
             {
                 "totalItems": dataset.get_total_items(),
@@ -139,7 +143,7 @@ def create_app(
         )
 
     @app.route("/api/users", methods=["GET"])
-    def get_users(request):
+    async def get_users(request):
         split = request.args.get("split")
         validate_split_name(split)
 
@@ -147,7 +151,7 @@ def create_app(
         return json(users)
 
     @app.route("/api/items", methods=["GET"])
-    def get_items(request):
+    async def get_items(request):
         query = request.args.get("query")
 
         if not query:
@@ -162,7 +166,7 @@ def create_app(
         return data
 
     @app.route("/api/models/<model_name>/predict", methods=["POST"])
-    def predict_items(request, model_name: str):
+    async def predict_items(request, model_name: str):
         if not models.get(model_name):
             raise NotFound(f"Model '{model_name}' not implemented.")
 
@@ -200,7 +204,7 @@ def create_app(
         return data
 
     @app.route("/api/items/search", methods=["POST"])
-    def search_items(request):
+    async def search_items(request):
         query = request.json.get("query")
 
         if not query:
@@ -211,7 +215,7 @@ def create_app(
         return json(items.index.tolist())
 
     @app.route("/api/users/search", methods=["POST"])
-    def search_users(request):
+    async def search_users(request):
         query = request.json.get("query")
 
         if not query:
@@ -232,7 +236,7 @@ def create_app(
         return json(user_ids)
 
     @app.route("/api/items/describe", methods=["POST"])
-    def describe_items(request):
+    async def describe_items(request):
         item_ids = request.json.get("items")
 
         if not item_ids or len(item_ids) == 0:
@@ -244,7 +248,7 @@ def create_app(
         return json({"description": description})
 
     @app.route("/api/users/describe", methods=["POST"])
-    def describe_users(request):
+    async def describe_users(request):
         user_ids = request.json.get("users")
         split = request.json.get("split")
 
@@ -272,7 +276,7 @@ def create_app(
         )
 
     @app.route("/api/items/embeddings", methods=["GET"])
-    def get_item_embeddings(request):
+    async def get_item_embeddings(request):
         split = request.args.get("split")
         validate_split_name(split)
 
@@ -287,7 +291,7 @@ def create_app(
         return json(df.to_dict("records"))
 
     @app.route("/api/users/embeddings", methods=["GET"])
-    def get_user_embeddings(request):
+    async def get_user_embeddings(request):
         split = request.args.get("split")
         validate_split_name(split)
 
@@ -301,7 +305,7 @@ def create_app(
         return json(df.to_dict("records"))
 
     @app.route("/api/users/<uid>", methods=["GET"])
-    def get_user_detail(request, uid: str):
+    async def get_user_detail(request, uid: str):
         split = dataset.get_split_by_user(uid)
 
         if not split:
@@ -313,7 +317,7 @@ def create_app(
         return data
 
     @app.route("/api/models/metrics", methods=["GET"])
-    def get_metrics(request):
+    async def get_metrics(request):
         if not model_eval.evaluated_models:
             raise NotFound("Models have not been evaluated yet.")
 
@@ -330,7 +334,7 @@ def create_app(
         return json({"results": results})
 
     @app.route("/api/models/<model_name>/metrics/<metrics_type>", methods=["GET"])
-    def get_user_metrics(request, model_name: str, metrics_type: str):
+    async def get_user_metrics(request, model_name: str, metrics_type: str):
         if models.get(model_name) is None:
             raise NotFound(f"Model '{model_name}' not implemented.")
 

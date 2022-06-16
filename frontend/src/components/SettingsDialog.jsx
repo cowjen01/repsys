@@ -12,17 +12,12 @@ import {
 import { useDispatch, useSelector } from 'react-redux';
 import { Formik, Field } from 'formik';
 
-import {
-  darkModeSelector,
-  itemViewSelector,
-  setDarkMode,
-  setItemView,
-} from '../../reducers/settings';
-import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../../reducers/dialogs';
-import { SelectField, CheckboxField } from '../fields';
-import { useGetDatasetQuery } from '../../api';
-import { capitalize } from '../../utils';
-import ErrorAlert from '../ErrorAlert';
+import { darkModeSelector, itemViewSelector, setDarkMode, setItemView } from '../reducers/settings';
+import { closeSettingsDialog, openSnackbar, settingsDialogSelector } from '../reducers/dialogs';
+import { SelectField, CheckboxField } from './fields';
+import { useGetDatasetQuery } from '../api';
+import { capitalize } from '../utils';
+import ErrorAlert from './ErrorAlert';
 
 function SettingsDialog() {
   const darkMode = useSelector(darkModeSelector);
@@ -96,24 +91,29 @@ function SettingsDialog() {
                 <Grid container direction="column" spacing={2}>
                   <Grid item>
                     <Typography variant="subtitle2" component="div">
-                      Recommenders
+                      Attribute mappings
                     </Typography>
-                    {fields.map((field) => (
+                    {fields.map((field, index) => (
                       <Field
                         key={field}
                         name={`itemView.${field}`}
-                        label={`${capitalize(field)} attribute`}
+                        label={`${capitalize(field)} field`}
                         fullWidth
                         component={SelectField}
                         options={attributeOptions}
+                        required={index === 0}
                       />
                     ))}
                   </Grid>
                   <Grid item>
                     <Typography variant="subtitle2" component="div">
-                      Appearance
+                      System appearance
                     </Typography>
-                    <Field name="darkMode" label="Nightshift Mode" component={CheckboxField} />
+                    <Field
+                      name="darkMode"
+                      label="Nightshift mode (experimental)"
+                      component={CheckboxField}
+                    />
                   </Grid>
                 </Grid>
               )}

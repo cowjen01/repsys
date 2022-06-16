@@ -9,6 +9,8 @@ export const slice = createSlice({
     favouriteUsers: [],
     interactiveMode: false,
     customInteractions: [],
+    seenTutorials: [],
+    initialized: false,
   },
   reducers: {
     toggleBuildMode: (state) => {
@@ -20,6 +22,9 @@ export const slice = createSlice({
       if (payload) {
         state.customInteractions = payload;
       }
+    },
+    setInitialized: (state) => {
+      state.initialized = true;
     },
     setSelectedUser: (state, { payload }) => {
       state.selectedUser = payload;
@@ -36,6 +41,9 @@ export const slice = createSlice({
     addCustomInteraction: (state, { payload }) => {
       state.customInteractions.unshift(payload);
     },
+    addSeenTutorial: (state, { payload }) => {
+      state.seenTutorials.push(payload);
+    },
   },
 });
 
@@ -47,6 +55,8 @@ export const {
   toggleInteractiveMode,
   addCustomInteraction,
   setCustomInteractions,
+  addSeenTutorial,
+  setInitialized,
 } = slice.actions;
 
 export const buildModeSelector = (state) => state.app.buildMode;
@@ -58,5 +68,9 @@ export const favouriteUsersSelector = (state) => state.app.favouriteUsers;
 export const interactiveModeSelector = (state) => state.app.interactiveMode;
 
 export const customInteractionsSelector = (state) => state.app.customInteractions;
+
+export const seenTutorialsSelector = (state) => state.app.seenTutorials;
+
+export const initializedSelector = (state) => state.app.initialized;
 
 export default slice.reducer;

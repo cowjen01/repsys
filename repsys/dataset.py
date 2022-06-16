@@ -1,8 +1,9 @@
 import logging
 import os
 import typing
+import math
 from abc import ABC, abstractmethod
-from typing import Dict, Tuple, List, Optional
+from typing import Dict, Tuple, List, Optional, Any
 
 import numpy as np
 import pandas as pd
@@ -200,6 +201,9 @@ class Dataset(ABC):
     @abstractmethod
     def load_interactions(self) -> DataFrame:
         pass
+
+    def default_web_config(self) -> Dict[str, Any]:
+        return {}
 
     def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:
         raise Exception("You must implement your custom embeddings method.")
@@ -575,17 +579,18 @@ class DatasetSplitter:
             # randomly choose 20% of all items user interacted with
             # these interactions goes to test list, other goes to training list
             indices = np.zeros(n_items, dtype="bool")
-            holdout_size = int(self.test_holdout_prop * n_items)
+            holdout_size = math.ceil(self.test_holdout_prop * n_items)
 
-            set_seed(self.seed)
-            rand_items = np.random.choice(n_items, size=holdout_size, replace=False).astype("int64")
-            indices[rand_items] = True
+            if holdout_size > 0:
+                set_seed(self.seed)
+                rand_items = np.random.choice(n_items, size=holdout_size, replace=False).astype("int64")
+                indices[rand_items] = True
 
-            train_list.append(group[np.logical_not(indices)])
-            holdout_list.append(group[indices])
+                train_list.append(group[np.logical_not(indices)])
+                holdout_list.append(group[indices])
 
-            if i % 1000 == 0 and i > 0:
-                logger.info(f"{i} users sampled")
+                if i % 1000 == 0 and i > 0:
+                    logger.info(f"{i} users sampled")
 
         train_data = pd.concat(train_list)
         holdout_data = pd.concat(holdout_list)

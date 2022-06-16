@@ -28,22 +28,19 @@ function ItemDetailDialog() {
         <>
           <DialogTitle>{dialog.item[itemView.title]}</DialogTitle>
           <DialogContent>
-            <DialogContentText>
-              {/* <Typography gutterBottom>
-                {dialog.item[itemView.subtitle]}
-              </Typography>
-              <Typography gutterBottom>
-                {dialog.item[itemView.caption]}
-              </Typography> */}
-              <Typography gutterBottom>
-                {dialog.item[itemView.content] || 'No description provided.'}
-              </Typography>
-            </DialogContentText>
+            <Typography variant="subtitle1" component="p" gutterBottom>
+              {[dialog.item[itemView.caption], dialog.item[itemView.subtitle]]
+                .filter((x) => x !== undefined)
+                .join(' | ')}
+            </Typography>
+            <Typography variant="body1" sx={{ whiteSpace: 'pre-line' }} gutterBottom>
+              {dialog.item[itemView.content] || 'No description provided.'}
+            </Typography>
           </DialogContent>
         </>
       )}
       <DialogActions>
-        <Button color="secondary" onClick={handleClose} autoFocus>
+        <Button color="secondary" onClick={handleClose}>
           Close
         </Button>
       </DialogActions>

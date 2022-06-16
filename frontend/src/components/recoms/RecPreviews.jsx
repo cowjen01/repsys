@@ -2,21 +2,15 @@ import React from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { Grid, Fab, Alert, AlertTitle } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+// import FavoriteIcon from '@mui/icons-material/Favorite';
+// import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 
 import { recommendersSelector, deleteRecommender } from '../../reducers/recommenders';
-import {
-  buildModeSelector,
-  favouriteUsersSelector,
-  selectedUserSelector,
-  addUserToFavourites,
-  removeUserFromFavourites,
-} from '../../reducers/app';
+import { buildModeSelector } from '../../reducers/app';
 import { openRecEditDialog } from '../../reducers/dialogs';
 import ControlPanel from './ControlPanel';
 import SelectorDialog from './SelectorDialog';
-import ItemDetailDialog from './ItemDetailDialog';
+import { ItemDetailDialog } from '../items';
 import RecEditView from './RecEditView';
 import RecGridView from './RecGridView';
 import RecEditDialog from './RecEditDialog';
@@ -34,8 +28,15 @@ function RecPreviews() {
   const recommenders = useSelector(recommendersSelector);
   const buildMode = useSelector(buildModeSelector);
   const itemView = useSelector(itemViewSelector);
-  const favouriteUsers = useSelector(favouriteUsersSelector);
-  const selectedUser = useSelector(selectedUserSelector);
+  // const favouriteUsers = useSelector(favouriteUsersSelector);
+  // const selectedUser = useSelector(selectedUserSelector);
+  // const seenTutorials = useSelector(seenTutorialsSelector);
+
+  // useEffect(() => {
+  //   if (!seenTutorials.includes('previews')) {
+  //     dispatch(openTutorialDialog('previews'));
+  //   }
+  // }, []);
 
   const handleRecDeleteConfirm = ({ index }) => {
     dispatch(deleteRecommender(index));
@@ -45,13 +46,13 @@ function RecPreviews() {
     dispatch(openRecEditDialog(null));
   };
 
-  const handleFavouriteToggle = () => {
-    if (favouriteUsers.includes(selectedUser)) {
-      dispatch(removeUserFromFavourites(selectedUser));
-    } else {
-      dispatch(addUserToFavourites(selectedUser));
-    }
-  };
+  // const handleFavouriteToggle = () => {
+  //   if (favouriteUsers.includes(selectedUser)) {
+  //     dispatch(removeUserFromFavourites(selectedUser));
+  //   } else {
+  //     dispatch(addUserToFavourites(selectedUser));
+  //   }
+  // };
 
   return (
     <>
@@ -59,9 +60,9 @@ function RecPreviews() {
         {!itemView.title && (
           <Grid item xs={12}>
             <Alert severity="warning">
-              <AlertTitle>Views not configured</AlertTitle>
-              It is not configured how the data should be mapped to the views. Please open the
-              settings in the top-right menu and finish the setup.
+              <AlertTitle>Mappings not configured</AlertTitle>
+              To see the recommendations, please open the settings dialog in the top-right corner
+              and finish the attribute mappings setup.
             </Alert>
           </Grid>
         )}
@@ -72,9 +73,9 @@ function RecPreviews() {
                 {!recommenders.length && (
                   <Grid item xs={12}>
                     <Alert severity="info">
-                      <AlertTitle>Recommenders not configured</AlertTitle>
-                      There have been no recommenders created yet. Please switch to the build mode
-                      and create one.
+                      <AlertTitle>Empty recommenders</AlertTitle>
+                      Please add a new recommender by switching to build mode and pressing the add
+                      button in the bottom-left corner.
                     </Alert>
                   </Grid>
                 )}
@@ -107,7 +108,7 @@ function RecPreviews() {
           Add recommender
         </Fab>
       )}
-      {selectedUser && !buildMode && (
+      {/* {selectedUser && !buildMode && (
         <Fab onClick={handleFavouriteToggle} variant="extended" color="secondary" sx={fabStyles}>
           {!favouriteUsers.includes(selectedUser) ? (
             <FavoriteBorderIcon sx={{ mr: 1 }} />
@@ -116,7 +117,7 @@ function RecPreviews() {
           )}
           Favourite user
         </Fab>
-      )}
+      )} */}
     </>
   );
 }

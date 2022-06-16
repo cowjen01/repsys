@@ -8,7 +8,11 @@ from repsys.errors import InvalidConfigError
 
 class DatasetConfig:
     def __init__(
-        self, test_holdout_prop: float, train_split_prop: float, min_user_interacts: int, min_item_interacts: int,
+        self,
+        test_holdout_prop: float,
+        train_split_prop: float,
+        min_user_interacts: int,
+        min_item_interacts: int,
     ):
         self.test_holdout_prop = test_holdout_prop
         self.train_split_prop = train_split_prop
@@ -53,7 +57,7 @@ class Config:
         server_port: int,
         dataset_config: DatasetConfig,
         eval_config: EvaluationConfig,
-        visual_config: VisualizationConfig
+        visual_config: VisualizationConfig,
     ):
         self.dataset = dataset_config
         self.eval = eval_config
@@ -101,7 +105,13 @@ def read_config(config_path: str = None):
     validate_dataset_config(dataset_config)
 
     evaluator_config = EvaluationConfig(
-        parse_list(config.get("evaluation", "precision_recall_k", fallback=const.DEFAULT_PRECISION_RECALL_K,)),
+        parse_list(
+            config.get(
+                "evaluation",
+                "precision_recall_k",
+                fallback=const.DEFAULT_PRECISION_RECALL_K,
+            )
+        ),
         parse_list(config.get("evaluation", "ndcg_k", fallback=const.DEFAULT_NDCG_K)),
         parse_list(config.get("evaluation", "coverage_k", fallback=const.DEFAULT_COVERAGE_K)),
         parse_list(config.get("evaluation", "diversity_k", fallback=const.DEFAULT_DIVERSITY_K)),
@@ -124,5 +134,5 @@ def read_config(config_path: str = None):
         config.get("server", "port", fallback=const.DEFAULT_SERVER_PORT),
         dataset_config,
         evaluator_config,
-        visual_config
+        visual_config,
     )

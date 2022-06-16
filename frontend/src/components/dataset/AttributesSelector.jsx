@@ -14,10 +14,10 @@ function AttributesSelector({
   onChange,
 }) {
   const [selectedAttribute, setSelectedAttribute] = useState('');
-  const [selectedValues, setSelectedValues] = useState([]);
+  const [selectedValue, setSelectedValue] = useState([]);
   const [selectedThreshold, setSelectedThreshold] = useState(1);
 
-  const isMultipleSelect = !!(selectedAttribute && attributes[selectedAttribute].dtype === 'tag');
+  // const isMultipleSelect = !!(selectedAttribute && attributes[selectedAttribute].dtype === 'tag');
 
   const attributeOptions = useMemo(() => {
     const allowedTypes = ['number', 'category', 'tag'];
@@ -46,7 +46,7 @@ function AttributesSelector({
   useEffect(() => {
     if (resetIndex > 0) {
       setSelectedAttribute('');
-      setSelectedValues([]);
+      setSelectedValue(null);
     }
   }, [resetIndex]);
 
@@ -56,30 +56,30 @@ function AttributesSelector({
 
   const handleAttributeChange = (newValue) => {
     setSelectedAttribute(newValue);
-    setSelectedValues([]);
+    setSelectedValue(null);
     onChange();
   };
 
   const handleValuesChange = (newValue) => {
-    if (isMultipleSelect) {
-      setSelectedValues(newValue);
-    } else {
-      setSelectedValues([newValue]);
-    }
+    // if (isMultipleSelect) {
+    //   setSelectedValues(newValue);
+    // } else {
+    //   setSelectedValues([newValue]);
+    // }
+    setSelectedValue(newValue);
   };
 
   const handleFilterApply = () => {
-    if (selectedValues.length) {
+    if (selectedValue) {
       const fieldType = attributes[selectedAttribute].dtype;
       const query = {
         attribute: selectedAttribute,
       };
       if (fieldType === 'number') {
         const { bins } = attributes[selectedAttribute];
-        const index = selectedValues[0];
-        query.range = [bins[index], bins[index + 1]];
+        query.range = [bins[selectedValue], bins[selectedValue + 1]];
       } else {
-        query.values = selectedValues;
+        query.values = [selectedValue];
       }
       if (displayThreshold) {
         query.threshold = parseInt(selectedThreshold, 10);
@@ -101,8 +101,7 @@ function AttributesSelector({
       <CategoryFilter
         label="Attribute value"
         disabled={!selectedAttribute || disabled}
-        value={isMultipleSelect ? selectedValues : selectedValues[0]}
-        multiple={isMultipleSelect}
+        value={selectedValue}
         onBlur={handleFilterApply}
         onChange={handleValuesChange}
         options={filterOptions}

@@ -68,7 +68,11 @@ def train_models(config: Config, models: Dict[str, Model], dataset: Dataset, mod
 
 
 def evaluate_dataset(
-    config: Config, models: Dict[str, Model], dataset: Dataset, method: str, model_name: str,
+    config: Config,
+    models: Dict[str, Model],
+    dataset: Dataset,
+    method: str,
+    model_name: str,
 ):
     logger.info(f"Evaluating implemented dataset using '{method}' method")
 
@@ -96,7 +100,11 @@ def evaluate_dataset(
 
 
 def evaluate_models(
-    config: Config, models: Dict[str, Model], dataset: Dataset, split_type: str, model_name: str,
+    config: Config,
+    models: Dict[str, Model],
+    dataset: Dataset,
+    split_type: str,
+    model_name: str,
 ):
     logger.info("Evaluating implemented models")
 

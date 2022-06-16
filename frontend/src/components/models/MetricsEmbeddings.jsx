@@ -20,7 +20,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
   const [selectedModel, setSelectedModel] = useState(evaluatedModels[0]);
   const [selectedMetric, setSelectedMetric] = useState('');
   const [plotResetIndex, setPlotResetIndex] = useState(0);
-  const [selectedColorScale, setSelectedColorScale] = useState('Picnic');
+  const [selectedColorScale, setSelectedColorScale] = useState('Jet');
 
   const userEmbeddings = useGetUserEmbeddingsQuery('validation', {
     skip: metricsType !== 'user',
@@ -100,7 +100,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             label="Color scale"
             value={selectedColorScale}
             onChange={setSelectedColorScale}
-            options={['Picnic', 'Bluered', 'Jet', 'YlGnBu']}
+            options={['Jet', 'Picnic', 'Bluered', 'YlGnBu']}
           />
           <CategoryFilter
             label="Marker size"

@@ -41,7 +41,7 @@ function Layout({ children }) {
               color="inherit"
               variant="text"
             >
-              Models
+              Evaluations
             </Button>
             <Button
               to="/dataset"

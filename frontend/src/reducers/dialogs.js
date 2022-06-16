@@ -11,6 +11,10 @@ export const slice = createSlice({
       content: '',
       params: null,
     },
+    tutorialDialog: {
+      open: false,
+      tutorial: null,
+    },
     itemDetailDialog: {
       open: false,
       item: null,
@@ -69,6 +73,15 @@ export const slice = createSlice({
     closeUserSelectDialog: (state) => {
       state.userSelectDialogOpen = false;
     },
+    openTutorialDialog: (state, { payload }) => {
+      state.tutorialDialog = {
+        open: true,
+        tutorial: payload,
+      };
+    },
+    closeTutorialDialog: (state) => {
+      state.tutorialDialog.open = false;
+    },
     openRecEditDialog: (state, { payload }) => {
       state.recEditDialog = {
         open: true,
@@ -97,6 +110,8 @@ export const {
   closeUserSelectDialog,
   openRecEditDialog,
   closeRecEditDialog,
+  openTutorialDialog,
+  closeTutorialDialog,
 } = slice.actions;
 
 export const snackbarSelector = (state) => state.dialogs.snackbar;
@@ -110,5 +125,7 @@ export const itemDetailDialogSelector = (state) => state.dialogs.itemDetailDialo
 export const userSelectDialogSelector = (state) => state.dialogs.userSelectDialogOpen;
 
 export const recEditDialogSelector = (state) => state.dialogs.recEditDialog;
+
+export const tutorialDialogSelector = (state) => state.dialogs.tutorialDialog;
 
 export default slice.reducer;

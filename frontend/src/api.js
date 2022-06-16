@@ -79,6 +79,9 @@ export const repsysApi = createApi({
     getItemEmbeddings: builder.query({
       query: (split = 'train') => `/items/embeddings?split=${split}`,
     }),
+    getDefaultConfig: builder.query({
+      query: () => '/web/config',
+    }),
   }),
 });
 
@@ -98,4 +101,5 @@ export const {
   useSearchUsersMutation,
   usePredictItemsByModelMutation,
   useGetItemMetricsByModelQuery,
+  useGetDefaultConfigQuery,
 } = repsysApi;

@@ -11,6 +11,7 @@ import {
   trainUsers,
   trainUsersEmbeddings,
 } from './data/users';
+import defaultConfig from './data/config';
 
 function shuffle(a) {
   const b = a.slice();
@@ -70,6 +71,7 @@ export const handlers = [
       })
     );
   }),
+  rest.get('/api/web/config', (req, res, ctx) => res(ctx.json(defaultConfig))),
   rest.get('/api/dataset', (req, res, ctx) => res(ctx.delay(500), ctx.json(dataset))),
   rest.get('/api/models', (req, res, ctx) => res(ctx.json(models))),
   rest.get('/api/models/metrics', (req, res, ctx) =>
