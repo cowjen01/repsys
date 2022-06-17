@@ -1,6 +1,7 @@
 import logging
 import os
 from typing import Dict, Any
+import random
 
 from pandas import DataFrame
 from sanic import Sanic
@@ -13,6 +14,7 @@ from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
 from repsys.evaluators import DatasetEvaluator, ModelEvaluator
 from repsys.model import Model
+from repsys.helpers import set_seed
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +24,7 @@ def create_app(
     dataset: Dataset,
     dataset_eval: DatasetEvaluator,
     model_eval: ModelEvaluator,
+    config: Config
 ) -> Sanic:
     app = Sanic("repsys", configure_logging=False)
 
@@ -145,9 +148,16 @@ def create_app(
     @app.route("/api/users", methods=["GET"])
     async def get_users(request):
         split = request.args.get("split")
+        sample_limit = request.args.get("sample")
+
         validate_split_name(split)
 
         users = dataset.get_users_by_split(split)
+
+        if sample_limit:
+            set_seed(config.seed)
+            users = random.sample(users, int(sample_limit))
+
         return json(users)
 
     @app.route("/api/items", methods=["GET"])
@@ -364,6 +374,6 @@ def run_server(
     dataset_eval: DatasetEvaluator,
     model_eval: ModelEvaluator,
 ) -> None:
-    app = create_app(models, dataset, dataset_eval, model_eval)
+    app = create_app(models, dataset, dataset_eval, model_eval, config)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="0.0.0.0", port=config.server_port, debug=False, access_log=False)

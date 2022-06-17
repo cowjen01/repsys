@@ -1,19 +1,19 @@
-import React, { useEffect } from 'react';
-import { Grid, LinearProgress, Typography } from '@mui/material';
-import { useSelector, useDispatch } from 'react-redux';
+import React from 'react';
+import { Grid, LinearProgress } from '@mui/material';
+// import { useSelector, useDispatch } from 'react-redux';
 
 import ErrorAlert from '../ErrorAlert';
 import { useGetDatasetQuery } from '../../api';
 import ItemsEmbeddings from './ItemsEmbeddings';
 import UsersEmbeddings from './UsersEmbeddings';
-import { seenTutorialsSelector } from '../../reducers/app';
-import { openTutorialDialog } from '../../reducers/dialogs';
+// import { seenTutorialsSelector } from '../../reducers/app';
+// import { openTutorialDialog } from '../../reducers/dialogs';
 import TooltipHeader from '../TooltipHeader';
 
 function DatasetEvaluation() {
   const dataset = useGetDatasetQuery();
-  const seenTutorials = useSelector(seenTutorialsSelector);
-  const dispatch = useDispatch();
+  // const seenTutorials = useSelector(seenTutorialsSelector);
+  // const dispatch = useDispatch();
 
   // useEffect(() => {
   //   if (!seenTutorials.includes('dataset') && !dataset.isLoading) {
@@ -41,7 +41,7 @@ function DatasetEvaluation() {
       <Grid item xs={12}>
         <TooltipHeader
           title="User Embeddings"
-          tooltip="The plot shows a visualization of the training users. It is possible to filter them based on the attributes of items the users interacted with by specifying the minimum interactions made with such items or selecting a cluster of users to display 100 of the most popular items within the group and the distribution of attribute values of these items. The selection can be canceled using a double-click."
+          tooltip="The plot shows a visualization of the training users. It is possible to filter them based on the attributes of items the users interacted with by specifying the minimum interactions made with such items or selecting a cluster of users to display 100 of the most popular items within the group and the distribution of attribute values of these items. To apply the minimum interactions filter, please click outside the field after changing the value. The selection can be canceled using a double-click."
         />
         <UsersEmbeddings attributes={dataset.data.attributes} />
       </Grid>

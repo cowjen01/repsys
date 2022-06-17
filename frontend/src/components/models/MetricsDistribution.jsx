@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import pt from 'prop-types';
-import { Paper, Grid, Box, Tabs, Tab, Stack, Typography } from '@mui/material';
+import { Paper, Grid, Box, Tabs, Tab, Stack } from '@mui/material';
 import Plotly from 'plotly.js';
 
 import { ScatterPlot, HistogramPlot } from '../plots';

@@ -12,6 +12,7 @@ function EmbeddingsPlot({
   onComputeStarted,
   onComputeFinished,
   color,
+  isLoading,
   resetIndex,
   showScale,
   colorScale,
@@ -40,7 +41,7 @@ function EmbeddingsPlot({
   };
 
   useEffect(() => {
-    if (selectedIds.length) {
+    if (selectedIds.length && !isLoading) {
       onComputeStarted();
       const ids = new Set(selectedIds);
       const indices = embeddings.reduce((acc, item, index) => {
@@ -51,8 +52,10 @@ function EmbeddingsPlot({
       }, []);
       setHighlightedPoints(indices);
       onComputeFinished();
+    } else if (!isLoading) {
+      setHighlightedPoints([]);
     }
-  }, [selectedIds]);
+  }, [selectedIds, isLoading]);
 
   const scatterPoints = useMemo(
     () =>
@@ -109,6 +112,7 @@ EmbeddingsPlot.defaultProps = {
   resetIndex: 0,
   markerSize: 3,
   markerOpacity: 1,
+  isLoading: false,
   showScale: false,
   colorScale: 'Jet',
   onSelect: () => {},
@@ -126,6 +130,7 @@ EmbeddingsPlot.propTypes = {
   selectedIds: pt.arrayOf(pt.string),
   color: pt.arrayOf(pt.number),
   onComputeStarted: pt.func,
+  isLoading: pt.bool,
   onComputeFinished: pt.func,
   markerOpacity: pt.number,
   colorScale: pt.string,

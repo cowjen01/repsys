@@ -107,7 +107,7 @@ function UserSelectDialog() {
               User Selector
             </Typography>
             <Typography variant="body2" component="div">
-              Select a user from the list of test users.
+              Select a user from the subset of test users.
             </Typography>
             <Autocomplete
               value={currentUser}
@@ -137,7 +137,7 @@ function UserSelectDialog() {
               User Simulator
             </Typography>
             <Typography variant="body2" component="div">
-              Create a test user based on his interactions.
+              Start typing to search through the catalog of items.
             </Typography>
             <Autocomplete
               multiple
