@@ -130,7 +130,7 @@ def create_app(
 
     @app.route("/api/web/config", methods=["GET"])
     async def get_web_config(request):
-        return json(dataset.default_web_config())
+        return json(dataset.web_default_config())
 
     @app.route("/api/models", methods=["GET"])
     async def get_models(request):

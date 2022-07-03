@@ -93,7 +93,6 @@ import scipy.sparse as sp
 from sklearn.neighbors import NearestNeighbors
 
 from repsys import Model
-from repsys.ui import Select
 
 class KNN(Model):
     def __init__(self):
@@ -150,7 +149,7 @@ framework behavior, etc.
 
 ```ini
 [general]
-seed=123
+seed=1234
 
 [dataset]
 train_split_prop=0.85

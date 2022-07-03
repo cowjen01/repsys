@@ -1,5 +1,4 @@
 import os
-import pickle
 from abc import ABC
 
 import numpy as np
@@ -11,39 +10,30 @@ from sklearn.utils.extmath import randomized_svd
 
 from repsys import Model
 from repsys.helpers import set_seed
-from repsys.ui import Select
+from repsys.ui import Select, Number
 
 
 class BaseModel(Model, ABC):
     def _checkpoint_path(self):
-        return os.path.join("./checkpoints", self.name())
+        return os.path.join("./checkpoints", f"{self.name()}.npy")
 
-    def _serialize(self):
-        return self.model
+    def _create_checkpoints_dir(self):
+        dir_path = os.path.dirname(self._checkpoint_path())
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path, exist_ok=True)
 
-    def _deserialize(self, checkpoint):
-        self.model = checkpoint
+    def _mask_items(self, X_predict, item_indices):
+        mask = np.ones(self.dataset.items.shape[0], dtype=np.bool)
+        mask[item_indices] = 0
+        X_predict[:, mask] = 0
 
-    def _load_model(self):
-        if not os.path.exists(self._checkpoint_path()):
-            raise Exception("The model has not been trained yet.")
+    def _filter_items(self, X_predict, col, value):
+        indices = self.dataset.filter_items_by_tags(col, [value])
+        self._mask_items(X_predict, indices)
 
-        checkpoint = pickle.load(open(self._checkpoint_path(), "rb"))
-        self._deserialize(checkpoint)
-
-    def _save_model(self):
-        if not os.path.exists("./checkpoints"):
-            os.mkdir("./checkpoints")
-
-        checkpoint = open(self._checkpoint_path(), "wb")
-        pickle.dump(self._serialize(), checkpoint)
-
-    def _apply_filters(self, predictions, **kwargs):
+    def _apply_filters(self, X_predict, **kwargs):
         if kwargs.get("genre"):
-            items = self.dataset.items
-            items = items[items["genres"].apply(lambda x: kwargs.get("genre") not in x)]
-            indices = items.index.map(self.dataset.item_id_to_index)
-            predictions[:, indices] = 0
+            self._filter_items(X_predict, "genres", kwargs.get("genre"))
 
     def web_params(self):
         return {
@@ -66,7 +56,10 @@ class KNN(BaseModel):
         if X.count_nonzero() == 0:
             return np.random.uniform(size=X.shape)
 
-        distances, indices = self.model.kneighbors(X)
+        if kwargs.get("neighbors"):
+            distances, indices = self.model.kneighbors(X, n_neighbors=kwargs.get("neighbors"))
+        else:
+            distances, indices = self.model.kneighbors(X)
 
         n_distances = distances[:, 1:]
         n_indices = indices[:, 1:]
@@ -89,6 +82,11 @@ class KNN(BaseModel):
         self._apply_filters(X_predict, **kwargs)
 
         return X_predict
+
+    def web_params(self):
+        new_params = super(KNN, self).web_params()
+        new_params["neighbors"] = Number()
+        return new_params
 
 
 class TopPopular(BaseModel):
@@ -141,29 +139,22 @@ class Rand(BaseModel):
 class PureSVD(BaseModel):
     def __init__(self, n_factors: int = 50):
         self.n_factors = n_factors
-        self.U = None  # user embeddings
-        self.V = None  # item embeddings
-        self.sim = None  # item-item similarity
+        self.sim = None
 
     def name(self) -> str:
         return "svd"
 
-    def _serialize(self):
-        return {"U": self.U, "V": self.V, "sim": self.sim}
+    def _save_model(self):
+        self._create_checkpoints_dir()
+        np.save(self._checkpoint_path(), self.sim)
 
-    def _deserialize(self, checkpoint):
-        self.U = checkpoint.get("U")
-        self.V = checkpoint.get("V")
-        self.sim = checkpoint.get("sim")
+    def _load_model(self):
+        self.sim = np.load(self._checkpoint_path())
 
     def fit(self, training=False):
         X = self.dataset.get_train_data()
 
         U, sigma, VT = randomized_svd(X, self.n_factors, random_state=self.config.seed)
-        sigma = sp.diags(sigma, 0)
-
-        self.U = U * sigma
-        self.V = VT.T
         self.sim = VT.T.dot(VT)
 
     def predict(self, X: csr_matrix, **kwargs):
@@ -175,70 +166,39 @@ class PureSVD(BaseModel):
         return X_predict
 
 
-# class Ensemble(BaseModel):
-#     def __init__(self):
-#         self.svd_ratio = 0.5
-#         self.svd = PureSVD(n_factors=150)
-#         self.knn = KNN(n=100)
-#
-#     def name(self) -> str:
-#         return "ens"
-#
-#     def _update_model(self, model):
-#         model.config = self.config
-#         model.dataset = self.dataset
-#
-#     def fit(self, training: bool = False) -> None:
-#         self._update_model(self.svd)
-#         self.svd.fit(training)
-#
-#         self._update_model(self.knn)
-#         self.knn.fit(training)
-#
-#     def predict(self, X: csr_matrix, **kwargs):
-#         knn_predict = self.knn.predict(X, **kwargs)
-#         svd_predict = self.svd.predict(X, **kwargs)
-#
-#         X_predict = (1 - self.svd_ratio) * knn_predict + self.svd_ratio * svd_predict
-#
-#         return X_predict
+class EASE(BaseModel):
+    def __init__(self, lmb: int = 100):
+        self.sim = None
+        self.lmb = lmb
 
+    def name(self) -> str:
+        return "ease"
 
-# class EASE(BaseModel):
-#     def __init__(self, l2_lambda=0.5):
-#         self.B = None
-#         self.l2_lambda = l2_lambda
+    def _save_model(self):
+        self._create_checkpoints_dir()
+        np.save(self._checkpoint_path(), self.sim)
 
-#     def name(self) -> str:
-#         return "ease"
+    def _load_model(self):
+        self.sim = np.load(self._checkpoint_path())
 
-#     def _serialize(self):
-#         return self.B
+    def fit(self, training=False):
+        if training:
+            X = self.dataset.get_train_data()
+            G = X.T.dot(X).toarray()
+            diagonal_indices = np.diag_indices(G.shape[0])
+            G[diagonal_indices] += self.lmb
+            P = np.linalg.inv(G)
+            B = P / (-np.diag(P))
+            B[diagonal_indices] = 0
+            self.sim = B
+            self._save_model()
+        else:
+            self._load_model()
 
-#     def _deserialize(self, checkpoint):
-#         self.B = checkpoint
+    def predict(self, X: csr_matrix, **kwargs):
+        X_predict = X.dot(self.sim)
+        X_predict[X.nonzero()] = 0
 
-#     def fit(self, training: bool = False) -> None:
-#         if training:
-#             X = self.dataset.get_train_data()
-#             G = X.T.dot(X).toarray()
+        self._apply_filters(X_predict, **kwargs)
 
-#             diagonal_indices = np.diag_indices(G.shape[0])
-#             G[diagonal_indices] += self.l2_lambda
-
-#             P = np.linalg.inv(G)
-#             B = P / (-np.diag(P))
-#             B[diagonal_indices] = 0
-
-#             self.B = B
-#             self._save_model()
-#         else:
-#             self._load_model()
-
-#     def predict(self, X: csr_matrix, **kwargs):
-#         predictions = X.dot(self.B)
-#         predictions[X.nonzero()] = 0
-
-#         self._apply_filters(predictions, **kwargs)
-
-#         return predictions
+        return X_predict

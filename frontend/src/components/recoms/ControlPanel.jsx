@@ -11,6 +11,7 @@ import {
   Paper,
   Skeleton,
   Typography,
+  Alert,
 } from '@mui/material';
 import { useSelector, useDispatch } from 'react-redux';
 import FilterListIcon from '@mui/icons-material/FilterList';
@@ -112,12 +113,12 @@ function UserPanel() {
               <ListItemIcon>
                 <PersonSearchIcon />
               </ListItemIcon>
-              <ListItemText primary="User Selection" />
+              <ListItemText primary="Interactions Selector" />
             </ListItemButton>
           </ListItem>
         </List>
       </Paper>
-      {(customInteractions.length > 0 || selectedUser) && (
+      {customInteractions.length > 0 || selectedUser ? (
         <Box sx={{ marginTop: 2 }}>
           {customInteractions.length > 0 && (
             <Chip
@@ -160,6 +161,10 @@ function UserPanel() {
           ) : (
             <Skeleton variant="rectangular" height={listHeight + 48} width="100%" />
           )}
+        </Box>
+      ) : (
+        <Box sx={{ marginTop: 2 }}>
+          <Alert severity="warning">No interactions selected.</Alert>
         </Box>
       )}
     </Box>

@@ -139,13 +139,13 @@ class ModelEvaluator:
 
         self._dataset = dataset
         self._user_results: Dict[str, List[DataFrame]] = {}
-        self._item_results: Dict[str, List[DataFrame]] = {}
+        # self._item_results: Dict[str, List[DataFrame]] = {}
         self._summary_results: Dict[str, List[DataFrame]] = {}
         self._version: str = CURRENT_VERSION
 
     def compute_metrics(
         self, X_predict: ndarray, X_true: ndarray
-    ) -> Tuple[Dict[str, float], Dict[str, ndarray], Dict[str, ndarray]]:
+    ) -> Tuple[Dict[str, float], Dict[str, ndarray]]:
         X_train = self._dataset.get_train_data()
         max_k = max(
             self.pr_k + self.ndcg_k + self.coverage_k + self.diversity_k + self.novelty_k + self.plt_k + self.clt_k
@@ -166,7 +166,6 @@ class ModelEvaluator:
 
         summary_results = {}
         user_results = {}
-        item_results = {}
 
         logger.info("Computing precision and recall")
         precision_dict, recall_dict = dict(), dict()
@@ -219,10 +218,10 @@ class ModelEvaluator:
         mae, mse, rmse = get_error_metrics(X_predict, X_true)
         user_results["MAE"], user_results["MSE"], user_results["RMSE"] = mae, mse, rmse
 
-        logger.info("Computing item popularity")
-        item_results["Popularity"] = get_item_pop(X_predict)
+        # logger.info("Computing item popularity")
+        # item_results["Popularity"] = get_item_pop(X_predict)
 
-        return summary_results, user_results, item_results
+        return summary_results, user_results
 
     def print(self) -> None:
         for model in self.evaluated_models:
@@ -231,16 +230,16 @@ class ModelEvaluator:
             print("User Metrics:")
             print_results(self._user_results.get(model))
 
-            print("Item Metrics:")
-            print_results(self._item_results.get(model))
+            # print("Item Metrics:")
+            # print_results(self._item_results.get(model))
 
     def get_user_results(self, model_name: str) -> Optional[DataFrame]:
         results = self._user_results.get(model_name)
         return results[-1] if results is not None else None
 
-    def get_item_results(self, model_name: str) -> Optional[DataFrame]:
-        results = self._item_results.get(model_name)
-        return results[-1] if results is not None else None
+    # def get_item_results(self, model_name: str) -> Optional[DataFrame]:
+    #     results = self._item_results.get(model_name)
+    #     return results[-1] if results is not None else None
 
     def get_prev_summary(self, model_name: str) -> Optional[DataFrame]:
         results = self._summary_results.get(model_name)
@@ -264,13 +263,13 @@ class ModelEvaluator:
         X_predict[X_predict == -np.inf] = 0
         X_predict[X_predict == np.inf] = 1
 
-        summary_results, user_results, item_results = self.compute_metrics(X_predict, X_true)
+        summary_results, user_results = self.compute_metrics(X_predict, X_true)
 
         user_ids = list(test_split.user_index.keys())
         user_df = results_to_df(user_results, user_ids)
 
-        item_ids = list(self._dataset.item_index.keys())
-        item_df = results_to_df(item_results, item_ids)
+        # item_ids = list(self._dataset.item_index.keys())
+        # item_df = results_to_df(item_results, item_ids)
 
         summary_df = pd.DataFrame(summary_results, index=[0])
 
@@ -278,21 +277,21 @@ class ModelEvaluator:
         if model_name not in self.evaluated_models:
             self.evaluated_models.append(model_name)
             self._user_results[model_name] = [user_df]
-            self._item_results[model_name] = [item_df]
+            # self._item_results[model_name] = [item_df]
             self._summary_results[model_name] = [summary_df]
         else:
             self._user_results.get(model_name).append(user_df)
-            self._item_results.get(model_name).append(item_df)
+            # self._item_results.get(model_name).append(item_df)
             self._summary_results.get(model_name).append(summary_df)
 
     @tmpdir_provider
     def _save_latest_eval(self, model_name: str, checkpoints_dir: str):
         user_results = self._user_results.get(model_name)[-1]
-        item_results = self._item_results.get(model_name)[-1]
+        # item_results = self._item_results.get(model_name)[-1]
         summary_results = self._summary_results.get(model_name)[-1]
 
         write_df(user_results, "user-results.csv")
-        write_df(item_results, "item-results.csv")
+        # write_df(item_results, "item-results.csv")
         write_df(summary_results, "summary-results.csv", index=True)
 
         write_version(self._version, tmp_dir_path())
@@ -310,17 +309,17 @@ class ModelEvaluator:
         unzip_dir(zip_path, tmp_dir_path())
 
         user_path = os.path.join(tmp_dir_path(), "user-results.csv")
-        item_path = os.path.join(tmp_dir_path(), "item-results.csv")
+        # item_path = os.path.join(tmp_dir_path(), "item-results.csv")
         summary_path = os.path.join(tmp_dir_path(), "summary-results.csv")
 
         user_results = read_df(user_path, index_col="id")
-        item_results = read_df(item_path, index_col="id")
+        # item_results = read_df(item_path, index_col="id")
         summary_results = read_df(summary_path)
 
         self._version = read_version(tmp_dir_path())
 
         self._user_results[model_name].append(user_results)
-        self._item_results[model_name].append(item_results)
+        # self._item_results[model_name].append(item_results)
         self._summary_results[model_name].append(summary_results)
 
     def load(self, checkpoints_dir: str, models: List[str], load_prev: bool = True) -> None:
@@ -332,7 +331,7 @@ class ModelEvaluator:
 
             if checkpoints:
                 self._user_results[model] = []
-                self._item_results[model] = []
+                # self._item_results[model] = []
                 self._summary_results[model] = []
                 self.evaluated_models.append(model)
 

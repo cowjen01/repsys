@@ -202,7 +202,7 @@ class Dataset(ABC):
     def load_interactions(self) -> DataFrame:
         pass
 
-    def default_web_config(self) -> Dict[str, Any]:
+    def web_default_config(self) -> Dict[str, Any]:
         return {}
 
     def compute_embeddings(self, X: csr_matrix) -> Tuple[ndarray, ndarray]:

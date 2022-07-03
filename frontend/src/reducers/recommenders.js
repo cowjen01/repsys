@@ -10,7 +10,15 @@ export const slice = createSlice({
     addRecommender: (state, action) => {
       state.push(action.payload);
     },
-    setRecommenders: (state, action) => action.payload,
+    setRecommenders: (state, action) =>
+      action.payload.map((recom) => {
+        const defaultParams = {
+          itemsPerPage: 4,
+          itemsLimit: 20,
+          modelParams: {},
+        };
+        return Object.assign(defaultParams, recom);
+      }),
     updateRecommendersOrder: (state, action) => {
       const { dragIndex, hoverIndex } = action.payload;
       [state[dragIndex], state[hoverIndex]] = [state[hoverIndex], state[dragIndex]];

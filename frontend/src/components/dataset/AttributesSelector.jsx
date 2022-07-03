@@ -117,6 +117,11 @@ function AttributesSelector({
           onChange={handleThresholdChange}
           value={selectedThreshold}
           variant="filled"
+          onKeyPress={(event) => {
+            if (event.key === 'Enter') {
+              event.target.blur();
+            }
+          }}
         />
       )}
     </Stack>

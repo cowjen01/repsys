@@ -96,15 +96,15 @@ function UserSelectDialog() {
       <Box sx={{ width: 450 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange} centered>
-            <Tab label="Test Users" />
-            <Tab label="Custom Users" />
+            <Tab label="Test User" />
+            <Tab label="Custom User" />
             {/* <Tab label="Favourites" /> */}
           </Tabs>
         </Box>
         <TabPanel value={activeTab} index={0}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" component="div">
-              User Selector
+              Test User
             </Typography>
             <Typography variant="body2" component="div">
               Select a user from the subset of test users.
@@ -134,7 +134,7 @@ function UserSelectDialog() {
         <TabPanel value={activeTab} index={1}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" component="div">
-              User Simulator
+              Custom User
             </Typography>
             <Typography variant="body2" component="div">
               Start typing to search through the catalog of items.

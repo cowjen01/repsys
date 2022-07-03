@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import pt from 'prop-types';
-import { Typography, Stack, Box, List } from '@mui/material';
+import { Typography, Stack, Box, List, Alert } from '@mui/material';
 
 import { PanelLoader } from '../loaders';
 import { ItemListView } from '../items';
@@ -46,6 +46,7 @@ function UsersDescription({ attributes, users, split }) {
         </List>
         <AttributesPlot attributes={attributes} description={data.itemsDescription} />
       </Box>
+      <Alert severity="info">Disable selection by double-clicking inside the plot area.</Alert>
     </Stack>
   );
 }

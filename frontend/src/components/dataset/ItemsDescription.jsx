@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import pt from 'prop-types';
 
+import { Stack, Alert } from '@mui/material';
 import { PanelLoader } from '../loaders';
 import { useDescribeItemsMutation } from '../../api';
 import ErrorAlert from '../ErrorAlert';
@@ -28,7 +29,12 @@ function ItemsDescription({ attributes, items }) {
     return <PanelLoader />;
   }
 
-  return <AttributesPlot attributes={attributes} description={data.description} />;
+  return (
+    <Stack spacing={1}>
+      <AttributesPlot attributes={attributes} description={data.description} />
+      <Alert severity="info">Disable selection by double-clicking inside the plot area.</Alert>
+    </Stack>
+  );
 }
 
 ItemsDescription.propTypes = {
