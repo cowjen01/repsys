@@ -143,9 +143,7 @@ class ModelEvaluator:
         self._summary_results: Dict[str, List[DataFrame]] = {}
         self._version: str = CURRENT_VERSION
 
-    def compute_metrics(
-        self, X_predict: ndarray, X_true: ndarray
-    ) -> Tuple[Dict[str, float], Dict[str, ndarray]]:
+    def compute_metrics(self, X_predict: ndarray, X_true: ndarray) -> Tuple[Dict[str, float], Dict[str, ndarray]]:
         X_train = self._dataset.get_train_data()
         max_k = max(
             self.pr_k + self.ndcg_k + self.coverage_k + self.diversity_k + self.novelty_k + self.plt_k + self.clt_k
@@ -233,9 +231,21 @@ class ModelEvaluator:
             # print("Item Metrics:")
             # print_results(self._item_results.get(model))
 
-    def get_user_results(self, model_name: str) -> Optional[DataFrame]:
+    def get_user_results(self, model_name: str, compare_model_name: Optional[str] = None) -> Optional[DataFrame]:
         results = self._user_results.get(model_name)
-        return results[-1] if results is not None else None
+
+        if results is None:
+            return None
+
+        latest_results = results[-1]
+
+        if compare_model_name is not None:
+            compare_results = self._user_results.get(compare_model_name)
+            latest_compare_results = compare_results[-1]
+
+            return latest_results.subtract(latest_compare_results)
+
+        return latest_results
 
     # def get_item_results(self, model_name: str) -> Optional[DataFrame]:
     #     results = self._item_results.get(model_name)

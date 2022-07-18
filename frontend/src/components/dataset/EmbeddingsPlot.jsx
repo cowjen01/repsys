@@ -99,7 +99,7 @@ function EmbeddingsPlot({
       markerOpacity={markerOpacity}
       showScale={highlightedPoints.length > 0 ? false : showScale}
       layoutProps={{
-        margin: { t: 20, b: 20, l: 30, r: showScale ? 100 : 20 },
+        margin: { t: 20, b: 20, l: 30, r: showScale ? 110 : 20 },
       }}
     />
   );

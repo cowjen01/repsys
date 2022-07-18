@@ -108,7 +108,8 @@ function AttributesSelector({
       />
       {displayThreshold && (
         <TextField
-          sx={{ width: 200 }}
+          sx={{ width: 170 }}
+          size="small"
           disabled={!selectedAttribute || disabled}
           label="Min. interactions"
           type="number"

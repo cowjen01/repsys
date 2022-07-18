@@ -86,8 +86,8 @@ function ScatterPlot({
             showscale: showScale,
             colorscale: colorScale,
             opacity: markerOpacity,
-            // cmin: 0,
-            // cmax: 1,
+            cmin: -1,
+            cmax: 1,
           },
         },
       ]}

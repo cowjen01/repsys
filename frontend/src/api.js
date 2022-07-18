@@ -49,7 +49,13 @@ export const repsysApi = createApi({
       query: () => '/models',
     }),
     getUserMetricsByModel: builder.query({
-      query: (model) => `/models/${model}/metrics/user`,
+      query: ({ model, compareModel = null }) => {
+        if (!compareModel) {
+          return `/models/${model}/metrics/user`;
+        }
+
+        return `/models/${model}/metrics/user?compare_againts=${compareModel}`;
+      },
     }),
     getItemMetricsByModel: builder.query({
       query: (model) => `/models/${model}/metrics/item`,

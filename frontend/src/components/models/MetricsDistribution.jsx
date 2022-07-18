@@ -32,9 +32,12 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
   });
   const embeddings = metricsType === 'user' ? userEmbeddings : itemEmbeddings;
 
-  const userMetrics = useGetUserMetricsByModelQuery(selectedModel, {
-    skip: metricsType !== 'user',
-  });
+  const userMetrics = useGetUserMetricsByModelQuery(
+    { model: selectedModel },
+    {
+      skip: metricsType !== 'user',
+    }
+  );
   const itemMetrics = useGetItemMetricsByModelQuery(selectedModel, {
     skip: metricsType !== 'item',
   });

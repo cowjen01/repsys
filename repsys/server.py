@@ -24,7 +24,7 @@ def create_app(
     dataset: Dataset,
     dataset_eval: DatasetEvaluator,
     model_eval: ModelEvaluator,
-    config: Config
+    config: Config,
 ) -> Sanic:
     app = Sanic("repsys", configure_logging=False)
 
@@ -349,9 +349,19 @@ def create_app(
             raise NotFound(f"Model '{model_name}' not implemented.")
 
         if metrics_type == "user":
-            results = model_eval.get_user_results(model_name)
-        elif metrics_type == "item":
-            results = model_eval.get_item_results(model_name)
+            compare_model_name = request.args.get("compare_againts")
+            if compare_model_name is not None:
+                if model_name == compare_model_name:
+                    raise InvalidUsage("Can not compare a model with itself.")
+
+                if models.get(compare_model_name) is None:
+                    raise NotFound(f"Model '{model_name}' not implemented.")
+
+                results = model_eval.get_user_results(model_name, compare_model_name)
+            else:
+                results = model_eval.get_user_results(model_name)
+        # elif metrics_type == "item":
+        #     results = model_eval.get_item_results(model_name)
         else:
             raise InvalidUsage("Invalid metrics type.")
 
@@ -360,6 +370,7 @@ def create_app(
 
         df = results.copy()
         df = df.sort_index()
+        df = df.round(4)
         df["id"] = df.index
 
         return json(df.to_dict("records"))

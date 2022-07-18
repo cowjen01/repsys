@@ -18,6 +18,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
   const [selectedData, setSelectedData] = useState([]);
   const [selectedMarkerSize, setSelectedMarkerSize] = useState(3);
   const [selectedModel, setSelectedModel] = useState(evaluatedModels[0]);
+  const [selectedCompareModel, setSelectedCompareModel] = useState('');
   const [selectedMetric, setSelectedMetric] = useState('');
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedColorScale, setSelectedColorScale] = useState('Jet');
@@ -30,9 +31,12 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
   });
   const embeddings = metricsType === 'user' ? userEmbeddings : itemEmbeddings;
 
-  const userMetrics = useGetUserMetricsByModelQuery(selectedModel, {
-    skip: metricsType !== 'user',
-  });
+  const userMetrics = useGetUserMetricsByModelQuery(
+    { model: selectedModel, compareModel: selectedCompareModel },
+    {
+      skip: metricsType !== 'user',
+    }
+  );
   const itemMetrics = useGetItemMetricsByModelQuery(selectedModel, {
     skip: metricsType !== 'item',
   });
@@ -40,7 +44,13 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
 
   const handleModelChange = (newValue) => {
     setSelectedModel(newValue);
-    setSelectedMetric('');
+    setSelectedCompareModel('');
+    setPlotResetIndex(plotResetIndex + 1);
+    setSelectedData([]);
+  };
+
+  const handleCompareModelChange = (newValue) => {
+    setSelectedCompareModel(newValue);
     setPlotResetIndex(plotResetIndex + 1);
     setSelectedData([]);
   };
@@ -64,7 +74,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
       return metrics.data.map((d) => d[selectedMetric]);
     }
     return [];
-  }, [metrics.data, selectedMetric]);
+  }, [metrics.data, selectedMetric, selectedCompareModel]);
 
   const metricsOptions = useMemo(() => {
     if (metrics.data) {
@@ -74,7 +84,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
   }, [metrics.data, selectedModel]);
 
   useEffect(() => {
-    if (metricsOptions.length > 0) {
+    if (!selectedMetric && metricsOptions.length > 0) {
       setSelectedMetric(metricsOptions[0]);
     }
   }, [metricsOptions]);
@@ -95,6 +105,13 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             value={selectedMetric}
             onChange={handleMetricChange}
             options={metricsOptions}
+          />
+          <CategoryFilter
+            label="Compare model"
+            value={selectedCompareModel}
+            displayEmpty
+            onChange={handleCompareModelChange}
+            options={evaluatedModels.filter((x) => x !== selectedModel)}
           />
           <CategoryFilter
             label="Color scale"

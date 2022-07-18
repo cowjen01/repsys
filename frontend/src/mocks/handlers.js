@@ -80,6 +80,7 @@ export const handlers = [
   ),
   rest.get('/api/models/:modelName/metrics/user', (req, res, ctx) => {
     const { modelName } = req.params;
+    const compareModel = req.url.searchParams.get('compare_againts');
     return res(ctx.delay(1000), ctx.json(userMetrics[modelName]));
   }),
   rest.get('/api/models/:modelName/metrics/item', (req, res, ctx) => {
