@@ -3,11 +3,6 @@ import pt from 'prop-types';
 import Plot from 'react-plotly.js';
 import { useTheme } from '@mui/material/styles';
 
-const plotColors = {
-  selectedMarker: '#636EFA',
-  unselectedMarker: '#dcdcdc',
-};
-
 function ScatterPlot({
   x,
   y,
@@ -21,6 +16,10 @@ function ScatterPlot({
   showScale,
   colorScale,
   layoutProps,
+  markerSize,
+  markerOpacity,
+  unselectedColor,
+  selectedColor,
   ...props
 }) {
   const theme = useTheme();
@@ -30,14 +29,14 @@ function ScatterPlot({
   const defaultColors = useMemo(() => {
     const colors = [];
     for (let i = 0; i < x.length; i += 1) {
-      colors.push(plotColors.unselectedMarker);
+      colors.push(unselectedColor);
     }
     return colors;
   }, [x.length]);
 
   const finalColor = useMemo(() => {
     if (!highlighted.length && !color.length) {
-      return plotColors.selectedMarker;
+      return selectedColor;
     }
 
     if (!highlighted.length && color.length) {
@@ -46,7 +45,7 @@ function ScatterPlot({
 
     const colors = [...defaultColors];
     highlighted.forEach((p) => {
-      colors[p] = plotColors.selectedMarker;
+      colors[p] = selectedColor;
     });
 
     return colors;
@@ -71,22 +70,24 @@ function ScatterPlot({
           customdata: meta,
           unselected: {
             marker: {
-              opacity: 0.7,
-              color: plotColors.unselectedMarker,
+              opacity: markerOpacity,
+              color: unselectedColor,
             },
           },
           selected: {
             marker: {
-              opacity: 0.7,
-              color: plotColors.selectedMarker,
+              opacity: markerOpacity,
+              color: selectedColor,
             },
           },
           marker: {
-            size: 6 - Math.log10(x.length),
+            size: markerSize,
             color: finalColor,
             showscale: showScale,
             colorscale: colorScale,
-            opacity: 0.7,
+            opacity: markerOpacity,
+            cmin: -1,
+            cmax: 1,
           },
         },
       ]}
@@ -118,18 +119,20 @@ function ScatterPlot({
 ScatterPlot.propTypes = {
   x: pt.arrayOf(pt.number).isRequired,
   y: pt.arrayOf(pt.number).isRequired,
-  label: pt.arrayOf(pt.string),
+  label: pt.arrayOf(pt.oneOfType([pt.string, pt.number])),
   color: pt.oneOfType([pt.arrayOf(pt.number), pt.string]),
   height: pt.oneOfType([pt.number, pt.string]),
   meta: pt.arrayOf(pt.any),
   highlighted: pt.arrayOf(pt.number),
-  // eslint-disable-next-line react/forbid-prop-types
   innerRef: pt.any,
   dragMode: pt.string,
+  markerOpacity: pt.number,
+  markerSize: pt.number,
   showScale: pt.bool,
-  // eslint-disable-next-line react/forbid-prop-types
   layoutProps: pt.any,
   colorScale: pt.string,
+  unselectedColor: pt.string,
+  selectedColor: pt.string,
 };
 
 ScatterPlot.defaultProps = {
@@ -140,9 +143,13 @@ ScatterPlot.defaultProps = {
   showScale: false,
   innerRef: null,
   highlighted: [],
+  markerOpacity: 1,
+  markerSize: 2,
   dragMode: 'lasso',
   layoutProps: {},
   colorScale: 'Bluered',
+  unselectedColor: '#dcdcdc',
+  selectedColor: '#0613ff',
 };
 
 export default ScatterPlot;

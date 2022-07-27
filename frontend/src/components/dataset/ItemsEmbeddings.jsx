@@ -4,7 +4,7 @@ import { Box, Grid, Paper } from '@mui/material';
 
 import ErrorAlert from '../ErrorAlert';
 import EmbeddingsPlot from './EmbeddingsPlot';
-import { useGetItemsEmbeddingsQuery, useSearchItemsMutation } from '../../api';
+import { useGetItemEmbeddingsQuery, useSearchItemsMutation } from '../../api';
 import { PlotLoader } from '../loaders';
 import AttributesSelector from './AttributesSelector';
 import ItemsDescription from './ItemsDescription';
@@ -14,7 +14,7 @@ function ItemsEmbeddings({ attributes }) {
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]);
   const [isPlotLoading, setIsPlotLoading] = useState(false);
-  const embeddings = useGetItemsEmbeddingsQuery();
+  const embeddings = useGetItemEmbeddingsQuery();
   const [searchItems, items] = useSearchItemsMutation();
 
   if (embeddings.isError) {
@@ -69,8 +69,11 @@ function ItemsEmbeddings({ attributes }) {
                   embeddings={embeddings.data}
                   onSelect={handlePlotSelect}
                   selectedIds={items.data}
+                  isLoading={isLoading}
                   onComputeStarted={() => setIsPlotLoading(true)}
                   onComputeFinished={() => setIsPlotLoading(false)}
+                  markerSize={3}
+                  markerOpacity={0.3}
                 />
               </Paper>
             </Box>

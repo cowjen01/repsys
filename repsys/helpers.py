@@ -8,6 +8,8 @@ from typing import List
 
 import numpy as np
 
+from repsys.constants import CURRENT_VERSION
+
 
 def remove_dir(path: str) -> None:
     shutil.rmtree(path)
@@ -23,7 +25,7 @@ def current_dir_path() -> str:
 
 
 def default_config_path() -> str:
-    return os.path.join(current_dir_path(), 'repsys.ini')
+    return os.path.join(current_dir_path(), "repsys.ini")
 
 
 def tmp_dir_path() -> str:
@@ -59,9 +61,7 @@ def zip_dir(zip_path: str, dir_path: str) -> None:
 
 
 def get_subclasses(cls) -> List[str]:
-    return cls.__subclasses__() + [
-        g for s in cls.__subclasses__() for g in get_subclasses(s)
-    ]
+    return cls.__subclasses__() + [g for s in cls.__subclasses__() for g in get_subclasses(s)]
 
 
 def current_ts() -> int:
@@ -105,3 +105,17 @@ def tmpdir_provider(func):
             remove_tmp_dir()
 
     return _wrapper
+
+
+def write_version(version: str, dir_name: str):
+    with open(os.path.join(dir_name, "version.txt"), "w") as f:
+        f.write(version)
+
+
+def read_version(dir_name: str):
+    path = os.path.join(dir_name, "version.txt")
+    if not os.path.isfile(path):
+        return CURRENT_VERSION
+
+    with open(path, "r") as f:
+        return f.readline()

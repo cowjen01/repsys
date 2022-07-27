@@ -12,7 +12,7 @@ function Root() {
   return (
     <BrowserRouter>
       <Provider store={store}>
-        <PersistGate loading={null} persistor={persistor}>
+        <PersistGate loading={<div />} persistor={persistor}>
           <DndProvider backend={HTML5Backend}>
             <App />
           </DndProvider>

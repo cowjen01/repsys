@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -13,7 +13,12 @@ import {
 import CheckIcon from '@mui/icons-material/Check';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { favouriteUsersSelector, setCustomInteractions, setSelectedUser } from '../../reducers/app';
+import {
+  setCustomInteractions,
+  setSelectedUser,
+  customInteractionsSelector,
+  selectedUserSelector,
+} from '../../reducers/app';
 import { closeUserSelectDialog, userSelectDialogSelector } from '../../reducers/dialogs';
 import TabPanel from '../TabPanel';
 import { useGetUsersQuery, useGetItemsByTitleQuery } from '../../api';
@@ -25,8 +30,10 @@ let timerID;
 function UserSelectDialog() {
   const dispatch = useDispatch();
   const dialogOpen = useSelector(userSelectDialogSelector);
-  const favouriteUsers = useSelector(favouriteUsersSelector);
+  // const favouriteUsers = useSelector(favouriteUsersSelector);
   const itemView = useSelector(itemViewSelector);
+  const customInteractions = useSelector(customInteractionsSelector);
+  const selectedUser = useSelector(selectedUserSelector);
 
   const [currentUser, setCurrentUser] = useState(null);
   const [interactions, setInteractions] = useState([]);
@@ -41,27 +48,39 @@ function UserSelectDialog() {
     skip: queryString.length < 3,
   });
 
+  useEffect(() => {
+    if (customInteractions.length > 0) {
+      setInteractions(customInteractions);
+      setActiveTab(1);
+    } else if (selectedUser) {
+      setCurrentUser(selectedUser);
+      setActiveTab(0);
+    } else {
+      setCurrentUser(null);
+      setInteractions([]);
+      setActiveTab(0);
+    }
+  }, [customInteractions, selectedUser, dialogOpen]);
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
-    setCurrentUser(null);
   };
 
   const handleDialogClose = () => {
     dispatch(closeUserSelectDialog());
-    setCurrentUser(null);
-    setActiveTab(0);
-    setInteractions([]);
   };
 
   const handleUserSelect = () => {
     dispatch(setSelectedUser(currentUser));
     dispatch(setCustomInteractions([]));
+    setInteractions([]);
     handleDialogClose();
   };
 
   const handleInteractionsSelect = () => {
     dispatch(setCustomInteractions(interactions));
     dispatch(setSelectedUser(null));
+    setCurrentUser(null);
     handleDialogClose();
   };
 
@@ -77,18 +96,18 @@ function UserSelectDialog() {
       <Box sx={{ width: 450 }}>
         <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Tabs value={activeTab} onChange={handleTabChange} centered>
-            <Tab label="Users" />
-            <Tab label="Simulator" />
-            <Tab label="Favourites" />
+            <Tab label="Test User" />
+            <Tab label="Custom User" />
+            {/* <Tab label="Favourites" /> */}
           </Tabs>
         </Box>
         <TabPanel value={activeTab} index={0}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" component="div">
-              User Selector
+              Test User
             </Typography>
             <Typography variant="body2" component="div">
-              Select a user from the list of validation users.
+              Select a user from the subset of test users.
             </Typography>
             <Autocomplete
               value={currentUser}
@@ -115,10 +134,10 @@ function UserSelectDialog() {
         <TabPanel value={activeTab} index={1}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" component="div">
-              User Simulator
+              Custom User
             </Typography>
             <Typography variant="body2" component="div">
-              Create a test user based on his interactions.
+              Start typing to search through the catalog of items.
             </Typography>
             <Autocomplete
               multiple
@@ -160,7 +179,7 @@ function UserSelectDialog() {
             </Button>
           </Box>
         </TabPanel>
-        <TabPanel value={activeTab} index={2}>
+        {/* <TabPanel value={activeTab} index={2}>
           <Box sx={{ p: 3 }}>
             <Typography variant="h6" component="div">
               Favourite Users
@@ -188,7 +207,7 @@ function UserSelectDialog() {
               Select user
             </Button>
           </Box>
-        </TabPanel>
+        </TabPanel> */}
       </Box>
     </Drawer>
   );

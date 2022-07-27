@@ -1,42 +1,93 @@
 import React from 'react';
-import { Grid, Typography, LinearProgress } from '@mui/material';
+import { Grid, LinearProgress } from '@mui/material';
+// import { useSelector, useDispatch } from 'react-redux';
 
-import UsersDistribution from './UsersDistribution';
+import MetricsDistribution from './MetricsDistribution';
 import MetricsSummary from './MetricsSummary';
 import ErrorAlert from '../ErrorAlert';
-import UsersEmbeddings from './UsersEmbeddings';
-import { useGetModelsMetricsQuery } from '../../api';
+import MetricsEmbeddings from './MetricsEmbeddings';
+import { useGetModelsMetricsQuery, useGetDatasetQuery } from '../../api';
+// import { seenTutorialsSelector } from '../../reducers/app';
+// import { openTutorialDialog } from '../../reducers/dialogs';
+import TooltipHeader from '../TooltipHeader';
 
 function ModelsEvaluation() {
   const metrics = useGetModelsMetricsQuery();
+  const dataset = useGetDatasetQuery();
+  // const seenTutorials = useSelector(seenTutorialsSelector);
+  // const dispatch = useDispatch();
 
-  if (metrics.isLoading) {
+  // useEffect(() => {
+  //   if (!seenTutorials.includes('models') && !metrics.isLoading && !dataset.isLoading) {
+  //     dispatch(openTutorialDialog('models'));
+  //   }
+  // }, [metrics.isLoading, dataset.isLoading]);
+
+  if (metrics.isLoading || dataset.isLoading) {
     return <LinearProgress />;
   }
 
   if (metrics.isError) {
     return <ErrorAlert error={metrics.error} />;
   }
+
+  if (dataset.isError) {
+    return <ErrorAlert error={dataset.error} />;
+  }
+
+  const evaluatedModels = Object.keys(metrics.data.results);
+
   return (
     <Grid container spacing={4}>
       <Grid item xs={12}>
-        <Typography component="div" variant="h6" gutterBottom>
-          Models Performance
-        </Typography>
+        <TooltipHeader
+          title="Metrics Summary"
+          tooltip="The summary shows an average of metrics over the set of test users. Below each value is displayed how the metric changed compared to the previous evaluation."
+        />
         <MetricsSummary metricsData={metrics.data} />
       </Grid>
       <Grid item xs={12}>
+        <TooltipHeader
+          title="Metrics Distribution"
+          tooltip="The histogram shows the distribution of metrics over the set of test users. On the x-axis is the metric value and on the y-axis is the number of users with corresponding metric results. It is possible to select a part of the distribution to display additional information: the position of users in the latent space and the distribution of attribute values for items they interacted with most. The selection can be canceled using a double-click."
+        />
+        <MetricsDistribution
+          metricsType="user"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
+      </Grid>
+      <Grid item xs={12}>
+        <TooltipHeader
+          title="User Embeddings"
+          tooltip="The plot shows a visualization of the users, where each point is a test user, and the color corresponds with the measured metric value. It is possible to select a cluster of users using the lasso tool to display the distribution of attribute values for the most interacted items. The selection can be canceled using a double-click."
+        />
+        <MetricsEmbeddings
+          metricsType="user"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
+      </Grid>
+      {/* <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Metrics Distribution
+          Item Metrics Distribution
         </Typography>
-        <UsersDistribution metricsData={metrics.data} />
+        <MetricsDistribution
+          metricsType="item"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
       </Grid>
       <Grid item xs={12}>
         <Typography component="div" variant="h6" gutterBottom>
-          Users Embeddings
+          Item Metrics Embeddings
         </Typography>
-        <UsersEmbeddings metricsData={metrics.data} />
-      </Grid>
+        <MetricsEmbeddings
+          metricsType="item"
+          itemAttributes={dataset.data.attributes}
+          evaluatedModels={evaluatedModels}
+        />
+      </Grid> */}
     </Grid>
   );
 }

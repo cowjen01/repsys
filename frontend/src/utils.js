@@ -1,3 +1,4 @@
+/* eslint-disable no-bitwise */
 function capitalize(str) {
   return str.charAt(0).toUpperCase() + str.slice(1);
 }
@@ -36,4 +37,12 @@ function sliceIdentifier(id, limit = 20) {
   return `${str.slice(0, limit)}...`;
 }
 
-export { sleep, capitalize, mergeDeep, sliceIdentifier };
+function generateUID() {
+  let firstPart = (Math.random() * 46656) | 0;
+  let secondPart = (Math.random() * 46656) | 0;
+  firstPart = `000${firstPart.toString(36)}`.slice(-3);
+  secondPart = `000${secondPart.toString(36)}`.slice(-3);
+  return firstPart + secondPart;
+}
+
+export { sleep, capitalize, mergeDeep, sliceIdentifier, generateUID };

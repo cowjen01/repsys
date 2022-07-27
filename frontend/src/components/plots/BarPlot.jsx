@@ -20,7 +20,7 @@ function BarPlot({ data, height, width, orientation, layoutProps, ...props }) {
         autosize: true,
         paper_bgcolor: 'rgba(0,0,0,0)',
         plot_bgcolor: 'rgba(0,0,0,0)',
-        font: { color: theme.palette.text.primary, size: 11 },
+        font: { color: theme.palette.text.primary, size: 13 },
         xaxis: { gridcolor, automargin: true },
         yaxis: { gridcolor, automargin: true },
         margin: { t: 10, b: 30, l: 30, r: 10 },

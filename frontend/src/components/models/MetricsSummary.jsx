@@ -61,14 +61,13 @@ function MetricsSummary({ metricsData }) {
         </Paper>
       </Grid>
       <Grid item xs={5}>
-        <Paper>
+        <Paper sx={{ height: '100%' }}>
           <BarPlot
             orientation="h"
             data={barPlotData}
             layoutProps={{
               margin: { t: 30, b: 40, l: 120, r: 40 },
             }}
-            height={400}
           />
         </Paper>
       </Grid>

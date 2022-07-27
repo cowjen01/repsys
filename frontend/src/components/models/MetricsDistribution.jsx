@@ -1,28 +1,47 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import pt from 'prop-types';
 import { Paper, Grid, Box, Tabs, Tab, Stack } from '@mui/material';
 import Plotly from 'plotly.js';
 
 import { ScatterPlot, HistogramPlot } from '../plots';
 import UsersDescription from '../dataset/UsersDescription';
-import { useGetUserMetricsByModelQuery, useGetUsersEmbeddingsQuery } from '../../api';
+import ItemsDescription from '../dataset/ItemsDescription';
+import {
+  useGetUserMetricsByModelQuery,
+  useGetUserEmbeddingsQuery,
+  useGetItemMetricsByModelQuery,
+  useGetItemEmbeddingsQuery,
+} from '../../api';
 import { CategoryFilter } from '../filters';
 import TabPanel from '../TabPanel';
 import { PlotLoader } from '../loaders';
 
-function UsersDistribution({ metricsData }) {
-  const models = Object.keys(metricsData.results);
-  const metrics = metricsData.metrics.user;
-
+function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedData, setSelectedData] = useState();
-  const [selectedModel, setSelectedModel] = useState(models[0]);
-  const [selectedMetric, setSelectedMetric] = useState(metrics[0]);
+  const [selectedModel, setSelectedModel] = useState(evaluatedModels[0]);
+  const [selectedMetric, setSelectedMetric] = useState('');
 
   const histRef = useRef();
 
-  const embeddings = useGetUsersEmbeddingsQuery('validation');
-  const userMetrics = useGetUserMetricsByModelQuery(selectedModel);
+  const userEmbeddings = useGetUserEmbeddingsQuery('validation', {
+    skip: metricsType !== 'user',
+  });
+  const itemEmbeddings = useGetItemEmbeddingsQuery('train', {
+    skip: metricsType !== 'item',
+  });
+  const embeddings = metricsType === 'user' ? userEmbeddings : itemEmbeddings;
+
+  const userMetrics = useGetUserMetricsByModelQuery(
+    { model: selectedModel },
+    {
+      skip: metricsType !== 'user',
+    }
+  );
+  const itemMetrics = useGetItemMetricsByModelQuery(selectedModel, {
+    skip: metricsType !== 'item',
+  });
+  const metrics = metricsType === 'user' ? userMetrics : itemMetrics;
 
   const resetHistSelection = () => {
     Plotly.restyle(histRef.current.el, { selectedpoints: [null] });
@@ -39,7 +58,7 @@ function UsersDistribution({ metricsData }) {
 
   const handleModelChange = (newValue) => {
     setSelectedModel(newValue);
-    setSelectedMetric(metrics[0]);
+    // setSelectedMetric('');
     resetSelection();
   };
 
@@ -53,7 +72,7 @@ function UsersDistribution({ metricsData }) {
       const points = eventData.points[0].data.selectedpoints;
       setSelectedData({
         indices: points,
-        users: points.map((p) => userMetrics.data[p].id),
+        ids: points.map((p) => metrics.data[p].id),
       });
     }
   };
@@ -73,11 +92,24 @@ function UsersDistribution({ metricsData }) {
   }, [embeddings.data]);
 
   const histogramData = useMemo(() => {
-    if (userMetrics.data) {
-      return userMetrics.data.map((d) => d[selectedMetric]);
+    if (metrics.data) {
+      return metrics.data.map((d) => d[selectedMetric]);
     }
     return [];
-  }, [userMetrics.data, selectedMetric]);
+  }, [metrics.data, selectedMetric]);
+
+  const metricsOptions = useMemo(() => {
+    if (metrics.data) {
+      return Object.keys(metrics.data[0]).filter((x) => x !== 'id');
+    }
+    return [];
+  }, [metrics.data, selectedModel]);
+
+  useEffect(() => {
+    if (!selectedMetric && metricsOptions.length > 0) {
+      setSelectedMetric(metricsOptions[0]);
+    }
+  }, [metricsOptions]);
 
   return (
     <Grid container spacing={2}>
@@ -87,26 +119,25 @@ function UsersDistribution({ metricsData }) {
             label="Model"
             value={selectedModel}
             onChange={handleModelChange}
-            options={models}
+            options={evaluatedModels}
           />
           <CategoryFilter
             label="Metric"
-            disabled={userMetrics.isFetching}
+            disabled={!selectedModel || metrics.isFetching || metricsOptions.length === 0}
             value={selectedMetric}
             onChange={handleMetricChange}
-            options={metrics}
+            options={metricsOptions}
           />
         </Stack>
       </Grid>
       <Grid item xs={12}>
-        <Grid container spacing={2} sx={{ height: 450 }}>
+        <Grid container spacing={2} sx={{ height: 500 }}>
           <Grid item xs={8}>
             <Box position="relative">
-              {userMetrics.isFetching && <PlotLoader />}
+              {metrics.isFetching && <PlotLoader />}
               <Paper sx={{ p: 2 }}>
                 <HistogramPlot
                   data={histogramData}
-                  height={400}
                   innerRef={histRef}
                   onDeselect={handleHistUnselect}
                   onSelected={handleHistSelect}
@@ -125,10 +156,12 @@ function UsersDistribution({ metricsData }) {
                 </Box>
                 <TabPanel value={activeTab} index={0} sx={{ p: 1 }}>
                   <ScatterPlot
-                    height={350}
+                    height={400}
                     x={scatterPoints.x}
                     y={scatterPoints.y}
                     highlighted={selectedData.indices}
+                    markerSize={2}
+                    markerOpacity={0.5}
                     dragMode="pan"
                   />
                 </TabPanel>
@@ -137,7 +170,15 @@ function UsersDistribution({ metricsData }) {
                   index={1}
                   sx={{ p: 2, overflow: 'auto', height: 'calc(100% - 48px)' }}
                 >
-                  <UsersDescription split="validation" users={selectedData.users} />
+                  {metricsType === 'user' ? (
+                    <UsersDescription
+                      attributes={itemAttributes}
+                      split="validation"
+                      users={selectedData.ids}
+                    />
+                  ) : (
+                    <ItemsDescription attributes={itemAttributes} items={selectedData.ids} />
+                  )}
                 </TabPanel>
               </Paper>
             )}
@@ -148,9 +189,14 @@ function UsersDistribution({ metricsData }) {
   );
 }
 
-UsersDistribution.propTypes = {
-  // eslint-disable-next-line react/forbid-prop-types
-  metricsData: pt.any.isRequired,
+MetricsDistribution.defaultProps = {
+  evaluatedModels: [],
 };
 
-export default UsersDistribution;
+MetricsDistribution.propTypes = {
+  evaluatedModels: pt.arrayOf(pt.string),
+  itemAttributes: pt.any.isRequired,
+  metricsType: pt.string.isRequired,
+};
+
+export default MetricsDistribution;

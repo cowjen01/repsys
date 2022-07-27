@@ -1,9 +1,12 @@
+from typing import List, Dict, Any
+
+
 class WebParam:
-    def __init__(self, field, default="") -> None:
+    def __init__(self, field: str, default: Any = "") -> None:
         self.field = field
         self.default = default
 
-    def to_dict(self):
+    def to_dict(self) -> Dict[str, Any]:
         return {
             "field": self.field,
             "default": self.default,
@@ -11,12 +14,12 @@ class WebParam:
 
 
 class Text(WebParam):
-    def __init__(self, default="") -> None:
+    def __init__(self, default: str = "") -> None:
         super().__init__("text", default)
 
 
 class Select(WebParam):
-    def __init__(self, options, default="") -> None:
+    def __init__(self, options: List[str], default: str = "") -> None:
         super().__init__("select", default)
         self.options = options
 
@@ -27,10 +30,10 @@ class Select(WebParam):
 
 
 class Checkbox(WebParam):
-    def __init__(self, default=False) -> None:
+    def __init__(self, default: bool = False) -> None:
         super().__init__("checkbox", default)
 
 
 class Number(WebParam):
-    def __init__(self, default="") -> None:
+    def __init__(self, default: Any = "") -> None:
         super().__init__("number", default)

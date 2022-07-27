@@ -1,5 +1,5 @@
-sklearn
-repsys
+repsys-framework
+scikit-learn
 pandas
 scipy
 numpy

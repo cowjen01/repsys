@@ -61,10 +61,10 @@ def validate_instances(instances: Dict[str, Any]):
             raise PackageLoaderError("Name of the class must contain only alphanumeric characters.")
 
 
-def load_packages(models_pkg, cls) -> Dict[str, Any]:
-    logger.debug("Loading models package ...")
+def load_packages(pkg, cls) -> Dict[str, Any]:
+    logger.debug(f"Loading '{cls.__name__}' package ...")
     loader = ClassLoader(cls)
-    loader.register_package(models_pkg)
+    loader.register_package(pkg)
 
     validate_instances(loader.instances)
 

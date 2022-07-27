@@ -1,6 +1,7 @@
 import logging
 import os
-from typing import Dict
+from typing import Dict, Any
+import random
 
 from pandas import DataFrame
 from sanic import Sanic
@@ -13,16 +14,26 @@ from repsys.dataset import Dataset, get_top_tags, get_top_categories
 from repsys.dtypes import filter_columns_by_type
 from repsys.evaluators import DatasetEvaluator, ModelEvaluator
 from repsys.model import Model
+from repsys.helpers import set_seed
 
 logger = logging.getLogger(__name__)
 
 
-def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
-               model_eval: ModelEvaluator) -> Sanic:
-    app = Sanic(__name__)
+def create_app(
+    models: Dict[str, Model],
+    dataset: Dataset,
+    dataset_eval: DatasetEvaluator,
+    model_eval: ModelEvaluator,
+    config: Config,
+) -> Sanic:
+    app = Sanic("repsys", configure_logging=False)
 
-    static_folder = os.path.join(os.path.dirname(__file__), "../frontend/build")
-    app.static("/", static_folder, pattern=r"/^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/")
+    static_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), "web", "build")
+    app.static(
+        "/",
+        static_folder,
+        pattern=r"/^[^.]+$|.(?!(css|gif|ico|jpg|js|png|txt|svg|woff|ttf)$)([^.]+$)/",
+    )
 
     def serialize_items(items: DataFrame):
         items_copy = items.copy()
@@ -30,24 +41,24 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
 
         tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
         for col in tag_cols:
-            items_copy[col] = items_copy[col].str.join(', ')
+            items_copy[col] = items_copy[col].str.join(", ")
 
         return items_copy.to_dict("records")
 
     def get_item_attributes() -> Dict[str, any]:
         attributes = {}
         for col, datatype in dataset.item_cols().items():
-            attributes[col] = {'dtype': str(datatype)}
+            attributes[col] = {"dtype": str(datatype)}
 
             if type(datatype) == dtypes.Tag:
-                attributes[col]['options'] = dataset.tags.get(col)
+                attributes[col]["options"] = dataset.tags.get(col)
 
             if type(datatype) == dtypes.Category:
-                attributes[col]['options'] = dataset.categories.get(col)
+                attributes[col]["options"] = dataset.categories.get(col)
 
             if type(datatype) == dtypes.Number:
                 hist = dataset.histograms.get(col)
-                attributes[col]['bins'] = hist[1].tolist()
+                attributes[col]["bins"] = hist[1].tolist()
 
         return attributes
 
@@ -55,11 +66,11 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         if not split:
             raise InvalidUsage("The dataset's split must be specified.")
 
-        if split not in ['train', 'validation', 'test']:
+        if split not in ["train", "validation", "test"]:
             raise InvalidUsage("The split must be one of: train, validation or test.")
 
     def get_items_by_query(query: Dict[str, any]) -> DataFrame:
-        col = query.get('attribute')
+        col = query.get("attribute")
 
         if not col:
             raise InvalidUsage("Searched attribute must be specified.")
@@ -71,7 +82,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
 
         items = dataset.items
         if col_type == dtypes.Number:
-            range_filter = query.get('range')
+            range_filter = query.get("range")
 
             if not range_filter or len(range_filter) != 2:
                 raise InvalidUsage(f"A range must be specified for '{col}' attribute.")
@@ -79,7 +90,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
             items = items[(items[col] >= range_filter[0]) & (items[col] <= range_filter[1])]
 
         if col_type == dtypes.Category or col_type == dtypes.Tag:
-            values_filter = query.get('values')
+            values_filter = query.get("values")
 
             if not values_filter or len(values_filter) == 0:
                 raise InvalidUsage(f"Values must be specified for '{col}' attribute.")
@@ -91,35 +102,66 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
 
         return items
 
-    @app.route('/')
-    @app.route('/dataset')
-    @app.route('/models')
+    def get_items_description(items: DataFrame) -> Dict[str, Dict[str, Any]]:
+        attributes = {}
+
+        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
+        for col in tag_cols:
+            labels, counts = get_top_tags(items, col, n=4)
+            attributes[col] = {"labels": labels, "values": counts}
+
+        category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
+        for col in category_cols:
+            labels, counts = get_top_categories(items, col, n=4)
+            attributes[col] = {"labels": labels, "values": counts}
+
+        number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
+        for col in number_cols:
+            values, bins = dataset.compute_histogram_by_col(items, col, bins=4)
+            attributes[col] = {"values": values.tolist(), "bins": bins.tolist()}
+
+        return attributes
+
+    @app.route("/")
+    @app.route("/dataset")
+    @app.route("/models")
     def index(request):
         return file(f"{static_folder}/index.html")
 
+    @app.route("/api/web/config", methods=["GET"])
+    async def get_web_config(request):
+        return json(dataset.web_default_config())
+
     @app.route("/api/models", methods=["GET"])
-    def get_models(request):
-        return json({
-            model.name(): model.to_dict() for model in models.values()
-        })
+    async def get_models(request):
+        return json({model.name(): model.to_dict() for model in models.values()})
 
     @app.route("/api/dataset", methods=["GET"])
-    def get_dataset(request):
-        return json({
-            "totalItems": dataset.get_total_items(),
-            "attributes": get_item_attributes()
-        })
+    async def get_dataset(request):
+        return json(
+            {
+                "totalItems": dataset.get_total_items(),
+                "attributes": get_item_attributes(),
+            }
+        )
 
     @app.route("/api/users", methods=["GET"])
-    def get_users(request):
+    async def get_users(request):
         split = request.args.get("split")
+        sample_limit = request.args.get("sample")
+
         validate_split_name(split)
 
         users = dataset.get_users_by_split(split)
+
+        if sample_limit:
+            set_seed(config.seed)
+            users = random.sample(users, int(sample_limit))
+
         return json(users)
 
     @app.route("/api/items", methods=["GET"])
-    def get_items(request):
+    async def get_items(request):
         query = request.args.get("query")
 
         if not query:
@@ -134,7 +176,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         return data
 
     @app.route("/api/models/<model_name>/predict", methods=["POST"])
-    def predict_items(request, model_name: str):
+    async def predict_items(request, model_name: str):
         if not models.get(model_name):
             raise NotFound(f"Model '{model_name}' not implemented.")
 
@@ -172,7 +214,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         return data
 
     @app.route("/api/items/search", methods=["POST"])
-    def search_items(request):
+    async def search_items(request):
         query = request.json.get("query")
 
         if not query:
@@ -183,7 +225,7 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         return json(items.index.tolist())
 
     @app.route("/api/users/search", methods=["POST"])
-    def search_users(request):
+    async def search_users(request):
         query = request.json.get("query")
 
         if not query:
@@ -204,51 +246,24 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         return json(user_ids)
 
     @app.route("/api/items/describe", methods=["POST"])
-    def describe_items(request):
-        item_ids = request.json.get('items')
+    async def describe_items(request):
+        item_ids = request.json.get("items")
 
         if not item_ids or len(item_ids) == 0:
-            raise InvalidUsage('A list of items must be specified.')
+            raise InvalidUsage("A list of items must be specified.")
 
         items = dataset.items.loc[item_ids]
+        description = get_items_description(items)
 
-        attributes = {}
-
-        tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
-        for col in tag_cols:
-            labels, counts = get_top_tags(items, col, n=5)
-            attributes[col] = {
-                'labels': labels,
-                'values': counts
-            }
-
-        category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
-        for col in category_cols:
-            labels, counts = get_top_categories(items, col, n=5)
-            attributes[col] = {
-                'labels': labels,
-                'values': counts
-            }
-
-        number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
-        for col in number_cols:
-            values, bins = dataset.compute_histogram_by_col(items, col)
-            attributes[col] = {
-                'values': values.tolist(),
-                'bins': bins.tolist()
-            }
-
-        return json({
-            'attributes': attributes
-        })
+        return json({"description": description})
 
     @app.route("/api/users/describe", methods=["POST"])
-    def describe_users(request):
-        user_ids = request.json.get('users')
-        split = request.json.get('split')
+    async def describe_users(request):
+        user_ids = request.json.get("users")
+        split = request.json.get("split")
 
         if not user_ids or len(user_ids) == 0:
-            raise InvalidUsage('A list of users must be specified.')
+            raise InvalidUsage("A list of users must be specified.")
 
         validate_split_name(split)
 
@@ -260,100 +275,116 @@ def create_app(models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[st
         if None in user_indices:
             raise InvalidUsage(f"Some of the input users not found.")
 
-        items = dataset.get_top_items_by_users(user_indices, split)
+        items = dataset.get_top_items_by_users(user_indices, split, n=100)
+        description = get_items_description(items)
 
-        return json({
-            'topItems': serialize_items(items)
-        })
+        return json(
+            {
+                "topItems": serialize_items(items.iloc[:5]),
+                "itemsDescription": description,
+            }
+        )
 
     @app.route("/api/items/embeddings", methods=["GET"])
-    def get_user_embeddings(request):
+    async def get_item_embeddings(request):
         split = request.args.get("split")
         validate_split_name(split)
 
-        split_eval = dataset_eval.get(split)
-        if split_eval is None or split_eval.item_embeddings is None:
-            raise NotFound(f"No embeddings found for split '{split}'.")
+        if dataset_eval.item_embeddings is None:
+            raise NotFound(f"No embeddings found.")
 
-        df = split_eval.item_embeddings.join(dataset.items[dataset.get_title_col()])
-        df = df.rename(columns={dataset.get_title_col(): 'title'})
+        df = dataset_eval.item_embeddings.join(dataset.items[dataset.get_title_col()])
+        df = df.rename(columns={dataset.get_title_col(): "title"})
+        df = df.sort_index()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
 
     @app.route("/api/users/embeddings", methods=["GET"])
-    def get_user_embeddings(request):
+    async def get_user_embeddings(request):
         split = request.args.get("split")
         validate_split_name(split)
 
-        split_eval = dataset_eval.get(split)
-        if split_eval is None or split_eval.user_embeddings is None:
+        if dataset_eval is None or dataset_eval.user_embeddings.get(split) is None:
             raise NotFound(f"No embeddings found for split '{split}'.")
 
-        df = split_eval.user_embeddings.copy()
+        df = dataset_eval.user_embeddings.get(split).copy()
+        df = df.sort_index()
         df["id"] = df.index
 
         return json(df.to_dict("records"))
 
     @app.route("/api/users/<uid>", methods=["GET"])
-    def get_user_detail(request, uid: str):
+    async def get_user_detail(request, uid: str):
         split = dataset.get_split_by_user(uid)
 
         if not split:
             raise NotFound(f"User '{uid}' not found.")
 
         items = dataset.get_interacted_items_by_user(uid, split)
-        data = json({
-            'interactions': serialize_items(items)
-        })
+        data = json({"interactions": serialize_items(items)})
 
         return data
 
     @app.route("/api/models/metrics", methods=["GET"])
-    def get_metrics(request):
+    async def get_metrics(request):
         if not model_eval.evaluated_models:
-            raise NotFound('Models have not been evaluated yet.')
+            raise NotFound("Models have not been evaluated yet.")
 
         results = {}
         for model in model_eval.evaluated_models:
-            model_summary = model_eval.get_eval_summary(model)
-            if model_summary:
-                results[model] = {'current': model_summary}
-                prev_summary = model_eval.get_eval_summary(model, history=1)
-                if prev_summary:
-                    results[model]['previous'] = prev_summary
+            current_summary = model_eval.get_current_summary(model)
+            if current_summary is not None:
+                results[model] = {"current": current_summary.iloc[0].to_dict()}
 
-        return json({
-            'metrics': {
-                'user': model_eval.user_metrics
-            },
-            'results': results
-        })
+                prev_summary = model_eval.get_prev_summary(model)
+                if prev_summary is not None:
+                    results[model]["previous"] = prev_summary.iloc[0].to_dict()
 
-    @app.route("/api/models/<model_name>/metrics/user", methods=["GET"])
-    def get_model_metrics(request, model_name: str):
+        return json({"results": results})
+
+    @app.route("/api/models/<model_name>/metrics/<metrics_type>", methods=["GET"])
+    async def get_user_metrics(request, model_name: str, metrics_type: str):
         if models.get(model_name) is None:
             raise NotFound(f"Model '{model_name}' not implemented.")
 
-        results = model_eval.get_user_results(model_name)
+        if metrics_type == "user":
+            compare_model_name = request.args.get("compare_againts")
+            if compare_model_name is not None:
+                if model_name == compare_model_name:
+                    raise InvalidUsage("Can not compare a model with itself.")
+
+                if models.get(compare_model_name) is None:
+                    raise NotFound(f"Model '{model_name}' not implemented.")
+
+                results = model_eval.get_user_results(model_name, compare_model_name)
+            else:
+                results = model_eval.get_user_results(model_name)
+        # elif metrics_type == "item":
+        #     results = model_eval.get_item_results(model_name)
+        else:
+            raise InvalidUsage("Invalid metrics type.")
 
         if results is None:
             raise NotFound(f"Model '{model_name}' not evaluated.")
 
         df = results.copy()
+        df = df.sort_index()
+        df = df.round(4)
         df["id"] = df.index
 
         return json(df.to_dict("records"))
 
-    @app.listener("after_server_stop")
-    def on_shutdown(current_app, loop):
-        logger.info("Server has been shut down.")
-
     return app
 
 
-def run_server(config: Config, models: Dict[str, Model], dataset: Dataset, dataset_eval: Dict[str, DatasetEvaluator],
-               model_eval: ModelEvaluator) -> None:
-    app = create_app(models, dataset, dataset_eval, model_eval)
+def run_server(
+    config: Config,
+    models: Dict[str, Model],
+    dataset: Dataset,
+    dataset_eval: DatasetEvaluator,
+    model_eval: ModelEvaluator,
+) -> None:
+    app = create_app(models, dataset, dataset_eval, model_eval, config)
     app.config.FALLBACK_ERROR_FORMAT = "json"
-    app.run(host="localhost", port=config.server_port, debug=False, access_log=False)
+    app.run(host="0.0.0.0", port=config.server_port, debug=False, access_log=False)

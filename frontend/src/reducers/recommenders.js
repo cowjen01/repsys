@@ -1,6 +1,8 @@
 /* eslint-disable no-param-reassign */
 import { createSlice } from '@reduxjs/toolkit';
 
+import { generateUID } from '../utils';
+
 export const slice = createSlice({
   name: 'recommenders',
   initialState: [],
@@ -8,6 +10,15 @@ export const slice = createSlice({
     addRecommender: (state, action) => {
       state.push(action.payload);
     },
+    setRecommenders: (state, action) =>
+      action.payload.map((recom) => {
+        const defaultParams = {
+          itemsPerPage: 4,
+          itemsLimit: 20,
+          modelParams: {},
+        };
+        return Object.assign(defaultParams, recom);
+      }),
     updateRecommendersOrder: (state, action) => {
       const { dragIndex, hoverIndex } = action.payload;
       [state[dragIndex], state[hoverIndex]] = [state[hoverIndex], state[dragIndex]];
@@ -21,7 +32,7 @@ export const slice = createSlice({
       const source = state[index];
       state.splice(index + 1, 0, {
         ...source,
-        name: `${source.name} - copy`,
+        name: `${source.name} #${generateUID()}`,
       });
     },
     deleteRecommender: (state, action) => {
@@ -36,6 +47,7 @@ export const {
   updateRecommendersOrder,
   duplicateRecommender,
   updateRecommender,
+  setRecommenders,
 } = slice.actions;
 
 export const recommendersSelector = (state) => state.recommenders;

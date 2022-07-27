@@ -5,7 +5,7 @@ export const repsysApi = createApi({
   baseQuery: fetchBaseQuery({ baseUrl: '/api/' }),
   endpoints: (builder) => ({
     getUsers: builder.query({
-      query: ({ split = 'train' }) => `/users?split=${split}`,
+      query: ({ split = 'train', sample = 200 }) => `/users?split=${split}&sample=${sample}`,
     }),
     searchUsers: builder.mutation({
       query: ({ split = 'train', query }) => ({
@@ -49,7 +49,16 @@ export const repsysApi = createApi({
       query: () => '/models',
     }),
     getUserMetricsByModel: builder.query({
-      query: (model) => `/models/${model}/metrics/user`,
+      query: ({ model, compareModel = null }) => {
+        if (!compareModel) {
+          return `/models/${model}/metrics/user`;
+        }
+
+        return `/models/${model}/metrics/user?compare_againts=${compareModel}`;
+      },
+    }),
+    getItemMetricsByModel: builder.query({
+      query: (model) => `/models/${model}/metrics/item`,
     }),
     predictItemsByModel: builder.mutation({
       query: ({ model, ...body }) => ({
@@ -70,11 +79,14 @@ export const repsysApi = createApi({
         },
       }),
     }),
-    getUsersEmbeddings: builder.query({
+    getUserEmbeddings: builder.query({
       query: (split = 'train') => `/users/embeddings?split=${split}`,
     }),
-    getItemsEmbeddings: builder.query({
+    getItemEmbeddings: builder.query({
       query: (split = 'train') => `/items/embeddings?split=${split}`,
+    }),
+    getDefaultConfig: builder.query({
+      query: () => '/web/config',
     }),
   }),
 });
@@ -82,16 +94,18 @@ export const repsysApi = createApi({
 export const {
   useGetDatasetQuery,
   useGetItemsByTitleQuery,
-  useGetItemsEmbeddingsQuery,
+  useGetItemEmbeddingsQuery,
   useGetUserMetricsByModelQuery,
   useGetModelsMetricsQuery,
   useGetModelsQuery,
   useGetUserByIDQuery,
-  useGetUsersEmbeddingsQuery,
+  useGetUserEmbeddingsQuery,
   useGetUsersQuery,
   useDescribeItemsMutation,
   useDescribeUsersMutation,
   useSearchItemsMutation,
   useSearchUsersMutation,
   usePredictItemsByModelMutation,
+  useGetItemMetricsByModelQuery,
+  useGetDefaultConfigQuery,
 } = repsysApi;

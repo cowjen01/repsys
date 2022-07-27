@@ -12,9 +12,12 @@ function EmbeddingsPlot({
   onComputeStarted,
   onComputeFinished,
   color,
+  isLoading,
   resetIndex,
   showScale,
   colorScale,
+  markerSize,
+  markerOpacity,
 }) {
   const [highlightedPoints, setHighlightedPoints] = useState([]);
   const scatterRef = useRef();
@@ -38,7 +41,7 @@ function EmbeddingsPlot({
   };
 
   useEffect(() => {
-    if (selectedIds.length) {
+    if (selectedIds.length && !isLoading) {
       onComputeStarted();
       const ids = new Set(selectedIds);
       const indices = embeddings.reduce((acc, item, index) => {
@@ -49,8 +52,10 @@ function EmbeddingsPlot({
       }, []);
       setHighlightedPoints(indices);
       onComputeFinished();
+    } else if (!isLoading) {
+      setHighlightedPoints([]);
     }
-  }, [selectedIds]);
+  }, [selectedIds, isLoading]);
 
   const scatterPoints = useMemo(
     () =>
@@ -61,6 +66,8 @@ function EmbeddingsPlot({
           acc.meta.push(id);
           if (title) {
             acc.label.push(title);
+          } else {
+            acc.label.push(id);
           }
           return acc;
         },
@@ -86,11 +93,13 @@ function EmbeddingsPlot({
       label={scatterPoints.label}
       innerRef={scatterRef}
       colorScale={colorScale}
+      markerSize={markerSize}
       onDeselect={handleUnselect}
       onSelected={handleSelect}
+      markerOpacity={markerOpacity}
       showScale={highlightedPoints.length > 0 ? false : showScale}
       layoutProps={{
-        margin: { t: 20, b: 20, l: 30, r: showScale ? 100 : 20 },
+        margin: { t: 20, b: 20, l: 30, r: showScale ? 110 : 20 },
       }}
     />
   );
@@ -101,8 +110,11 @@ EmbeddingsPlot.defaultProps = {
   selectedIds: [],
   embeddings: [],
   resetIndex: 0,
+  markerSize: 3,
+  markerOpacity: 1,
+  isLoading: false,
   showScale: false,
-  colorScale: 'Bluered',
+  colorScale: 'Jet',
   onSelect: () => {},
   onUnselect: () => {},
   onComputeStarted: () => {},
@@ -118,8 +130,11 @@ EmbeddingsPlot.propTypes = {
   selectedIds: pt.arrayOf(pt.string),
   color: pt.arrayOf(pt.number),
   onComputeStarted: pt.func,
+  isLoading: pt.bool,
   onComputeFinished: pt.func,
+  markerOpacity: pt.number,
   colorScale: pt.string,
+  markerSize: pt.number,
   embeddings: pt.arrayOf(
     pt.shape({
       title: pt.string,

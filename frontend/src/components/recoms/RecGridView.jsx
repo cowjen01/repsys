@@ -2,8 +2,19 @@ import React, { useState, useEffect, useMemo } from 'react';
 import pt from 'prop-types';
 import KeyboardArrowRightIcon from '@mui/icons-material/KeyboardArrowRight';
 import KeyboardArrowLeftIcon from '@mui/icons-material/KeyboardArrowLeft';
+import MemoryIcon from '@mui/icons-material/Memory';
+import LabelIcon from '@mui/icons-material/Label';
 import { useSelector, useDispatch } from 'react-redux';
-import { Skeleton, Typography, Grid, Alert, AlertTitle, Stack, IconButton } from '@mui/material';
+import {
+  Skeleton,
+  Typography,
+  Grid,
+  Alert,
+  AlertTitle,
+  Stack,
+  IconButton,
+  Chip,
+} from '@mui/material';
 
 import { ItemCardView } from '../items';
 import { openItemDetailDialog } from '../../reducers/dialogs';
@@ -17,6 +28,7 @@ import { recommenderByIndexSelector } from '../../reducers/recommenders';
 import { itemViewSelector } from '../../reducers/settings';
 import { usePredictItemsByModelMutation } from '../../api';
 import ErrorAlert from '../ErrorAlert';
+import { capitalize } from '../../utils';
 
 function RecGridView({ index }) {
   const dispatch = useDispatch();
@@ -85,9 +97,28 @@ function RecGridView({ index }) {
           sx={{ minHeight: '40px' }}
         >
           <Grid item>
-            <Typography variant="h6" component="div">
-              {name}
-            </Typography>
+            <Grid container alignItems="center">
+              <Grid item sx={{ mr: 2 }}>
+                <Typography variant="h6" component="div">
+                  {name}
+                </Typography>
+              </Grid>
+              <Grid item>
+                <Stack spacing={1} direction="row">
+                  <Chip icon={<MemoryIcon />} size="small" label={`Model: ${model}`} />
+                  {Object.entries(modelParams)
+                    .filter((x) => x[1] !== '')
+                    .map(([paramKey, paramValue]) => (
+                      <Chip
+                        key={paramKey}
+                        icon={<LabelIcon />}
+                        size="small"
+                        label={`${capitalize(paramKey)}: ${paramValue}`}
+                      />
+                    ))}
+                </Stack>
+              </Grid>
+            </Grid>
           </Grid>
           {recommendations.isSuccess && (
             <Grid item>

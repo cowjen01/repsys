@@ -1,5 +1,5 @@
 export const itemsDescription = {
-  attributes: {
+  description: {
     genres: {
       labels: [],
       values: [],
