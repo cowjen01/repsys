@@ -1,17 +1,16 @@
 import React from 'react';
-import pt from 'prop-types';
 import { Box, Toolbar, AppBar, Typography, Stack, Button, Grid, Container } from '@mui/material';
 import { useDispatch } from 'react-redux';
 import BubbleChartIcon from '@mui/icons-material/BubbleChart';
 import DonutSmallIcon from '@mui/icons-material/DonutSmall';
 import TableRowsIcon from '@mui/icons-material/TableRows';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, Outlet } from 'react-router-dom';
 import EqualizerIcon from '@mui/icons-material/Equalizer';
 
 import { openSettingsDialog } from '../reducers/dialogs';
 
-function Layout({ children }) {
+function Layout() {
   const dispatch = useDispatch();
 
   return (
@@ -76,14 +75,12 @@ function Layout({ children }) {
         }}
       >
         <Toolbar />
-        <Container maxWidth="xl">{children}</Container>
+        <Container maxWidth="xl">
+          <Outlet />
+        </Container>
       </Box>
     </>
   );
 }
-
-Layout.propTypes = {
-  children: pt.node.isRequired,
-};
 
 export default Layout;

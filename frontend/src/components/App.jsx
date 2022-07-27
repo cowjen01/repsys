@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import * as colors from '@mui/material/colors';
@@ -16,6 +16,7 @@ import { darkModeSelector, setItemView } from '../reducers/settings';
 import { useGetDefaultConfigQuery } from '../api';
 import { initializedSelector, setInitialized } from '../reducers/app';
 import { setRecommenders } from '../reducers/recommenders';
+import { DatasetWidget } from './widgets';
 
 function App() {
   const darkMode = useSelector(darkModeSelector);
@@ -72,13 +73,16 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <Layout>
-        <Routes>
-          <Route path="/" element={<RecPreviews />} />
-          <Route path="/models" element={<ModelsEvaluation />} />
-          <Route path="/dataset" element={<DatasetEvaluation />} />
-        </Routes>
-      </Layout>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route index element={<RecPreviews />} />
+          <Route path="models" element={<ModelsEvaluation />} />
+          <Route path="dataset" element={<DatasetEvaluation />} />
+        </Route>
+        <Route path="widgets">
+          <Route path="dataset/:dataType" element={<DatasetWidget />} />
+        </Route>
+      </Routes>
       <Snackbar />
       <SettingsDialog />
       <TutorialDialog />
