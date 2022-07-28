@@ -125,7 +125,8 @@ def create_app(
     @app.route("/")
     @app.route("/dataset")
     @app.route("/models")
-    def index(request):
+    @app.route("/widgets/<path_arg:path>")
+    def index(request, **kwargs):
         return file(f"{static_folder}/index.html")
 
     @app.route("/api/web/config", methods=["GET"])

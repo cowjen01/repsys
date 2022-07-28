@@ -9,7 +9,7 @@ import { PlotLoader } from '../loaders';
 import AttributesSelector from './AttributesSelector';
 import UsersDescription from './UsersDescription';
 
-function UsersEmbeddings({ attributes, split }) {
+function UsersEmbeddings({ attributes, split, displayFilters }) {
   const [filterResetIndex, setFilterResetIndex] = useState(0);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedUsers, setSelectedUsers] = useState([]);
@@ -51,16 +51,18 @@ function UsersEmbeddings({ attributes, split }) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <AttributesSelector
-          onChange={handleFilterChange}
-          resetIndex={filterResetIndex}
-          disabled={isLoading}
-          attributes={attributes}
-          onFilterApply={handleFilterApply}
-          displayThreshold
-        />
-      </Grid>
+      {displayFilters && (
+        <Grid item xs={12}>
+          <AttributesSelector
+            onChange={handleFilterChange}
+            resetIndex={filterResetIndex}
+            disabled={isLoading}
+            attributes={attributes}
+            onFilterApply={handleFilterApply}
+            displayThreshold
+          />
+        </Grid>
+      )}
       <Grid item xs={12}>
         <Grid container spacing={2} sx={{ height: 500 }}>
           <Grid item xs={8}>
@@ -97,12 +99,14 @@ function UsersEmbeddings({ attributes, split }) {
 
 UsersEmbeddings.defaultProps = {
   split: 'train',
+  displayFilters: true,
 };
 
 UsersEmbeddings.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   attributes: pt.any.isRequired,
   split: pt.string,
+  displayFilters: pt.bool,
 };
 
 export default UsersEmbeddings;

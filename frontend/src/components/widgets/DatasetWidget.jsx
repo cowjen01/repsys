@@ -1,5 +1,5 @@
 import React from 'react';
-import { LinearProgress, Box } from '@mui/material';
+import { LinearProgress } from '@mui/material';
 import { useParams } from 'react-router-dom';
 
 import ErrorAlert from '../ErrorAlert';
@@ -11,18 +11,23 @@ function DatasetWidget() {
   const dataset = useGetDatasetQuery();
   const { dataType } = useParams();
 
-  return (
-    <Box sx={{ p: 2 }}>
-      {dataset.isLoading && <LinearProgress />}
-      {!dataset.isLoading && dataset.isError && <ErrorAlert error={dataset.error} />}
-      {!dataset.isLoading && !dataset.isError && dataType === 'items' && (
-        <ItemsEmbeddings attributes={dataset.data.attributes} />
-      )}
-      {!dataset.isLoading && !dataset.isError && dataType === 'users' && (
-        <UsersEmbeddings attributes={dataset.data.attributes} />
-      )}
-    </Box>
-  );
+  if (dataset.isLoading) {
+    return <LinearProgress />;
+  }
+
+  if (dataset.isError) {
+    return <ErrorAlert error={dataset.error} />;
+  }
+
+  if (dataType === 'items') {
+    return <ItemsEmbeddings displayFilters={false} attributes={dataset.data.attributes} />;
+  }
+
+  if (dataType === 'users') {
+    return <UsersEmbeddings displayFilters={false} attributes={dataset.data.attributes} />;
+  }
+
+  return null;
 }
 
 export default DatasetWidget;

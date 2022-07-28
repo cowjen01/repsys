@@ -5,7 +5,6 @@ from typing import Dict, Optional, Any, Callable, Tuple, List
 import pandas as pd
 from numpy import ndarray
 import numpy as np
-import pymde
 import umap
 from pandas import DataFrame
 from scipy.sparse import issparse, csr_matrix
@@ -391,6 +390,7 @@ class DatasetEvaluator:
         return X[indices], indices
 
     def _pymde_embeddings(self, X: Any) -> ndarray:
+        import pymde
         pymde.seed(self._seed)
         mde = pymde.preserve_neighbors(X, init="random", n_neighbors=self._pymde_neighbors, verbose=self._verbose)
         embeddings = mde.embed(verbose=self._verbose, max_iter=1000, memory_size=50, eps=1e-6)

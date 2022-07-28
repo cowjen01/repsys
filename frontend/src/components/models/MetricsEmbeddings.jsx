@@ -14,7 +14,12 @@ import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
 import { PlotLoader } from '../loaders';
 
-function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
+function MetricsEmbeddings({
+  metricsType,
+  itemAttributes,
+  evaluatedModels,
+  displayVisualSettings,
+}) {
   const [selectedData, setSelectedData] = useState([]);
   const [selectedMarkerSize, setSelectedMarkerSize] = useState(3);
   const [selectedModel, setSelectedModel] = useState(evaluatedModels[0]);
@@ -113,18 +118,22 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             onChange={handleCompareModelChange}
             options={evaluatedModels.filter((x) => x !== selectedModel)}
           />
-          <CategoryFilter
-            label="Color scale"
-            value={selectedColorScale}
-            onChange={setSelectedColorScale}
-            options={['Jet', 'Picnic', 'Bluered', 'YlGnBu']}
-          />
-          <CategoryFilter
-            label="Marker size"
-            value={selectedMarkerSize}
-            onChange={setSelectedMarkerSize}
-            options={[2, 3, 4, 5, 6]}
-          />
+          {displayVisualSettings && (
+            <>
+              <CategoryFilter
+                label="Color scale"
+                value={selectedColorScale}
+                onChange={setSelectedColorScale}
+                options={['Jet', 'Picnic', 'Bluered', 'YlGnBu']}
+              />
+              <CategoryFilter
+                label="Marker size"
+                value={selectedMarkerSize}
+                onChange={setSelectedMarkerSize}
+                options={[2, 3, 4, 5, 6]}
+              />
+            </>
+          )}
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -170,12 +179,14 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
 
 MetricsEmbeddings.defaultProps = {
   evaluatedModels: [],
+  displayVisualSettings: true,
 };
 
 MetricsEmbeddings.propTypes = {
   evaluatedModels: pt.arrayOf(pt.string),
   itemAttributes: pt.any.isRequired,
   metricsType: pt.string.isRequired,
+  displayVisualSettings: pt.bool,
 };
 
 export default MetricsEmbeddings;

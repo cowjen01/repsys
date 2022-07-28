@@ -1,9 +1,10 @@
 import React, { useMemo, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Outlet } from 'react-router-dom';
 import { createTheme, ThemeProvider } from '@mui/material/styles';
 import { useSelector, useDispatch } from 'react-redux';
 import * as colors from '@mui/material/colors';
 import CssBaseline from '@mui/material/CssBaseline';
+import { Container } from '@mui/material';
 
 import Layout from './Layout';
 import { ModelsEvaluation } from './models';
@@ -16,7 +17,15 @@ import { darkModeSelector, setItemView } from '../reducers/settings';
 import { useGetDefaultConfigQuery } from '../api';
 import { initializedSelector, setInitialized } from '../reducers/app';
 import { setRecommenders } from '../reducers/recommenders';
-import { DatasetWidget } from './widgets';
+import { DatasetWidget, EvaluationWidget } from './widgets';
+
+function WidgetWrapper() {
+  return (
+    <Container sx={{ p: 2 }}>
+      <Outlet />
+    </Container>
+  );
+}
 
 function App() {
   const darkMode = useSelector(darkModeSelector);
@@ -79,8 +88,9 @@ function App() {
           <Route path="models" element={<ModelsEvaluation />} />
           <Route path="dataset" element={<DatasetEvaluation />} />
         </Route>
-        <Route path="widgets">
+        <Route path="widgets" element={<WidgetWrapper />}>
           <Route path="dataset/:dataType" element={<DatasetWidget />} />
+          <Route path="evaluation/:formatType" element={<EvaluationWidget />} />
         </Route>
       </Routes>
       <Snackbar />
