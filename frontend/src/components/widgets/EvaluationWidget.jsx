@@ -6,6 +6,7 @@ import ErrorAlert from '../ErrorAlert';
 import { useGetModelsMetricsQuery, useGetDatasetQuery } from '../../api';
 import MetricsDistribution from '../models/MetricsDistribution';
 import MetricsEmbeddings from '../models/MetricsEmbeddings';
+import MetricsSummary from '../models/MetricsSummary';
 
 function EvaluationWidget() {
   const metrics = useGetModelsMetricsQuery();
@@ -45,6 +46,10 @@ function EvaluationWidget() {
         evaluatedModels={evaluatedModels}
       />
     );
+  }
+
+  if (formatType === 'summary') {
+    return <MetricsSummary metricsData={metrics.data} />;
   }
 
   return null;

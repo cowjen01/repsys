@@ -81,9 +81,21 @@ function ItemsEmbeddings({ attributes, displayFilters }) {
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            {selectedItems.length > 0 && (
+            {selectedItems.length > 0 ? (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
                 <ItemsDescription attributes={attributes} items={selectedItems} />
+              </Paper>
+            ) : (
+              <Paper
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                Select a subset of the space.
               </Paper>
             )}
           </Grid>

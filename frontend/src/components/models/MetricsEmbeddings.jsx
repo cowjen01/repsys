@@ -157,7 +157,7 @@ function MetricsEmbeddings({
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            {selectedData.length > 0 && (
+            {selectedData.length > 0 ? (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
                 {metricsType === 'user' ? (
                   <UsersDescription
@@ -168,6 +168,18 @@ function MetricsEmbeddings({
                 ) : (
                   <ItemsDescription attributes={itemAttributes} items={selectedData} />
                 )}
+              </Paper>
+            ) : (
+              <Paper
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                Select a subset of the space.
               </Paper>
             )}
           </Grid>
