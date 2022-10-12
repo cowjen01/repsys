@@ -1,4 +1,4 @@
-# RepSys
+# RepSys: Framework for Interactive Evaluation of Recommender Systems
 
 [![PyPI version](https://badge.fury.io/py/repsys-framework.svg)](https://badge.fury.io/py/repsys-framework)
 
@@ -16,10 +16,14 @@ The RepSys is a framework for developing and analyzing recommendation systems, a
   <img src="https://github.com/cowjen01/repsys/raw/master/images/demos/dataset-users.png" width="48%" /> 
 </p>
 
-## Demo
+## Online Demo
 
-You can now try RepSys online on our [demo site](https://repsys.recombee.net). 
+You can now try RepSys online on our [demo site](https://repsys.recombee.net) with the Movielens dataset. 
 Also, check out an [interactive blog post](https://www.recombee.com/blog/repsys-opensource-library-for-interactive-evaluation-of-recommendation-systems.html) we made using the RepSys widgets component.
+
+## Publication
+
+Our paper "[RepSys: Framework for Interactive Evaluation of Recommender Systems](https://dl.acm.org/doi/10.1145/3523227.3551469)" was accepted to the RecSys'22 conference.
 
 ## Installation
 
@@ -35,7 +39,7 @@ If you will be using PyMDE for data visualization, you need to install RepSys wi
 $ pip install repsys-framework[pymde]
 ```
 
-## Getting started
+## Getting Started
 
 If you want to skip this tutorial and try the framework, you can pull the content of the [demo](https://github.com/cowjen01/repsys/tree/master/demo) folder located at the repository.
 As mentioned in the [next step](https://github.com/cowjen01/repsys#datasetpy), you still have to download the dataset before you begin.
@@ -187,7 +191,7 @@ tsne_perplexity=30
 port=3001
 ```
 
-### Splitting the data
+### Splitting the Data
 
 Before we train our models, we need to split the data into train, validation, and test sets. Run the following command from the current directory.
 
@@ -198,7 +202,7 @@ $ repsys dataset split
 This will hold out 85% of the users as training data, and the rest 15% will be used as validation/test data with 7.5% of users each. For both validation 
 and test set, 20% of the interactions will also be held out for evaluation purposes. The split dataset will be stored in the default checkpoints folder.
 
-### Training the models
+### Training the Models
 
 Now we can move to the training process. To do this, please call the following command.
 
@@ -209,7 +213,7 @@ $ repsys model train
 This command will call the fit method of each model with the training flag set to true. You can always limit the models using `-m` flag with the model's name as a parameter.
 
 
-### Evaluating the models
+### Evaluating the Models
 
 When the data is prepared and the models trained, we can evaluate the performance of the models on the unseen users' interactions. Run the following command to do so.
 
@@ -219,7 +223,7 @@ $ repsys model eval
 
 Again, you can limit the models using the `-m` flag. The results will be stored in the checkpoints folder when the evaluation is done.
 
-### Evaluating the dataset
+### Evaluating the Dataset
 
 Before starting the web application, the final step is to evaluate the dataset's data. This procedure will create users and items embeddings of the training and validation data 
 to allow you to explore the latent space. Run the following command from the project directory.
@@ -229,9 +233,9 @@ $ repsys dataset eval
 ```
 
 You can choose from three types of embeddings algorithm:
-1. [PyMDE](https://pymde.org) (Minimum-Distortion Embedding) is a fast library designed to distort relationships between pairs of items minimally. Use `--method pymde` (this is the default option).
-2. Combination of the PCA and TSNE algorithms (reduction of the dimensionality to 50 using PCA, then reduction to 2D space using TSNE). Use `--method tsne`.
-3. [UMAP](https://umap-learn.readthedocs.io/en/latest/index.html) (Uniform Manifold Approximation and Projection for Dimension Reduction) is a dimensionality reduction technique similar to t-SNE. Use `--method umap`.
+1. [UMAP](https://umap-learn.readthedocs.io/en/latest/index.html) (Uniform Manifold Approximation and Projection for Dimension Reduction) is a dimensionality reduction technique similar to t-SNE. Use `--method umap` (this is the default option).
+2. [PyMDE](https://pymde.org) (Minimum-Distortion Embedding) is a fast library designed to distort relationships between pairs of items minimally. Use `--method pymde`.
+3. Combination of the PCA and TSNE algorithms (reduction of the dimensionality to 50 using PCA, then reduction to 2D space using TSNE). Use `--method tsne`.
 4. Your own implementation of the algorithm. Use `--method custom` and add the following method to the model's class of your choice. In this case, you must also specify the model's name using `-m` parameter.
 
 ```python
@@ -247,7 +251,7 @@ def compute_embeddings(self, X):
 In the example, the negative matrix factorization is used. You have to return a user and item embeddings pair in this order. Also, it is essential to return the matrices in the shape of (n_users/n_items, n_dim). 
 If the reduced dimension is higher than 2, the TSNE method is applied.
 
-### Running the application
+### Running the Application
 
 Finally, it is time to start the web application to see the results of the evaluations and preview live recommendations of your models.
 
@@ -272,7 +276,7 @@ Finally, we see the user's interaction history on the right side and the recomme
 
 ![user select](https://github.com/cowjen01/repsys/raw/master/images/tutorial/recoms-preview.jpg)
 
-## Contribution
+## Contributing
 
 To build the package from the source, you first need to install Node.js and npm library as documented [here](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm).
 Then you can run the following script from the root directory to build the web application and install the package locally.
@@ -280,6 +284,33 @@ Then you can run the following script from the root directory to build the web a
 ```
 $ ./scripts/install-locally.sh
 ```
+
+If you employ RepSys in your research work, please do not forget to cite the related paper:
+
+```
+@inproceedings{10.1145/3523227.3551469,
+author = {\v{S}afa\v{r}\'{\i}k, Jan and Van\v{c}ura, Vojt\v{e}ch and Kord\'{\i}k, Pavel},
+title = {RepSys: Framework for Interactive Evaluation of Recommender Systems},
+year = {2022},
+isbn = {9781450392785},
+publisher = {Association for Computing Machinery},
+address = {New York, NY, USA},
+url = {https://doi.org/10.1145/3523227.3551469},
+doi = {10.1145/3523227.3551469},
+booktitle = {Proceedings of the 16th ACM Conference on Recommender Systems},
+pages = {636–639},
+numpages = {4},
+keywords = {User simulation, Distribution analysis, Recommender systems},
+location = {Seattle, WA, USA},
+series = {RecSys '22}
+}
+```
+
+## The Team
+
+- Jan Šafařík (safarj10@fit.cvut.cz)
+- Vojtěch Vančura (vancurv@fit.cvut.cz)
+- Pavel Kordík (pavel.kordik@fit.cvut.cz)
 
 ## Sponsoring
 
