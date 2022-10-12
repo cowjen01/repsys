@@ -14,7 +14,12 @@ import { CategoryFilter } from '../filters';
 import EmbeddingsPlot from '../dataset/EmbeddingsPlot';
 import { PlotLoader } from '../loaders';
 
-function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
+function MetricsEmbeddings({
+  metricsType,
+  itemAttributes,
+  evaluatedModels,
+  displayVisualSettings,
+}) {
   const [selectedData, setSelectedData] = useState([]);
   const [selectedMarkerSize, setSelectedMarkerSize] = useState(3);
   const [selectedModel, setSelectedModel] = useState(evaluatedModels[0]);
@@ -113,18 +118,22 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             onChange={handleCompareModelChange}
             options={evaluatedModels.filter((x) => x !== selectedModel)}
           />
-          <CategoryFilter
-            label="Color scale"
-            value={selectedColorScale}
-            onChange={setSelectedColorScale}
-            options={['Jet', 'Picnic', 'Bluered', 'YlGnBu']}
-          />
-          <CategoryFilter
-            label="Marker size"
-            value={selectedMarkerSize}
-            onChange={setSelectedMarkerSize}
-            options={[2, 3, 4, 5, 6]}
-          />
+          {displayVisualSettings && (
+            <>
+              <CategoryFilter
+                label="Color scale"
+                value={selectedColorScale}
+                onChange={setSelectedColorScale}
+                options={['Jet', 'Picnic', 'Bluered', 'YlGnBu']}
+              />
+              <CategoryFilter
+                label="Marker size"
+                value={selectedMarkerSize}
+                onChange={setSelectedMarkerSize}
+                options={[2, 3, 4, 5, 6]}
+              />
+            </>
+          )}
         </Stack>
       </Grid>
       <Grid item xs={12}>
@@ -148,7 +157,7 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            {selectedData.length > 0 && (
+            {selectedData.length > 0 ? (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
                 {metricsType === 'user' ? (
                   <UsersDescription
@@ -160,6 +169,18 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
                   <ItemsDescription attributes={itemAttributes} items={selectedData} />
                 )}
               </Paper>
+            ) : (
+              <Paper
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                Select a subset of the space.
+              </Paper>
             )}
           </Grid>
         </Grid>
@@ -170,12 +191,14 @@ function MetricsEmbeddings({ metricsType, itemAttributes, evaluatedModels }) {
 
 MetricsEmbeddings.defaultProps = {
   evaluatedModels: [],
+  displayVisualSettings: true,
 };
 
 MetricsEmbeddings.propTypes = {
   evaluatedModels: pt.arrayOf(pt.string),
   itemAttributes: pt.any.isRequired,
   metricsType: pt.string.isRequired,
+  displayVisualSettings: pt.bool,
 };
 
 export default MetricsEmbeddings;

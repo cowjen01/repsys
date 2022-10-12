@@ -47,7 +47,7 @@ function MetricsSummary({ metricsData }) {
           <Box sx={{ p: 2 }}>
             <Grid container>
               {indicators.map((indicator) => (
-                <Grid item xs={3} key={indicator.name}>
+                <Grid item md={3} xs={4} key={indicator.name}>
                   <IndicatorPlot
                     height={140}
                     title={indicator.name}

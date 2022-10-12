@@ -9,7 +9,7 @@ import { PlotLoader } from '../loaders';
 import AttributesSelector from './AttributesSelector';
 import ItemsDescription from './ItemsDescription';
 
-function ItemsEmbeddings({ attributes }) {
+function ItemsEmbeddings({ attributes, displayFilters }) {
   const [filterResetIndex, setFilterResetIndex] = useState(0);
   const [plotResetIndex, setPlotResetIndex] = useState(0);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -48,15 +48,17 @@ function ItemsEmbeddings({ attributes }) {
 
   return (
     <Grid container spacing={2}>
-      <Grid item xs={12}>
-        <AttributesSelector
-          onChange={handleFilterChange}
-          resetIndex={filterResetIndex}
-          disabled={isLoading}
-          attributes={attributes}
-          onFilterApply={handleFilterApply}
-        />
-      </Grid>
+      {displayFilters && (
+        <Grid item xs={12}>
+          <AttributesSelector
+            onChange={handleFilterChange}
+            resetIndex={filterResetIndex}
+            disabled={isLoading}
+            attributes={attributes}
+            onFilterApply={handleFilterApply}
+          />
+        </Grid>
+      )}
       <Grid item xs={12}>
         <Grid container spacing={2} sx={{ height: 500 }}>
           <Grid item xs={8}>
@@ -79,9 +81,21 @@ function ItemsEmbeddings({ attributes }) {
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            {selectedItems.length > 0 && (
+            {selectedItems.length > 0 ? (
               <Paper sx={{ p: 2, height: '100%', overflow: 'auto' }}>
                 <ItemsDescription attributes={attributes} items={selectedItems} />
+              </Paper>
+            ) : (
+              <Paper
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                Select a subset of the space.
               </Paper>
             )}
           </Grid>
@@ -91,9 +105,14 @@ function ItemsEmbeddings({ attributes }) {
   );
 }
 
+ItemsEmbeddings.defaultProps = {
+  displayFilters: true,
+};
+
 ItemsEmbeddings.propTypes = {
   // eslint-disable-next-line react/forbid-prop-types
   attributes: pt.any.isRequired,
+  displayFilters: pt.bool,
 };
 
 export default ItemsEmbeddings;

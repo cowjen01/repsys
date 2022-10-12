@@ -146,7 +146,7 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
             </Box>
           </Grid>
           <Grid item xs={4} sx={{ height: '100%' }}>
-            {selectedData && (
+            {selectedData ? (
               <Paper sx={{ height: '100%' }}>
                 <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
                   <Tabs value={activeTab} onChange={handleTabChange} variant="fullWidth">
@@ -180,6 +180,18 @@ function MetricsDistribution({ metricsType, itemAttributes, evaluatedModels }) {
                     <ItemsDescription attributes={itemAttributes} items={selectedData.ids} />
                   )}
                 </TabPanel>
+              </Paper>
+            ) : (
+              <Paper
+                sx={{
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: 'text.secondary',
+                }}
+              >
+                Select a part of the distribution.
               </Paper>
             )}
           </Grid>

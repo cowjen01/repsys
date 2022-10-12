@@ -57,12 +57,9 @@ class KNN(BaseModel):
             return np.random.uniform(size=X.shape)
 
         if kwargs.get("neighbors"):
-            distances, indices = self.model.kneighbors(X, n_neighbors=kwargs.get("neighbors"))
+            n_distances, n_indices = self.model.kneighbors(X, n_neighbors=kwargs.get("neighbors"))
         else:
-            distances, indices = self.model.kneighbors(X)
-
-        n_distances = distances[:, 1:]
-        n_indices = indices[:, 1:]
+            n_distances, n_indices = self.model.kneighbors(X)
 
         n_distances = 1 - n_distances
 

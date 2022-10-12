@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="repsys-framework",
-    version="0.3.5",
+    version="0.3.6",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
     description="Framework for developing and analyzing recommender systems.",
@@ -27,12 +27,13 @@ setuptools.setup(
         "coloredlogs==15.0.1",
         "numpy==1.21.5",
         "scipy==1.7.3",
-        "matplotlib==3.5.1",
         "pandas==1.3.5",
-        "pymde==0.1.14",
         "bidict==0.21.4",
         "scikit-learn==1.0.2",
         "umap-learn==0.5.2",
     ],
+    extras_require={
+        "pymde":  ["pymde==0.1.14"],
+    },
     zip_safe=False,
 )
