@@ -29,6 +29,12 @@ Install the package using [pip](https://pypi.org/project/repsys-framework/):
 $ pip install repsys-framework
 ```
 
+If you will be using PyMDE for data visualization, you need to install RepSys with the following extras:
+
+```
+$ pip install repsys-framework[pymde]
+```
+
 ## Getting started
 
 If you want to skip this tutorial and try the framework, you can pull the content of the [demo](https://github.com/cowjen01/repsys/tree/master/demo) folder located at the repository.
