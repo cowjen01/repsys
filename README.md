@@ -16,6 +16,11 @@ The RepSys is a framework for developing and analyzing recommendation systems, a
   <img src="https://github.com/cowjen01/repsys/raw/master/images/demos/dataset-users.png" width="48%" /> 
 </p>
 
+## Demo
+
+You can now try RepSys online on our [demo site](https://repsys.recombee.net). 
+Also, check out an [interactive blog post](https://www.recombee.com/blog/repsys-opensource-library-for-interactive-evaluation-of-recommendation-systems.html) we made using the RepSys widgets component.
+
 ## Installation
 
 Install the package using [pip](https://pypi.org/project/repsys-framework/):
