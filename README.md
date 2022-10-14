@@ -285,24 +285,26 @@ Then you can run the following script from the root directory to build the web a
 $ ./scripts/install-locally.sh
 ```
 
+## Citation
+
 If you employ RepSys in your research work, please do not forget to cite the related paper:
 
 ```
 @inproceedings{10.1145/3523227.3551469,
-author = {\v{S}afa\v{r}\'{\i}k, Jan and Van\v{c}ura, Vojt\v{e}ch and Kord\'{\i}k, Pavel},
-title = {RepSys: Framework for Interactive Evaluation of Recommender Systems},
-year = {2022},
-isbn = {9781450392785},
-publisher = {Association for Computing Machinery},
-address = {New York, NY, USA},
-url = {https://doi.org/10.1145/3523227.3551469},
-doi = {10.1145/3523227.3551469},
-booktitle = {Proceedings of the 16th ACM Conference on Recommender Systems},
-pages = {636–639},
-numpages = {4},
-keywords = {User simulation, Distribution analysis, Recommender systems},
-location = {Seattle, WA, USA},
-series = {RecSys '22}
+  author = {\v{S}afa\v{r}\'{\i}k, Jan and Van\v{c}ura, Vojt\v{e}ch and Kord\'{\i}k, Pavel},
+  title = {RepSys: Framework for Interactive Evaluation of Recommender Systems},
+  year = {2022},
+  isbn = {9781450392785},
+  publisher = {Association for Computing Machinery},
+  address = {New York, NY, USA},
+  url = {https://doi.org/10.1145/3523227.3551469},
+  doi = {10.1145/3523227.3551469},
+  booktitle = {Proceedings of the 16th ACM Conference on Recommender Systems},
+  pages = {636–639},
+  numpages = {4},
+  keywords = {User simulation, Distribution analysis, Recommender systems},
+  location = {Seattle, WA, USA},
+  series = {RecSys '22}
 }
 ```
 
