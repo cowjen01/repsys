@@ -2,6 +2,7 @@ import logging
 import os
 from typing import Dict, Any
 import random
+from prometheus_client import start_http_server, Histogram, Counter
 
 from pandas import DataFrame
 from sanic import Sanic
@@ -17,6 +18,9 @@ from repsys.model import Model
 from repsys.helpers import set_seed
 
 logger = logging.getLogger(__name__)
+
+recoms_latency_hist = Histogram('request_latency_seconds', 'Recommendation latency seconds')
+model_recoms_counter = Counter('recoms_per_model', 'Recommendations per model', ['model'])
 
 
 def create_app(
@@ -177,6 +181,7 @@ def create_app(
         return data
 
     @app.route("/api/models/<model_name>/predict", methods=["POST"])
+    @recoms_latency_hist.time()
     async def predict_items(request, model_name: str):
         if not models.get(model_name):
             raise NotFound(f"Model '{model_name}' not implemented.")
@@ -188,6 +193,8 @@ def create_app(
 
         if (user_id is None and item_ids is None) or (user_id is not None and item_ids is not None):
             raise InvalidUsage("Either the user or his interactions must be specified.")
+
+        model_recoms_counter.labels(model=model_name).inc()
 
         if user_id is not None:
             split = dataset.get_split_by_user(user_id)
@@ -386,6 +393,7 @@ def run_server(
     dataset_eval: DatasetEvaluator,
     model_eval: ModelEvaluator,
 ) -> None:
+    start_http_server(8000)
     app = create_app(models, dataset, dataset_eval, model_eval, config)
     app.config.FALLBACK_ERROR_FORMAT = "json"
     app.run(host="0.0.0.0", port=config.server_port, debug=False, access_log=False)

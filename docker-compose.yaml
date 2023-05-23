@@ -1,0 +1,42 @@
+version: "3"
+
+services:
+  prometheus:
+    image: prom/prometheus:v2.44.0
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    command:
+      - "--web.enable-lifecycle"
+      - "--config.file=/etc/prometheus/prometheus.yaml"
+      - "--storage.tsdb.path=/prometheus"
+    restart: always
+
+  alertmanager:
+    image: prom/alertmanager:v0.23.0
+    ports:
+      - 9093:9093
+    volumes:
+      - ./alertmanager/:/etc/alertmanager/
+    restart: always
+    command:
+      - "--config.file=/etc/alertmanager/config.yaml"
+      - "--storage.path=/alertmanager"
+
+  grafana:
+    image: grafana/grafana:9.2.7
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_data:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=password
+      - GF_USERS_ALLOW_SIGN_UP=false
+    restart: always
+
+volumes:
+  grafana_data: {}
+  prometheus_data: {}
