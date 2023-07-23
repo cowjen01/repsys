@@ -9,7 +9,7 @@ COPY requirements.txt .
 RUN pip install --upgrade pip \
     pip install -r requirements.txt
 
-COPY setup.py MANIFEST.in pyproject.toml LICENSE.txt README.md .
+COPY setup.py MANIFEST.in pyproject.toml LICENSE.txt README.md ./
 COPY repsys repsys
 RUN pip install .
 
