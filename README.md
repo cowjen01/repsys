@@ -313,6 +313,7 @@ If you employ RepSys in your research work, please do not forget to cite the rel
 - Jan Šafařík (safarj10@fit.cvut.cz)
 - Vojtěch Vančura (vancurv@fit.cvut.cz)
 - Pavel Kordík (pavel.kordik@fit.cvut.cz)
+- Petr Kasalický (kasalpe1@fit.cvut.cz)
 
 ## Sponsoring
 
