@@ -182,6 +182,7 @@ percentage_lt_k=20
 coverage_lt_k=20
 
 [visualization]
+embed_method=pymde
 pymde_neighbors=15
 umap_neighbors=15
 umap_min_dist=0.1
