@@ -33,7 +33,6 @@ from repsys.metrics import (
     get_clt,
     get_ndcg,
     get_novelty,
-    get_item_pop,
 )
 from repsys.model import Model
 

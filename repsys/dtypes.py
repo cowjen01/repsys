@@ -64,7 +64,7 @@ ColumnDict = Dict[str, Type[DataType]]
 def filter_columns_by_type(columns: ColumnDict, dtype: Type[DataType]) -> List[str]:
     results = []
     for [col, dt] in columns.items():
-        if type(dt) == dtype:
+        if isinstance(dt, dtype):
             results.append(col)
 
     return results

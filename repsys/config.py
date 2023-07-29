@@ -83,7 +83,7 @@ def validate_dataset_config(config: DatasetConfig):
 
 
 def parse_list(arg: str, sep: str = ","):
-    if type(arg) == str:
+    if isinstance(arg, str):
         return [int(x.strip()) for x in arg.split(sep)]
     return arg
 

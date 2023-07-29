@@ -3,7 +3,7 @@ from typing import Dict
 
 import click
 import coloredlogs
-from click import Context, BadOptionUsage
+from click import Context
 
 from repsys.config import read_config
 from repsys.core import (
