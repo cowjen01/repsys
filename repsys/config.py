@@ -41,7 +41,10 @@ class EvaluationConfig:
 
 
 class VisualizationConfig:
-    def __init__(self, pymde_neighbors: int, umap_neighbors: int, umap_min_dist: float, tsne_perplexity: int):
+    def __init__(
+        self, embed_method: str, pymde_neighbors: int, umap_neighbors: int, umap_min_dist: float, tsne_perplexity: int
+    ):
+        self.embed_method = embed_method
         self.pymde_neighbors = pymde_neighbors
         self.umap_neighbors = umap_neighbors
         self.umap_min_dist = umap_min_dist
@@ -80,6 +83,11 @@ def validate_dataset_config(config: DatasetConfig):
 
     if config.min_item_interacts < 0:
         raise InvalidConfigError("Minimum item interactions can be negative")
+
+
+def validate_visual_config(config: VisualizationConfig):
+    if config.embed_method not in ["umap", "pymde", "tsne", "custom"]:
+        raise InvalidConfigError("Invalid embedding method (none of: umap, pymde, tsne or custom)")
 
 
 def parse_list(arg: str, sep: str = ","):
@@ -121,11 +129,14 @@ def read_config(config_path: str = None):
     )
 
     visual_config = VisualizationConfig(
+        config.get("visualization", "embed_method", fallback=const.DEFAULT_EMBED_METHOD),
         config.getint("visualization", "pymde_neighbors", fallback=const.DEFAULT_PYMDE_NEIGHBORS),
         config.getint("visualization", "umap_neighbors", fallback=const.DEFAULT_UMAP_NEIGHBORS),
         config.getfloat("visualization", "umap_min_dist", fallback=const.DEFAULT_UMAP_MIN_DIST),
         config.getint("visualization", "tsne_perplexity", fallback=const.DEFAULT_TSNE_PERPLEXITY),
     )
+
+    validate_visual_config(visual_config)
 
     return Config(
         config.get("general", "checkpoints_dir", fallback=const.DEFAULT_CHECKPOINTS_DIR),

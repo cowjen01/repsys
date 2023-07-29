@@ -74,6 +74,9 @@ def evaluate_dataset(
     method: str,
     model_name: str,
 ):
+    if not method:
+        method = config.visual.embed_method
+
     logger.info(f"Evaluating implemented dataset using '{method}' method")
 
     dataset.load(config.checkpoints_dir)

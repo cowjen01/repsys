@@ -182,9 +182,7 @@ def dataset_split_cmd(ctx: Context, dataset: Dataset):
 @click.pass_context
 @click.option(
     "--method",
-    default="umap",
     type=click.Choice(["umap", "pymde", "tsne", "custom"]),
-    show_default=True,
     help="Embeddings method.",
 )
 @click.option("-m", "--model-name", help="Embeddings model.")
