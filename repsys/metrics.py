@@ -51,10 +51,14 @@ def get_coverage(X_predict: ndarray, sort_indices: ndarray, k: int) -> float:
     return n_covered_items / n_items
 
 
-def get_diversity(X_distances: ndarray, sort_indices: ndarray, k: int) -> ndarray:
+def get_diversity(embeddings: csr_matrix, sort_indices: ndarray, k: int) -> ndarray:
     def f(idx):
         pairs = np.array(np.meshgrid(idx, idx)).T.reshape(-1, 2)
-        dist = X_distances[pairs[:, 0], pairs[:, 1]]
+        embs_0 = embeddings.T[pairs[:, 0]].toarray()  # np array of shape (k*k, emb_size)
+        embs_1 = embeddings.T[pairs[:, 1]].toarray()  # np array of shape (k*k, emb_size)
+        # Compute cosine distance between (embs_0[0], embs_1[0]), (embs_0[1], embs_1[1]), (embs_0[2], embs_1[2]), ...
+        #   as normalized embs_0 * normalized embs_1 and sum over axis 1
+        dist = 1 - np.sum((embs_0 / np.linalg.norm(embs_0, axis=1)[:, np.newaxis]) * (embs_1 / np.linalg.norm(embs_1, axis=1)[:, np.newaxis]), axis=1)
         return dist.sum()
 
     vf = np.vectorize(f, signature="(n)->()")
