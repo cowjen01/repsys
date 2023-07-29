@@ -139,7 +139,7 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
 
     csv_dtypes = {}
     for col, dt in item_cols.items():
-        if type(dt) != dtypes.Number:
+        if not isinstance(dt, dtypes.Number):
             csv_dtypes[col] = str
         else:
             params = typing.cast(dtypes.Number, dt)
@@ -446,7 +446,7 @@ class Dataset(ABC):
         # keep only columns defined in the dtypes
         items = items[item_cols.keys()]
 
-        str_cols = [col for col, dt, in item_cols.items() if type(dt) != dtypes.Number]
+        str_cols = [col for col, dt, in item_cols.items() if not isinstance(dt, dtypes.Number)]
         for col in str_cols:
             items[col] = items[col].fillna("")
             items[col] = items[col].astype(str)
@@ -614,7 +614,7 @@ class DatasetSplitter:
 
     def split(
         self, df: DataFrame
-    ) -> Tuple[Tuple[Index, DataFrame], Tuple[Index, DataFrame, DataFrame], Tuple[Index, DataFrame, DataFrame],]:
+    ) -> Tuple[Tuple[Index, DataFrame], Tuple[Index, DataFrame, DataFrame], Tuple[Index, DataFrame, DataFrame]]:
 
         df, user_activity, item_popularity = self._filter_triplets(df)
         user_index = user_activity.index

@@ -50,13 +50,13 @@ def create_app(
         for col, datatype in dataset.item_cols().items():
             attributes[col] = {"dtype": str(datatype)}
 
-            if type(datatype) == dtypes.Tag:
+            if isinstance(datatype, dtypes.Tag):
                 attributes[col]["options"] = dataset.tags.get(col)
 
-            if type(datatype) == dtypes.Category:
+            if isinstance(datatype, dtypes.Category):
                 attributes[col]["options"] = dataset.categories.get(col)
 
-            if type(datatype) == dtypes.Number:
+            if isinstance(datatype, dtypes.Number):
                 hist = dataset.histograms.get(col)
                 attributes[col]["bins"] = hist[1].tolist()
 

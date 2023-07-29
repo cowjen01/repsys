@@ -10,7 +10,6 @@ from pandas import DataFrame
 from scipy.sparse import issparse, csr_matrix
 from sklearn.decomposition import PCA
 from sklearn.manifold import TSNE
-from sklearn.metrics import pairwise_distances
 
 from repsys.dataset import Dataset
 from repsys.constants import CURRENT_VERSION
@@ -34,7 +33,6 @@ from repsys.metrics import (
     get_clt,
     get_ndcg,
     get_novelty,
-    get_item_pop,
 )
 from repsys.model import Model
 
@@ -154,9 +152,6 @@ class ModelEvaluator:
         logger.info(f"Sorting true interactions for the maximal K={max_k}")
         true_sort_indices = sort_partially(-X_true, k=max_k)
 
-        logger.info("Computing item distances")
-        X_distances = pairwise_distances(X_train.T, metric="cosine")
-
         logger.info("Computing short-head/long-tail items")
         item_popularity = np.asarray((X_train > 0).sum(axis=0)).squeeze()
         _, long_tail_items = split_by_popularity(item_popularity)
@@ -186,7 +181,7 @@ class ModelEvaluator:
 
         logger.info("Computing user diversity")
         for k in self.diversity_k:
-            diversity = get_diversity(X_distances, predict_sort_indices, k)
+            diversity = get_diversity(X_train, predict_sort_indices, k)
             user_results[f"Diversity@{k}"] = diversity
             summary_results[f"Diversity@{k}"] = diversity.mean()
 
