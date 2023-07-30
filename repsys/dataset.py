@@ -159,6 +159,10 @@ def load_items(item_cols: ColumnDict, input_dir: str) -> Tuple[DataFrame, frozen
 
 def get_top_tags(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str], List[int]]:
     tags = items[items[col].str[0] != ""][col]
+
+    if tags.empty:
+        return ([], [])
+
     labels, counts = np.unique(np.concatenate(tags.values), return_counts=True)
     indices = (-counts).argsort()
     labels = labels[indices].tolist()[:n]
@@ -168,6 +172,10 @@ def get_top_tags(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str], Lis
 
 def get_top_categories(items: DataFrame, col: str, n: int = 5) -> Tuple[List[str], List[int]]:
     categories = items[items[col] != ""][col]
+
+    if categories.empty:
+        return ([], [])
+
     categories = categories.value_counts()
     labels = categories.index.tolist()[:n]
     counts = categories.values.tolist()[:n]

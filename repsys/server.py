@@ -108,12 +108,16 @@ def create_app(
         tag_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Tag)
         for col in tag_cols:
             labels, counts = get_top_tags(items, col, n=4)
-            attributes[col] = {"labels": labels, "values": counts}
+
+            if len(labels) > 0:
+                attributes[col] = {"labels": labels, "values": counts}
 
         category_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Category)
         for col in category_cols:
             labels, counts = get_top_categories(items, col, n=4)
-            attributes[col] = {"labels": labels, "values": counts}
+
+            if len(labels) > 0:
+                attributes[col] = {"labels": labels, "values": counts}
 
         number_cols = filter_columns_by_type(dataset.item_cols(), dtypes.Number)
         for col in number_cols:
