@@ -30,11 +30,11 @@ setuptools.setup(
         "pandas==1.3.5",
         "bidict==0.21.4",
         "scikit-learn==1.0.2",
-        "umap-learn==0.5.2",
+        "umap-learn==0.5.3",
         "websockets==10.0"
     ],
     extras_require={
-        "pymde": ["pymde==0.1.14"],
+        "pymde": ["pymde==0.1.18", "pynndescent==0.5.8"],
     },
     zip_safe=False,
 )
