@@ -39,5 +39,5 @@ class MovieLens(Dataset):
             "mappings": {"title": "title", "subtitle": "genres", "caption": "year", "image": "", "content": ""},
             "recommenders": [
                 {"name": "Top Comedies", "model": "knn", "modelParams": {"genre": "Comedy", "neighbors": 30}},
-            ]
+            ],
         }

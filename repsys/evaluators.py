@@ -1,7 +1,13 @@
 import logging
 import os
 from typing import Dict, Optional, Any, Callable, Tuple, List
+import warnings
 
+import numba
+
+# Umap prints NumbaDeprecationWarning due to The 'nopython' keyword argument was not supplied to the 'numba.jit
+# But there is no fix yet
+warnings.filterwarnings("ignore", category=numba.NumbaDeprecationWarning)
 import pandas as pd
 from numpy import ndarray
 import numpy as np
@@ -264,6 +270,12 @@ class ModelEvaluator:
             logger.warning("The predictions should not contain infinite values")
             logger.warning("They will be replaced by 0 and 1 for the purpose of the evaluation.")
 
+        if isinstance(X_predict, np.matrix):
+            X_predict = X_predict.getA()
+
+        if not isinstance(X_predict, np.ndarray):
+            raise ValueError(f"Model {model} predicts {type(X_predict)}, but only np.ndarray is now supported")
+
         X_predict[X_predict == -np.inf] = 0
         X_predict[X_predict == np.inf] = 1
 
@@ -386,6 +398,7 @@ class DatasetEvaluator:
 
     def _pymde_embeddings(self, X: Any) -> ndarray:
         import pymde
+
         pymde.seed(self._seed)
         mde = pymde.preserve_neighbors(X, init="random", n_neighbors=self._pymde_neighbors, verbose=self._verbose)
         embeddings = mde.embed(verbose=self._verbose, max_iter=1000, memory_size=50, eps=1e-6)

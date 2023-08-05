@@ -42,7 +42,10 @@ class Model(ABC):
     def predict_top_items(self, X: csr_matrix, n=20, **kwargs):
         prediction = self.predict(X, **kwargs)
         indices = (-prediction).argsort()[:, :n]
-        return np.vectorize(self.dataset.item_index_to_id)(indices)
+        top_items = np.vectorize(self.dataset.item_index_to_id)(indices)
+        if isinstance(top_items, np.matrix):
+            top_items = top_items.getA()
+        return top_items
 
     def to_dict(self):
         return {"params": {key: param.to_dict() for key, param in self.web_params().items()}}

@@ -1,4 +1,4 @@
-FROM python:3.7-slim AS compile-image
+FROM python:3.9-slim AS compile-image
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential gcc
 
@@ -13,7 +13,7 @@ COPY setup.py MANIFEST.in pyproject.toml LICENSE.txt README.md ./
 COPY repsys repsys
 RUN pip install .
 
-FROM python:3.7-slim AS build-image
+FROM python:3.9-slim AS build-image
 COPY --from=compile-image /opt/venv /opt/venv
 
 ENV PATH="/opt/venv/bin:$PATH"

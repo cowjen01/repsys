@@ -623,7 +623,6 @@ class DatasetSplitter:
     def split(
         self, df: DataFrame
     ) -> Tuple[Tuple[Index, DataFrame], Tuple[Index, DataFrame, DataFrame], Tuple[Index, DataFrame, DataFrame]]:
-
         df, user_activity, item_popularity = self._filter_triplets(df)
         user_index = user_activity.index
 
