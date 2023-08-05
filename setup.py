@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setuptools.setup(
     name="repsys-framework",
-    version="0.4.0",
+    version="0.4.1",
     author="Jan Safarik",
     author_email="safarj10@fit.cvut.cz",
     description="Framework for developing and analyzing recommender systems.",
@@ -34,7 +34,9 @@ setuptools.setup(
         "websockets==10.4",
     ],
     extras_require={
-        "pymde": ["pymde==0.1.18", "pynndescent==0.5.10"],
+        # pynndescent needs a fixed version 0.5.8 due to the issue:
+        # https://github.com/lmcinnes/pynndescent/issues/218
+        "pymde": ["pymde==0.1.18", "pynndescent==0.5.8"],
     },
     zip_safe=False,
 )
