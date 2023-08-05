@@ -3,6 +3,7 @@ import os
 from typing import Dict, Any
 import random
 
+import numpy as np
 from pandas import DataFrame
 from sanic import Sanic
 from sanic.exceptions import InvalidUsage, NotFound
@@ -213,7 +214,7 @@ def create_app(
         params = {k: v for k, v in params.items() if k in model.web_params().keys()}
 
         ids = model.predict_top_items(input_data, limit, **params)
-        items = dataset.items.loc[ids[0]]
+        items = dataset.items.loc[np.squeeze(ids)]
         data = json(serialize_items(items))
 
         return data
